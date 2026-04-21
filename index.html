@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>钓红点</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero" id="hero-section">
+      <div>
+        <p class="eyebrow">HTML5 + JavaScript</p>
+        <h1>钓红点</h1>
+        <p class="hero-copy">
+          参考斗地主式桌面观感的《钓红点》牌桌原型。你固定操作自己的手牌，其他玩家会在桌上实际出牌、钓牌和补枪。
+        </p>
+      </div>
+      <div class="rule-card">
+        <h2>当前版本特点</h2>
+        <ul>
+          <li>支持 2 / 3 / 4 人牌桌布局，玩家固定在下方，其他人为电脑。</li>
+          <li>只显示你的手牌和公共台面，其他玩家只显示背牌数量与刚打出的牌。</li>
+          <li>AI 回合会分阶段展示动作，不再只是滚文字日志。</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="setup-panel" id="setup-panel">
+      <div class="panel-head">
+        <h2>开始对局</h2>
+        <p>先选人数，再决定是否启用摇骰子决定先手。</p>
+      </div>
+      <div class="setup-grid">
+        <label>
+          <span>玩家人数</span>
+          <select id="player-count">
+            <option value="2">2 人</option>
+            <option value="3">3 人</option>
+            <option value="4">4 人</option>
+          </select>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="use-dice" checked>
+          <span>启用摇骰子定先手</span>
+        </label>
+      </div>
+      <div class="button-row">
+        <button id="start-game" class="primary-btn">开始游戏</button>
+        <button class="ghost-btn rules-trigger" type="button">查看规则</button>
+      </div>
+    </section>
+
+    <section class="game-layout hidden" id="game-layout">
+      <div class="table-topbar">
+        <div>
+          <p class="eyebrow">Table View</p>
+          <h2 class="table-title">红点牌桌</h2>
+        </div>
+        <button class="ghost-btn rules-trigger" type="button">规则说明</button>
+      </div>
+
+      <div class="status-strip">
+        <div>
+          <p class="status-label">当前状态</p>
+          <p class="status-value" id="status-text">等待开始</p>
+        </div>
+        <div>
+          <p class="status-label">牌堆</p>
+          <p class="status-value" id="draw-count">0 张</p>
+        </div>
+        <div>
+          <p class="status-label">台面明牌</p>
+          <p class="status-value" id="table-count">0 张</p>
+        </div>
+      </div>
+
+      <section class="table-board">
+        <div class="seat-slot seat-top-left" id="seat-top-left"></div>
+        <div class="seat-slot seat-top" id="seat-top"></div>
+        <div class="seat-slot seat-top-right" id="seat-top-right"></div>
+        <div class="seat-slot seat-left" id="seat-left"></div>
+        <div class="seat-slot seat-right" id="seat-right"></div>
+        <div class="seat-dice-layer" id="seat-dice-layer"></div>
+
+        <div class="center-stage">
+          <div class="panel-head compact-head">
+            <h2>桌面中央</h2>
+            <p id="selection-hint">轮到你时，先从手牌区选 1 张，再从公共牌里选目标牌。</p>
+          </div>
+
+          <div class="feedback-banner hidden" id="feedback-banner"></div>
+
+          <div class="action-stage" id="action-stage">
+            <div class="action-stage__meta">
+              <p class="status-label">最近动作</p>
+              <h3 id="action-title">等待首个动作</h3>
+              <p id="action-copy">开始游戏后，这里会展示玩家实际打出的牌。</p>
+            </div>
+            <div class="action-stage__cards" id="action-cards"></div>
+          </div>
+
+          <div class="draw-preview hidden" id="draw-preview">
+            <div class="draw-preview-copy">
+              <span>摸牌待结算</span>
+              <strong id="draw-preview-text">未摸牌</strong>
+            </div>
+            <div class="draw-preview-card" id="draw-preview-card"></div>
+          </div>
+
+          <div class="selection-metrics">
+            <div>
+              <span>当前出牌</span>
+              <strong id="selected-card-display">未选择</strong>
+            </div>
+            <div>
+              <span>已选台面牌</span>
+              <strong id="selected-table-total">0 张</strong>
+            </div>
+            <div>
+              <span>判定目标</span>
+              <strong id="rule-target-text">凑十 / 三张相同</strong>
+            </div>
+          </div>
+
+          <div class="table-cards" id="table-cards"></div>
+        </div>
+      </section>
+
+      <section class="human-panel">
+        <div class="panel-head">
+          <div>
+            <h2 id="current-player-title">你的手牌</h2>
+            <p id="turn-note">等待发牌。</p>
+          </div>
+          <div class="human-summary" id="human-summary"></div>
+        </div>
+
+        <div class="card-grid hand-grid" id="hand-cards"></div>
+
+        <div class="controls">
+          <div class="button-row">
+            <button id="confirm-action" class="primary-btn">尝试钓牌</button>
+            <button id="discard-action" class="ghost-btn">弃到台面</button>
+            <button id="clear-selection" class="ghost-btn">清空选择</button>
+            <button id="restart-game" class="ghost-btn">重新开局</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="events-panel">
+        <div class="panel-head">
+          <h2>最近事件</h2>
+          <p>这里只保留最近几步，主要动作以桌面动画为准。</p>
+        </div>
+        <div class="log-list" id="log-list"></div>
+      </section>
+
+      <section class="result-panel hidden" id="result-panel">
+        <div class="panel-head">
+          <h2>结算榜单</h2>
+          <p>只统计红桃和方块，A 按 10 分计算。</p>
+        </div>
+        <div class="result-grid" id="result-grid"></div>
+      </section>
+
+      <div class="pass-overlay hidden" id="pass-overlay">
+        <div class="overlay-card">
+          <p class="overlay-tag" id="overlay-tag">阶段提示</p>
+          <h2 id="overlay-title">准备开始</h2>
+          <p id="overlay-copy">点击按钮继续。</p>
+          <div class="overlay-details hidden" id="overlay-details"></div>
+          <button id="overlay-button" class="primary-btn">继续</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="rules-modal" id="rules-modal" aria-hidden="true">
+      <div class="rules-modal__backdrop" id="rules-backdrop"></div>
+      <div class="rules-modal__card" role="dialog" aria-modal="true" aria-labelledby="rules-title">
+        <div class="rules-modal__head">
+          <div>
+            <p class="eyebrow">Quick Guide</p>
+            <h2 id="rules-title">钓红点怎么玩</h2>
+          </div>
+          <button id="rules-close" class="ghost-btn" type="button">关闭</button>
+        </div>
+        <div class="rules-modal__body">
+          <article class="rules-block">
+            <h3>开局</h3>
+            <p>2 人每人 10 张，台面 12 张；3 人每人 7 张，台面 10 张；4 人每人 5 张，台面 12 张。其余牌进入牌堆。</p>
+          </article>
+          <article class="rules-block">
+            <h3>普通钓牌</h3>
+            <p>从手里打出 1 张牌，去钓台面的 1 张牌。数字牌必须凑成 10，A 按 1 点参与凑十。</p>
+          </article>
+          <article class="rules-block">
+            <h3>10 / J / Q / K</h3>
+            <p>这四类牌都按 10 点处理，但只能钓完全同点的牌，比如 J 只能钓 J，Q 只能钓 Q。</p>
+          </article>
+          <article class="rules-block">
+            <h3>三张相同</h3>
+            <p>若台面有 3 张与手牌同点的牌，可以一次把这 3 张全部钓走。</p>
+          </article>
+          <article class="rules-block">
+            <h3>摸牌补枪</h3>
+            <p>每次出牌后都要从牌堆摸 1 张，立刻再尝试钓牌；不成功就把摸到的牌放上台面。</p>
+          </article>
+          <article class="rules-block">
+            <h3>计分</h3>
+            <p>只统计红桃和方块。A 记 10 分，2-9 按点数，10/J/Q/K 记 10 分，总分最高者获胜。</p>
+          </article>
+        </div>
+        <div class="rules-modal__foot">
+          <button id="rules-ack" class="primary-btn" type="button">开始玩</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
