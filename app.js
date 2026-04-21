@@ -78,6 +78,7 @@ const ui = {
   seatLeft: document.getElementById("seat-left"),
   seatRight: document.getElementById("seat-right"),
   seatDiceLayer: document.getElementById("seat-dice-layer"),
+  seatResultLayer: document.getElementById("seat-result-layer"),
 };
 
 const state = {
@@ -108,6 +109,7 @@ const state = {
     results: "",
     seats: {},
     seatDice: "",
+    seatResults: "",
     seenCards: {
       hand: new Set(),
       table: new Set(),
@@ -243,6 +245,7 @@ function startGame(playerCount, useDice) {
     results: "",
     seats: {},
     seatDice: "",
+    seatResults: "",
     seenCards: {
       hand: new Set(),
       table: new Set(),
@@ -1458,6 +1461,7 @@ function renderSeats() {
   renderSeat(ui.seatLeft, seats.left);
   renderSeat(ui.seatRight, seats.right);
   renderSeatDice(seats);
+  renderSeatResults(seats);
 }
 
 function getSeatAssignments() {
@@ -1583,6 +1587,71 @@ function renderSeatDice(seats) {
   });
 }
 
+function renderSeatResults(seats) {
+  const rankedPlayers = state.phase === "game-over" ? getRankedPlayers() : [];
+  const resultByName = new Map(rankedPlayers.map((item, index) => [item.name, { ...item, rank: index + 1 }]));
+  const activePlayers = Object.entries(seats)
+    .filter(([, player]) => Boolean(player))
+    .map(([slot, player]) => ({ slot, player, result: resultByName.get(player.name) || null }));
+
+  const signature = state.phase !== "game-over"
+    ? "hidden"
+    : activePlayers.map(({ slot, player, result }) => {
+      if (!result) {
+        return `${slot}:${player.id}:none`;
+      }
+      return [
+        slot,
+        player.id,
+        result.rank,
+        result.score,
+        result.captured,
+        result.redCards.map((card) => card.id).join(","),
+      ].join(":");
+    }).join("|");
+
+  if (state.renderCache.seatResults === signature) {
+    return;
+  }
+  state.renderCache.seatResults = signature;
+
+  ui.seatResultLayer.innerHTML = "";
+  if (state.phase !== "game-over") {
+    return;
+  }
+
+  activePlayers.forEach(({ slot, player, result }) => {
+    if (!result) {
+      return;
+    }
+
+    const article = document.createElement("article");
+    article.className = `seat-result seat-result-${slot}${result.rank === 1 ? " top" : ""}`;
+    const redCardsHtml = result.redCards.length
+      ? result.redCards
+        .map((card) => `<span class="seat-result__card">${cardSymbol(card)}${card.rank} ${card.scoreValue}</span>`)
+        .join("")
+      : '<p class="seat-result__empty">本局未赢到红牌</p>';
+
+    article.innerHTML = `
+      <div class="seat-result__header">
+        <span class="seat-result__rank">第 ${result.rank} 名</span>
+        ${result.rank === 1 ? '<span class="seat-result__winner">最高分</span>' : ""}
+      </div>
+      <div>
+        <h3>${player.name}${player.isHuman ? "（你）" : ""}</h3>
+        <p class="seat-result__score">${result.score} 分</p>
+      </div>
+      <div class="seat-result__meta">
+        <span>红牌 ${result.redCards.length} 张</span>
+        <span>总赢牌 ${result.captured} 张</span>
+      </div>
+      <div class="seat-result__cards">${redCardsHtml}</div>
+    `;
+    ui.seatResultLayer.appendChild(article);
+  });
+}
+
 function renderTableCards(selectedSourceCard) {
   const currentPlayer = getCurrentPlayer();
   const playableIds = currentPlayer?.isHuman && state.phase === "human-turn" ? getPlayableTargetIds(selectedSourceCard) : new Set();
@@ -1690,8 +1759,9 @@ function renderResults() {
     return;
   }
 
-  ui.resultPanel.classList.remove("hidden");
+  ui.resultPanel.classList.add("hidden");
   ui.resultGrid.innerHTML = "";
+  return;
   getRankedPlayers().forEach((item, index) => {
     const redCardText = item.redCards.length
       ? item.redCards.map((card) => `${cardLabel(card)}(${card.scoreValue})`).join("、")
