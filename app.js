@@ -38,7 +38,12 @@ const FIRESTORE_COLLECTIONS = {
   profiles: "profiles",
   gameIds: "gameIds",
   gameResults: "gameResults",
+  friendRequests: "friendRequests",
+  friendships: "friendships",
+  roomInvites: "roomInvites",
+  rooms: "rooms",
 };
+const LEADERBOARD_MODES = ["2", "3", "4"];
 
 let firebaseApp = null;
 let auth = null;
@@ -48,6 +53,7 @@ const ui = {
   heroSection: document.getElementById("hero-section"),
   setupPanel: document.getElementById("setup-panel"),
   gameLayout: document.getElementById("game-layout"),
+  playStage: document.getElementById("play-stage"),
   rulesTriggers: [...document.querySelectorAll(".rules-trigger")],
   rulesModal: document.getElementById("rules-modal"),
   rulesBackdrop: document.getElementById("rules-backdrop"),
@@ -103,6 +109,19 @@ const ui = {
   historyMeta: document.getElementById("history-meta"),
   playerStatsCard: document.getElementById("player-stats-card"),
   leaderboardList: document.getElementById("leaderboard-list"),
+  leaderboardMode2: null,
+  leaderboardMode3: null,
+  leaderboardMode4: null,
+  refreshLeaderboard: null,
+  socialPanel: null,
+  socialStatus: null,
+  socialSearchInput: null,
+  socialSearchButton: null,
+  socialSearchResult: null,
+  socialFriendRequests: null,
+  socialFriends: null,
+  socialRoomInvites: null,
+  socialRoomCard: null,
   passOverlay: document.getElementById("pass-overlay"),
   overlayTag: document.getElementById("overlay-tag"),
   overlayTitle: document.getElementById("overlay-title"),
@@ -150,8 +169,18 @@ const state = {
   authStatusMessage: "正在连接 Firebase...",
   playerIdHintMessage: "",
   leaderboardLoaded: false,
+  leaderboardMode: "2",
+  leaderboardRefreshing: false,
   hasBoundGameId: false,
   gameIdEditable: true,
+  socialBusy: false,
+  socialStatusMessage: "",
+  socialSearchResult: null,
+  socialFriendRequests: [],
+  socialFriends: [],
+  socialRoomInvites: [],
+  socialActiveRoom: null,
+  socialUnsubs: [],
   renderCache: {
     humanSummary: "",
     humanHand: "",
@@ -163,6 +192,7 @@ const state = {
     history: "",
     playerStats: "",
     leaderboard: "",
+    social: "",
     seats: {},
     seatDice: "",
     seatResults: "",
@@ -204,11 +234,14 @@ function init() {
   ui.discardAction.addEventListener("click", handleDiscardAction);
   ui.clearSelection.addEventListener("click", clearSelection);
   document.addEventListener("keydown", handleKeyDown);
+  window.addEventListener("resize", updateGameLayoutScale);
 
   const legacyIdLabel = ui.playerIdSelect?.closest("label");
   if (legacyIdLabel) {
     legacyIdLabel.classList.add("hidden");
   }
+  ensureLeaderboardControls();
+  ensureSocialPanel();
   const leaderboardTitle = document.querySelector(".leaderboard-block .compact-head h2");
   const leaderboardCopy = document.querySelector(".leaderboard-block .compact-head p");
   if (leaderboardTitle) {
@@ -219,9 +252,824 @@ function init() {
   }
 
   state.playerIdHintMessage = "先登录或注册账号，再创建全局唯一的游戏 ID。";
+  ensureLeaderboardControls();
   renderAuthControls();
   render();
   initFirebase();
+}
+
+function ensureLeaderboardControls() {
+  const block = document.querySelector(".leaderboard-block");
+  if (!block) {
+    return;
+  }
+
+  const leaderboardTitle = document.querySelector(".leaderboard-block .compact-head h2");
+  const leaderboardCopy = document.querySelector(".leaderboard-block .compact-head p");
+  if (leaderboardTitle) {
+    leaderboardTitle.textContent = "云端排行榜";
+  }
+  if (leaderboardCopy) {
+    leaderboardCopy.textContent = "2 / 3 / 4 人模式分开排行，按该模式下的单局最高分排序。";
+  }
+
+  if (!document.getElementById("leaderboard-toolbar")) {
+    const toolbar = document.createElement("div");
+    toolbar.className = "leaderboard-toolbar";
+    toolbar.id = "leaderboard-toolbar";
+    toolbar.innerHTML = `
+      <div class="leaderboard-tabs" role="tablist" aria-label="排行榜模式">
+        <button id="leaderboard-mode-2" class="leaderboard-tab active" type="button" data-mode="2">2人榜</button>
+        <button id="leaderboard-mode-3" class="leaderboard-tab" type="button" data-mode="3">3人榜</button>
+        <button id="leaderboard-mode-4" class="leaderboard-tab" type="button" data-mode="4">4人榜</button>
+      </div>
+      <button id="refresh-leaderboard" class="ghost-btn leaderboard-refresh" type="button">刷新排行</button>
+    `;
+    block.insertBefore(toolbar, ui.leaderboardList);
+  }
+
+  ui.leaderboardMode2 = document.getElementById("leaderboard-mode-2");
+  ui.leaderboardMode3 = document.getElementById("leaderboard-mode-3");
+  ui.leaderboardMode4 = document.getElementById("leaderboard-mode-4");
+  ui.refreshLeaderboard = document.getElementById("refresh-leaderboard");
+
+  [ui.leaderboardMode2, ui.leaderboardMode3, ui.leaderboardMode4].forEach((button) => {
+    if (button && !button.dataset.bound) {
+      button.dataset.bound = "1";
+      button.addEventListener("click", () => {
+        state.leaderboardMode = button.dataset.mode || "2";
+        renderPlayerStatsDashboard();
+      });
+    }
+  });
+
+  if (ui.refreshLeaderboard && !ui.refreshLeaderboard.dataset.bound) {
+    ui.refreshLeaderboard.dataset.bound = "1";
+    ui.refreshLeaderboard.addEventListener("click", refreshLeaderboardNow);
+  }
+}
+
+async function refreshLeaderboardNow() {
+  state.leaderboardRefreshing = true;
+  renderPlayerStatsDashboard();
+  await loadLeaderboard();
+  if (state.authUser) {
+    await loadCurrentUserProfile();
+  }
+  state.leaderboardRefreshing = false;
+  renderPlayerStatsDashboard();
+  renderAuthControls();
+}
+
+function ensureSocialPanel() {
+  if (document.getElementById("social-panel")) {
+    bindSocialPanelRefs();
+    return;
+  }
+
+  const anchor = ui.playerStatsCard?.parentElement;
+  if (!anchor || !ui.playerStatsCard) {
+    return;
+  }
+
+  const panel = document.createElement("section");
+  panel.className = "social-panel";
+  panel.id = "social-panel";
+  panel.innerHTML = `
+    <div class="panel-head compact-head">
+      <h2>好友与邀请</h2>
+      <p>搜索游戏 ID、添加好友，并邀请好友进入 2 / 3 / 4 人等待房间。</p>
+    </div>
+    <div class="social-search-row">
+      <input id="social-search-id" type="text" maxlength="20" placeholder="搜索游戏 ID">
+      <button id="social-search-btn" class="ghost-btn" type="button">搜索</button>
+    </div>
+    <p id="social-status" class="social-status">登录后可以搜索好友并创建房间。</p>
+    <div id="social-search-result" class="social-card-list"></div>
+    <div id="social-room-card" class="social-room-card"></div>
+    <div class="social-columns">
+      <div class="social-column">
+        <h3>好友申请</h3>
+        <div id="social-friend-requests" class="social-card-list"></div>
+      </div>
+      <div class="social-column">
+        <h3>房间邀请</h3>
+        <div id="social-room-invites" class="social-card-list"></div>
+      </div>
+      <div class="social-column social-column-wide">
+        <h3>好友列表</h3>
+        <div id="social-friends" class="social-card-list"></div>
+      </div>
+    </div>
+  `;
+
+  anchor.insertBefore(panel, ui.playerStatsCard);
+  bindSocialPanelRefs();
+}
+
+function bindSocialPanelRefs() {
+  ui.socialPanel = document.getElementById("social-panel");
+  ui.socialStatus = document.getElementById("social-status");
+  ui.socialSearchInput = document.getElementById("social-search-id");
+  ui.socialSearchButton = document.getElementById("social-search-btn");
+  ui.socialSearchResult = document.getElementById("social-search-result");
+  ui.socialFriendRequests = document.getElementById("social-friend-requests");
+  ui.socialFriends = document.getElementById("social-friends");
+  ui.socialRoomInvites = document.getElementById("social-room-invites");
+  ui.socialRoomCard = document.getElementById("social-room-card");
+
+  if (ui.socialSearchButton && !ui.socialSearchButton.dataset.bound) {
+    ui.socialSearchButton.dataset.bound = "1";
+    ui.socialSearchButton.addEventListener("click", handleSocialSearch);
+  }
+  if (ui.socialSearchInput && !ui.socialSearchInput.dataset.bound) {
+    ui.socialSearchInput.dataset.bound = "1";
+    ui.socialSearchInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        handleSocialSearch();
+      }
+    });
+  }
+}
+
+function setSocialStatus(message) {
+  state.socialStatusMessage = message;
+  renderSocialPanel();
+}
+
+function resetSocialState() {
+  state.socialSearchResult = null;
+  state.socialFriendRequests = [];
+  state.socialFriends = [];
+  state.socialRoomInvites = [];
+  state.socialActiveRoom = null;
+  state.socialBusy = false;
+}
+
+function clearSocialListeners() {
+  state.socialUnsubs.forEach((unsubscribe) => {
+    try {
+      unsubscribe();
+    } catch (error) {
+      // ignore listener cleanup errors
+    }
+  });
+  state.socialUnsubs = [];
+}
+
+function getFriendPairId(uidA, uidB) {
+  return [uidA, uidB].sort().join("__");
+}
+
+function isFriendWithUid(uid) {
+  return state.socialFriends.some((friend) => friend.uid === uid);
+}
+
+async function refreshFriendsList() {
+  if (!db || !state.authUser) {
+    state.socialFriends = [];
+    return;
+  }
+
+  const currentUid = state.authUser.uid;
+  const [aSnapshot, bSnapshot] = await Promise.all([
+    db.collection(FIRESTORE_COLLECTIONS.friendships).where("uidA", "==", currentUid).get(),
+    db.collection(FIRESTORE_COLLECTIONS.friendships).where("uidB", "==", currentUid).get(),
+  ]);
+
+  const nextFriends = [];
+  aSnapshot.forEach((doc) => {
+    const data = doc.data();
+    nextFriends.push({
+      friendshipId: doc.id,
+      uid: data.uidB,
+      gameId: data.gameIdB,
+      createdAt: data.createdAt || null,
+    });
+  });
+  bSnapshot.forEach((doc) => {
+    const data = doc.data();
+    nextFriends.push({
+      friendshipId: doc.id,
+      uid: data.uidA,
+      gameId: data.gameIdA,
+      createdAt: data.createdAt || null,
+    });
+  });
+
+  nextFriends.sort((a, b) => a.gameId.localeCompare(b.gameId, "zh-CN"));
+  state.socialFriends = nextFriends;
+}
+
+async function refreshSocialData() {
+  if (!db || !state.authUser) {
+    resetSocialState();
+    renderSocialPanel();
+    return;
+  }
+
+  const currentUid = state.authUser.uid;
+  const [friendRequestsSnap, roomInvitesSnap, roomsSnap] = await Promise.all([
+    db.collection(FIRESTORE_COLLECTIONS.friendRequests)
+      .where("toUid", "==", currentUid)
+      .where("status", "==", "pending")
+      .get(),
+    db.collection(FIRESTORE_COLLECTIONS.roomInvites)
+      .where("toUid", "==", currentUid)
+      .where("status", "==", "pending")
+      .get(),
+    db.collection(FIRESTORE_COLLECTIONS.rooms)
+      .where("memberUids", "array-contains", currentUid)
+      .get(),
+  ]);
+
+  state.socialFriendRequests = friendRequestsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  state.socialRoomInvites = roomInvitesSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+  const activeRoom = roomsSnap.docs
+    .map((doc) => ({ id: doc.id, ...doc.data() }))
+    .filter((room) => room.status === "waiting" || room.status === "playing")
+    .sort((a, b) => {
+      const aTime = a.updatedAt?.toMillis ? a.updatedAt.toMillis() : 0;
+      const bTime = b.updatedAt?.toMillis ? b.updatedAt.toMillis() : 0;
+      return bTime - aTime;
+    })[0] || null;
+
+  state.socialActiveRoom = activeRoom;
+  await refreshFriendsList();
+  renderSocialPanel();
+}
+
+function startSocialSync() {
+  if (!db || !state.authUser) {
+    return;
+  }
+
+  clearSocialListeners();
+  const currentUid = state.authUser.uid;
+  const listenerConfigs = [
+    db.collection(FIRESTORE_COLLECTIONS.friendRequests)
+      .where("toUid", "==", currentUid)
+      .where("status", "==", "pending"),
+    db.collection(FIRESTORE_COLLECTIONS.roomInvites)
+      .where("toUid", "==", currentUid)
+      .where("status", "==", "pending"),
+    db.collection(FIRESTORE_COLLECTIONS.rooms)
+      .where("memberUids", "array-contains", currentUid),
+  ];
+
+  listenerConfigs.forEach((query) => {
+    const unsubscribe = query.onSnapshot(async () => {
+      await refreshSocialData();
+    }, (error) => {
+      setSocialStatus(`同步好友/房间失败：${formatAuthError(error)}`);
+    });
+    state.socialUnsubs.push(unsubscribe);
+  });
+
+  refreshSocialData();
+}
+
+async function handleSocialSearch() {
+  if (!db || !state.authUser) {
+    setSocialStatus("请先登录账号，再搜索好友。");
+    return;
+  }
+
+  const keyword = normalizePlayerId(ui.socialSearchInput?.value || "");
+  if (!keyword) {
+    setSocialStatus("先输入想搜索的游戏 ID。");
+    return;
+  }
+
+  state.socialBusy = true;
+  setSocialStatus(`正在搜索 ${keyword} ...`);
+
+  try {
+    const snapshot = await db.collection(FIRESTORE_COLLECTIONS.gameIds).doc(keyword.toLowerCase()).get();
+    if (!snapshot.exists) {
+      state.socialSearchResult = { type: "empty", keyword };
+      setSocialStatus("没有找到这个游戏 ID。");
+      return;
+    }
+
+    const data = snapshot.data();
+    const targetUid = data?.uid || "";
+    const gameId = data?.gameId || keyword;
+    const isSelf = targetUid === state.authUser.uid;
+    const isFriend = isFriendWithUid(targetUid);
+    const alreadyRequested = state.socialFriendRequests.some((item) => item.fromUid === targetUid)
+      || state.socialRoomInvites.some((item) => item.fromUid === targetUid);
+
+    state.socialSearchResult = {
+      type: "found",
+      uid: targetUid,
+      gameId,
+      isSelf,
+      isFriend,
+      alreadyRequested,
+    };
+    setSocialStatus(isSelf ? "这是你自己的游戏 ID。" : `已找到 ${gameId}。`);
+  } catch (error) {
+    setSocialStatus(`搜索失败：${formatAuthError(error)}`);
+  } finally {
+    state.socialBusy = false;
+    renderSocialPanel();
+  }
+}
+
+async function handleSendFriendRequest(targetUid, targetGameId) {
+  if (!db || !state.authUser || !state.currentPlayerId) {
+    setSocialStatus("先登录并确认自己的游戏 ID，再发送好友申请。");
+    return;
+  }
+  if (targetUid === state.authUser.uid) {
+    setSocialStatus("不能给自己发送好友申请。");
+    return;
+  }
+  if (isFriendWithUid(targetUid)) {
+    setSocialStatus("你们已经是好友了。");
+    return;
+  }
+
+  state.socialBusy = true;
+  renderSocialPanel();
+  try {
+    const existing = await db.collection(FIRESTORE_COLLECTIONS.friendRequests)
+      .where("fromUid", "==", state.authUser.uid)
+      .where("toUid", "==", targetUid)
+      .where("status", "==", "pending")
+      .get();
+    if (!existing.empty) {
+      setSocialStatus("好友申请已经发出，等对方处理即可。");
+      return;
+    }
+
+    await db.collection(FIRESTORE_COLLECTIONS.friendRequests).add({
+      fromUid: state.authUser.uid,
+      fromGameId: state.currentPlayerId,
+      toUid: targetUid,
+      toGameId: targetGameId,
+      status: "pending",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    state.socialSearchResult = null;
+    if (ui.socialSearchInput) {
+      ui.socialSearchInput.value = "";
+    }
+    setSocialStatus(`已向 ${targetGameId} 发出好友申请。`);
+  } catch (error) {
+    setSocialStatus(`发送好友申请失败：${formatAuthError(error)}`);
+  } finally {
+    state.socialBusy = false;
+    await refreshSocialData();
+  }
+}
+
+async function handleRespondFriendRequest(requestId, accept) {
+  if (!db || !state.authUser) {
+    return;
+  }
+
+  state.socialBusy = true;
+  renderSocialPanel();
+  try {
+    const requestRef = db.collection(FIRESTORE_COLLECTIONS.friendRequests).doc(requestId);
+    const requestSnap = await requestRef.get();
+    if (!requestSnap.exists) {
+      setSocialStatus("这条好友申请已经不存在了。");
+      return;
+    }
+
+    const data = requestSnap.data();
+    if (!accept) {
+      await requestRef.set({
+        status: "rejected",
+        respondedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      setSocialStatus(`已拒绝 ${data.fromGameId} 的好友申请。`);
+      return;
+    }
+
+    const pairId = getFriendPairId(data.fromUid, data.toUid);
+    await db.runTransaction(async (transaction) => {
+      const friendshipRef = db.collection(FIRESTORE_COLLECTIONS.friendships).doc(pairId);
+      transaction.set(friendshipRef, {
+        uidA: data.fromUid,
+        gameIdA: data.fromGameId,
+        uidB: data.toUid,
+        gameIdB: data.toGameId,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      transaction.set(requestRef, {
+        status: "accepted",
+        respondedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    });
+    setSocialStatus(`已和 ${data.fromGameId} 成为好友。`);
+  } catch (error) {
+    setSocialStatus(`处理好友申请失败：${formatAuthError(error)}`);
+  } finally {
+    state.socialBusy = false;
+    await refreshSocialData();
+  }
+}
+
+async function handleCreateRoom(mode) {
+  if (!db || !state.authUser || !state.currentPlayerId) {
+    setSocialStatus("先登录并绑定游戏 ID，再创建房间。");
+    return;
+  }
+  if (state.socialActiveRoom && state.socialActiveRoom.status === "waiting") {
+    setSocialStatus("你已经在一个等待中的房间里了。");
+    return;
+  }
+
+  state.socialBusy = true;
+  renderSocialPanel();
+  try {
+    await db.collection(FIRESTORE_COLLECTIONS.rooms).add({
+      mode: Number(mode),
+      status: "waiting",
+      hostUid: state.authUser.uid,
+      hostGameId: state.currentPlayerId,
+      memberUids: [state.authUser.uid],
+      members: [
+        {
+          uid: state.authUser.uid,
+          gameId: state.currentPlayerId,
+          joinedAt: Date.now(),
+        },
+      ],
+      invitedUids: [],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    setSocialStatus(`已创建 ${mode} 人房，去邀请好友吧。`);
+  } catch (error) {
+    setSocialStatus(`创建房间失败：${formatAuthError(error)}`);
+  } finally {
+    state.socialBusy = false;
+    await refreshSocialData();
+  }
+}
+
+async function handleInviteFriend(friendUid, friendGameId) {
+  if (!db || !state.authUser || !state.currentPlayerId) {
+    setSocialStatus("先登录并绑定游戏 ID，再邀请好友。");
+    return;
+  }
+
+  const room = state.socialActiveRoom;
+  if (!room || room.status !== "waiting") {
+    setSocialStatus("请先创建一个等待中的房间。");
+    return;
+  }
+  if (room.hostUid !== state.authUser.uid) {
+    setSocialStatus("只有房主可以继续邀请好友。");
+    return;
+  }
+  if ((room.memberUids || []).includes(friendUid)) {
+    setSocialStatus(`${friendGameId} 已经在房间里了。`);
+    return;
+  }
+  if ((room.invitedUids || []).includes(friendUid)) {
+    setSocialStatus(`已经邀请过 ${friendGameId} 了。`);
+    return;
+  }
+  if ((room.memberUids || []).length >= Number(room.mode || 2)) {
+    setSocialStatus("房间人数已经满了。");
+    return;
+  }
+
+  state.socialBusy = true;
+  renderSocialPanel();
+  try {
+    await db.collection(FIRESTORE_COLLECTIONS.roomInvites).add({
+      roomId: room.id,
+      mode: Number(room.mode || 2),
+      fromUid: state.authUser.uid,
+      fromGameId: state.currentPlayerId,
+      toUid: friendUid,
+      toGameId: friendGameId,
+      status: "pending",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    await db.collection(FIRESTORE_COLLECTIONS.rooms).doc(room.id).set({
+      invitedUids: firebase.firestore.FieldValue.arrayUnion(friendUid),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    setSocialStatus(`已邀请 ${friendGameId} 进入 ${room.mode} 人房。`);
+  } catch (error) {
+    setSocialStatus(`发送房间邀请失败：${formatAuthError(error)}`);
+  } finally {
+    state.socialBusy = false;
+    await refreshSocialData();
+  }
+}
+
+async function handleRespondRoomInvite(inviteId, accept) {
+  if (!db || !state.authUser || !state.currentPlayerId) {
+    return;
+  }
+
+  state.socialBusy = true;
+  renderSocialPanel();
+  try {
+    const inviteRef = db.collection(FIRESTORE_COLLECTIONS.roomInvites).doc(inviteId);
+    await db.runTransaction(async (transaction) => {
+      const inviteSnap = await transaction.get(inviteRef);
+      if (!inviteSnap.exists) {
+        throw new Error("INVITE_MISSING");
+      }
+      const invite = inviteSnap.data();
+      if (!accept) {
+        transaction.set(inviteRef, {
+          status: "rejected",
+          respondedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+        return;
+      }
+
+      const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(invite.roomId);
+      const roomSnap = await transaction.get(roomRef);
+      if (!roomSnap.exists) {
+        throw new Error("ROOM_MISSING");
+      }
+      const room = roomSnap.data();
+      const memberUids = Array.isArray(room.memberUids) ? [...room.memberUids] : [];
+      const members = Array.isArray(room.members) ? [...room.members] : [];
+      if (room.status !== "waiting") {
+        throw new Error("ROOM_CLOSED");
+      }
+      if (!memberUids.includes(state.authUser.uid)) {
+        if (memberUids.length >= Number(room.mode || 2)) {
+          throw new Error("ROOM_FULL");
+        }
+        memberUids.push(state.authUser.uid);
+        members.push({
+          uid: state.authUser.uid,
+          gameId: state.currentPlayerId,
+          joinedAt: Date.now(),
+        });
+      }
+
+      transaction.set(roomRef, {
+        memberUids,
+        members,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      transaction.set(inviteRef, {
+        status: "accepted",
+        respondedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    });
+
+    setSocialStatus(accept ? "已加入好友房间。" : "已拒绝房间邀请。");
+  } catch (error) {
+    const message = error?.message === "ROOM_FULL"
+      ? "这个房间已经满了。"
+      : error?.message === "ROOM_CLOSED"
+        ? "这个房间已经不能加入了。"
+        : error?.message === "ROOM_MISSING"
+          ? "房间已经不存在了。"
+          : `处理房间邀请失败：${formatAuthError(error)}`;
+    setSocialStatus(message);
+  } finally {
+    state.socialBusy = false;
+    await refreshSocialData();
+  }
+}
+
+async function handleLeaveRoom() {
+  if (!db || !state.authUser || !state.socialActiveRoom) {
+    return;
+  }
+
+  const room = state.socialActiveRoom;
+  state.socialBusy = true;
+  renderSocialPanel();
+  try {
+    await db.runTransaction(async (transaction) => {
+      const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(room.id);
+      const roomSnap = await transaction.get(roomRef);
+      if (!roomSnap.exists) {
+        return;
+      }
+      const data = roomSnap.data();
+      const memberUids = (data.memberUids || []).filter((uid) => uid !== state.authUser.uid);
+      const members = (data.members || []).filter((member) => member.uid !== state.authUser.uid);
+
+      if (!memberUids.length || data.hostUid === state.authUser.uid) {
+        transaction.set(roomRef, {
+          status: "closed",
+          memberUids,
+          members,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+        return;
+      }
+
+      transaction.set(roomRef, {
+        memberUids,
+        members,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    });
+    setSocialStatus(room.hostUid === state.authUser.uid ? "已关闭房间。" : "已离开房间。");
+  } catch (error) {
+    setSocialStatus(`离开房间失败：${formatAuthError(error)}`);
+  } finally {
+    state.socialBusy = false;
+    await refreshSocialData();
+  }
+}
+
+function renderSocialPanel() {
+  if (!ui.socialPanel || !ui.socialStatus || !ui.socialSearchResult || !ui.socialFriendRequests || !ui.socialFriends || !ui.socialRoomInvites || !ui.socialRoomCard) {
+    return;
+  }
+
+  const signedIn = Boolean(state.authUser);
+  const room = state.socialActiveRoom;
+  const signature = JSON.stringify({
+    signedIn,
+    currentPlayerId: state.currentPlayerId,
+    socialBusy: state.socialBusy,
+    socialStatusMessage: state.socialStatusMessage,
+    socialSearchResult: state.socialSearchResult,
+    socialFriendRequests: state.socialFriendRequests.map((item) => [item.id, item.fromGameId, item.toGameId]),
+    socialFriends: state.socialFriends.map((item) => [item.uid, item.gameId]),
+    socialRoomInvites: state.socialRoomInvites.map((item) => [item.id, item.fromGameId, item.mode]),
+    socialActiveRoom: room
+      ? {
+          id: room.id,
+          mode: room.mode,
+          hostUid: room.hostUid,
+          memberUids: room.memberUids,
+          invitedUids: room.invitedUids,
+          members: (room.members || []).map((member) => [member.uid, member.gameId]),
+        }
+      : null,
+  });
+
+  if (state.renderCache.social === signature) {
+    return;
+  }
+  state.renderCache.social = signature;
+
+  ui.socialPanel.classList.toggle("is-disabled", !signedIn);
+  ui.socialSearchInput.disabled = !signedIn || state.socialBusy;
+  ui.socialSearchButton.disabled = !signedIn || state.socialBusy;
+  ui.socialStatus.textContent = state.socialStatusMessage || (signedIn ? "现在可以搜索好友、处理邀请、创建房间。" : "登录后可以搜索好友并创建房间。");
+
+  ui.socialSearchResult.innerHTML = "";
+  if (state.socialSearchResult?.type === "found") {
+    const result = state.socialSearchResult;
+    const card = document.createElement("article");
+    card.className = "social-item";
+    card.innerHTML = `
+      <div>
+        <strong>${result.gameId}</strong>
+        <p>${result.isSelf ? "这是你自己的 ID" : result.isFriend ? "已经是你的好友" : "可以发送好友申请"}</p>
+      </div>
+    `;
+    const action = document.createElement("button");
+    action.className = "ghost-btn";
+    action.type = "button";
+    action.textContent = result.isSelf ? "本人" : result.isFriend ? "已是好友" : "添加好友";
+    action.disabled = result.isSelf || result.isFriend || state.socialBusy;
+    if (!action.disabled) {
+      action.addEventListener("click", () => handleSendFriendRequest(result.uid, result.gameId));
+    }
+    card.appendChild(action);
+    ui.socialSearchResult.appendChild(card);
+  }
+
+  ui.socialRoomCard.innerHTML = "";
+  if (!signedIn) {
+    ui.socialRoomCard.appendChild(createEmptyState("登录后可以创建好友房间。"));
+  } else if (!room) {
+    const wrap = document.createElement("div");
+    wrap.className = "social-room-inner";
+    wrap.innerHTML = `
+      <div>
+        <strong>还没有等待中的房间</strong>
+        <p>先创建一个 2 / 3 / 4 人房，再邀请好友加入。</p>
+      </div>
+    `;
+    const actions = document.createElement("div");
+    actions.className = "social-inline-actions";
+    ["2", "3", "4"].forEach((mode) => {
+      const button = document.createElement("button");
+      button.className = "ghost-btn";
+      button.type = "button";
+      button.textContent = `创建${mode}人房`;
+      button.disabled = state.socialBusy || !state.currentPlayerId;
+      button.addEventListener("click", () => handleCreateRoom(mode));
+      actions.appendChild(button);
+    });
+    wrap.appendChild(actions);
+    ui.socialRoomCard.appendChild(wrap);
+  } else {
+    const members = Array.isArray(room.members) ? room.members : [];
+    const card = document.createElement("div");
+    card.className = "social-room-inner";
+    const memberText = members.map((member) => member.gameId).join("、");
+    card.innerHTML = `
+      <div>
+        <strong>${room.mode} 人房 · ${room.hostUid === state.authUser.uid ? "你是房主" : "好友房间"}</strong>
+        <p>当前成员：${memberText || "暂无"}</p>
+        <p>已进 ${members.length} / ${room.mode} 人。联机正式出牌下一版接上，这一版先支持进房和等人。</p>
+      </div>
+    `;
+    const button = document.createElement("button");
+    button.className = "ghost-btn";
+    button.type = "button";
+    button.textContent = room.hostUid === state.authUser.uid ? "关闭房间" : "离开房间";
+    button.disabled = state.socialBusy;
+    button.addEventListener("click", handleLeaveRoom);
+    card.appendChild(button);
+    ui.socialRoomCard.appendChild(card);
+  }
+
+  ui.socialFriendRequests.innerHTML = "";
+  if (!state.socialFriendRequests.length) {
+    ui.socialFriendRequests.appendChild(createEmptyState("还没有新的好友申请。"));
+  } else {
+    state.socialFriendRequests.forEach((item) => {
+      const card = document.createElement("article");
+      card.className = "social-item";
+      card.innerHTML = `<div><strong>${item.fromGameId}</strong><p>想加你为好友</p></div>`;
+      const actions = document.createElement("div");
+      actions.className = "social-inline-actions";
+      const accept = document.createElement("button");
+      accept.className = "ghost-btn";
+      accept.type = "button";
+      accept.textContent = "通过";
+      accept.disabled = state.socialBusy;
+      accept.addEventListener("click", () => handleRespondFriendRequest(item.id, true));
+      const reject = document.createElement("button");
+      reject.className = "ghost-btn";
+      reject.type = "button";
+      reject.textContent = "拒绝";
+      reject.disabled = state.socialBusy;
+      reject.addEventListener("click", () => handleRespondFriendRequest(item.id, false));
+      actions.append(accept, reject);
+      card.appendChild(actions);
+      ui.socialFriendRequests.appendChild(card);
+    });
+  }
+
+  ui.socialRoomInvites.innerHTML = "";
+  if (!state.socialRoomInvites.length) {
+    ui.socialRoomInvites.appendChild(createEmptyState("还没有新的房间邀请。"));
+  } else {
+    state.socialRoomInvites.forEach((item) => {
+      const card = document.createElement("article");
+      card.className = "social-item";
+      card.innerHTML = `<div><strong>${item.fromGameId}</strong><p>邀请你进入 ${item.mode} 人房</p></div>`;
+      const actions = document.createElement("div");
+      actions.className = "social-inline-actions";
+      const accept = document.createElement("button");
+      accept.className = "ghost-btn";
+      accept.type = "button";
+      accept.textContent = "加入";
+      accept.disabled = state.socialBusy || Boolean(room);
+      accept.addEventListener("click", () => handleRespondRoomInvite(item.id, true));
+      const reject = document.createElement("button");
+      reject.className = "ghost-btn";
+      reject.type = "button";
+      reject.textContent = "拒绝";
+      reject.disabled = state.socialBusy;
+      reject.addEventListener("click", () => handleRespondRoomInvite(item.id, false));
+      actions.append(accept, reject);
+      card.appendChild(actions);
+      ui.socialRoomInvites.appendChild(card);
+    });
+  }
+
+  ui.socialFriends.innerHTML = "";
+  if (!state.socialFriends.length) {
+    ui.socialFriends.appendChild(createEmptyState("还没有好友，先去搜索一个游戏 ID 吧。"));
+  } else {
+    state.socialFriends.forEach((friend) => {
+      const card = document.createElement("article");
+      card.className = "social-item";
+      card.innerHTML = `<div><strong>${friend.gameId}</strong><p>${room ? `可邀请进入 ${room.mode} 人房` : "先创建房间再邀请"}</p></div>`;
+      const invite = document.createElement("button");
+      invite.className = "ghost-btn";
+      invite.type = "button";
+      invite.textContent = room ? "邀请进房" : "先创建房间";
+      invite.disabled = state.socialBusy || !room || room.hostUid !== state.authUser.uid || (room.memberUids || []).includes(friend.uid) || (room.invitedUids || []).includes(friend.uid) || (room.memberUids || []).length >= Number(room.mode || 2);
+      if (!invite.disabled) {
+        invite.addEventListener("click", () => handleInviteFriend(friend.uid, friend.gameId));
+      }
+      card.appendChild(invite);
+      ui.socialFriends.appendChild(card);
+    });
+  }
 }
 
 function handleKeyDown(event) {
@@ -244,14 +1092,55 @@ function normalizePlayerId(value) {
   return value.replace(/\s+/g, " ").trim().slice(0, 20);
 }
 
-function getSortedPlayerStats() {
+function createEmptyModeStats() {
+  return {
+    rounds: 0,
+    wins: 0,
+    totalScore: 0,
+    bestScore: 0,
+    lastScore: 0,
+  };
+}
+
+function normalizeModeStats(data = {}) {
+  return {
+    rounds: Number(data.rounds || 0),
+    wins: Number(data.wins || 0),
+    totalScore: Number(data.totalScore || 0),
+    bestScore: Number(data.bestScore || 0),
+    lastScore: Number(data.lastScore || 0),
+  };
+}
+
+function buildStatsByMode(data = {}) {
+  const source = data.statsByMode || {};
+  const legacyFallback = normalizeModeStats(data);
+  return {
+    "2": source["2"] ? normalizeModeStats(source["2"]) : legacyFallback,
+    "3": source["3"] ? normalizeModeStats(source["3"]) : createEmptyModeStats(),
+    "4": source["4"] ? normalizeModeStats(source["4"]) : createEmptyModeStats(),
+  };
+}
+
+function getModeStats(profile, mode = state.leaderboardMode) {
+  return profile?.statsByMode?.[String(mode)] || createEmptyModeStats();
+}
+
+function getTotalRoundsFromProfile(profile) {
+  return LEADERBOARD_MODES.reduce((sum, mode) => sum + Number(getModeStats(profile, mode).rounds || 0), 0);
+}
+
+function getSortedPlayerStats(mode = state.leaderboardMode) {
   return Object.values(state.playerStats)
-    .sort((a, b) =>
-      b.totalScore - a.totalScore
-      || b.wins - a.wins
-      || b.rounds - a.rounds
-      || a.id.localeCompare(b.id, "zh-CN"),
-    );
+    .sort((a, b) => {
+      const aStats = getModeStats(a, mode);
+      const bStats = getModeStats(b, mode);
+      return bStats.bestScore - aStats.bestScore
+        || bStats.totalScore - aStats.totalScore
+        || bStats.wins - aStats.wins
+        || bStats.rounds - aStats.rounds
+        || a.id.localeCompare(b.id, "zh-CN");
+    });
 }
 
 function ensurePlayerProfile(playerId) {
@@ -320,22 +1209,18 @@ function getPlayerProfileDefaults(playerId = "", uid = "") {
   return {
     id: playerId,
     uid,
-    rounds: 0,
-    wins: 0,
-    totalScore: 0,
-    bestScore: 0,
-    lastScore: 0,
+    statsByMode: {
+      "2": createEmptyModeStats(),
+      "3": createEmptyModeStats(),
+      "4": createEmptyModeStats(),
+    },
   };
 }
 
 function profileFromData(uid, data = {}) {
   return {
     ...getPlayerProfileDefaults(data.gameId || "", uid),
-    rounds: Number(data.rounds || 0),
-    wins: Number(data.wins || 0),
-    totalScore: Number(data.totalScore || 0),
-    bestScore: Number(data.bestScore || 0),
-    lastScore: Number(data.lastScore || 0),
+    statsByMode: buildStatsByMode(data),
   };
 }
 
@@ -437,7 +1322,10 @@ async function initFirebase() {
       if (user) {
         state.authStatusMessage = `已登录：${maskEmail(user.email)}`;
         await loadCurrentUserProfile();
+        startSocialSync();
       } else {
+        clearSocialListeners();
+        resetSocialState();
         state.currentPlayerId = "";
         state.hasBoundGameId = false;
         state.gameIdEditable = true;
@@ -586,7 +1474,7 @@ async function loadCurrentUserProfile() {
     const profile = profileFromData(snapshot.id, snapshot.data());
     state.currentPlayerId = profile.id;
     state.hasBoundGameId = Boolean(profile.id);
-    state.gameIdEditable = Number(profile.rounds || 0) === 0;
+    state.gameIdEditable = getTotalRoundsFromProfile(profile) === 0;
     ui.playerId.value = profile.id;
     state.playerIdHintMessage = getDefaultPlayerIdHint();
     upsertPlayerProfile(profile);
@@ -617,7 +1505,7 @@ async function prepareCurrentPlayerProfile() {
     const existingProfile = await profileRef.get();
     if (existingProfile.exists && existingProfile.data()?.gameId) {
       const profile = profileFromData(existingProfile.id, existingProfile.data());
-      const canReplace = Number(profile.rounds || 0) === 0;
+      const canReplace = getTotalRoundsFromProfile(profile) === 0;
       state.hasBoundGameId = Boolean(profile.id);
       state.gameIdEditable = canReplace;
 
@@ -666,7 +1554,8 @@ async function prepareCurrentPlayerProfile() {
       const existingData = currentProfile.exists ? currentProfile.data() : {};
       const previousGameId = existingData?.gameId || "";
       const previousNormalized = previousGameId ? String(previousGameId).toLowerCase() : "";
-      const canReplace = !previousGameId || Number(existingData?.rounds || 0) === 0;
+      const existingProfile = profileFromData(currentProfile.id, existingData);
+      const canReplace = !previousGameId || getTotalRoundsFromProfile(existingProfile) === 0;
       if (previousGameId && !canReplace) {
         createdProfile = profileFromData(currentProfile.id, existingData);
         return;
@@ -686,11 +1575,11 @@ async function prepareCurrentPlayerProfile() {
         uid: state.authUser.uid,
         gameId: playerId,
         gameIdNormalized: normalizedId,
-        rounds: 0,
-        wins: 0,
-        totalScore: 0,
-        bestScore: 0,
-        lastScore: 0,
+        statsByMode: {
+          "2": createEmptyModeStats(),
+          "3": createEmptyModeStats(),
+          "4": createEmptyModeStats(),
+        },
         createdAt: timestamp,
         updatedAt: timestamp,
       };
@@ -707,7 +1596,7 @@ async function prepareCurrentPlayerProfile() {
     if (createdProfile) {
       state.currentPlayerId = createdProfile.id;
       state.hasBoundGameId = Boolean(createdProfile.id);
-      state.gameIdEditable = Number(createdProfile.rounds || 0) === 0;
+      state.gameIdEditable = getTotalRoundsFromProfile(createdProfile) === 0;
       ui.playerId.value = createdProfile.id;
       state.playerIdHintMessage = getDefaultPlayerIdHint();
       upsertPlayerProfile(createdProfile);
@@ -1773,6 +2662,7 @@ function finishGame() {
   });
   const bestScore = result[0].score;
   const winners = result.filter((item) => item.score === bestScore).map((item) => item.name);
+  const isHumanWin = Boolean(humanResult) && result.every((item) => item.name === "鐜╁ 1" || humanResult.score > item.score);
   const winnerText = winners.length > 1 ? `${winners.join("、")} 并列第一` : `${winners[0]} 获胜`;
 
   if (false && humanResult) {
@@ -1828,6 +2718,93 @@ async function syncRoundResultToCloud(humanResult, isWin) {
       transaction.set(resultRef, {
         uid: state.authUser.uid,
         gameId: state.currentPlayerId,
+        score: humanResult.score,
+        isWin,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    });
+
+    await loadCurrentUserProfile();
+    await loadLeaderboard();
+    state.hasBoundGameId = true;
+    state.gameIdEditable = false;
+    renderAuthControls();
+    render();
+  } catch (error) {
+    state.authStatusMessage = `云端结算写入失败：${formatAuthError(error)}`;
+    renderAuthControls();
+    render();
+  }
+}
+
+function finishGame() {
+  clearAiTimer();
+  state.phase = "game-over";
+  const result = getRankedPlayers();
+  const humanResult = result.find((item) => item.name === "玩家 1");
+  state.lastFinishedResult = result.map((item) => ({
+    ...item,
+    redCards: [...item.redCards],
+  }));
+  state.lastFinishedAt = new Date().toLocaleString("zh-CN", {
+    hour12: false,
+  });
+
+  const bestScore = result[0]?.score || 0;
+  const winners = result.filter((item) => item.score === bestScore).map((item) => item.name);
+  const isHumanWin = Boolean(humanResult) && result.every((item) => item.name === "玩家 1" || humanResult.score > item.score);
+  const winnerText = winners.length > 1 ? `${winners.join("、")} 并列第一` : `${winners[0] || "无人"} 获胜`;
+
+  setFeedback(`结算完成，${winnerText}。`, "info");
+  pushLog(`游戏结束，${winnerText}。`);
+  showOverlay("本局结束", "本局结束", `${winnerText}。点击按钮查看完整结算榜单。`, "查看结果");
+  if (humanResult && state.authUser && state.currentPlayerId) {
+    syncRoundResultToCloud(humanResult, isHumanWin);
+  }
+  render();
+}
+
+async function syncRoundResultToCloud(humanResult, isWin) {
+  if (!db || !state.authUser || !state.currentPlayerId) {
+    return;
+  }
+
+  try {
+    const profileRef = db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid);
+    const resultRef = db.collection(FIRESTORE_COLLECTIONS.gameResults).doc();
+    const modeKey = String(state.settings.playerCount || 2);
+
+    await db.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(profileRef);
+      const currentData = snapshot.exists ? snapshot.data() : {};
+      const statsByMode = buildStatsByMode(currentData);
+      const currentModeStats = getModeStats({ statsByMode }, modeKey);
+      const nextProfile = {
+        uid: state.authUser.uid,
+        gameId: state.currentPlayerId,
+        gameIdNormalized: state.currentPlayerId.toLowerCase(),
+        statsByMode: {
+          ...statsByMode,
+          [modeKey]: {
+            rounds: Number(currentModeStats.rounds || 0) + 1,
+            wins: Number(currentModeStats.wins || 0) + (isWin ? 1 : 0),
+            totalScore: Number(currentModeStats.totalScore || 0) + humanResult.score,
+            bestScore: Math.max(Number(currentModeStats.bestScore || 0), humanResult.score),
+            lastScore: humanResult.score,
+          },
+        },
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+
+      if (!snapshot.exists) {
+        nextProfile.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+
+      transaction.set(profileRef, nextProfile, { merge: true });
+      transaction.set(resultRef, {
+        uid: state.authUser.uid,
+        gameId: state.currentPlayerId,
+        playerCount: Number(modeKey),
         score: humanResult.score,
         isWin,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -2242,13 +3219,90 @@ function renderPlayerStatsDashboard() {
   });
 }
 
+function renderPlayerStatsDashboard() {
+  const mode = String(state.leaderboardMode || "2");
+  const currentProfile = state.currentPlayerId && state.playerStats[state.currentPlayerId]
+    ? state.playerStats[state.currentPlayerId]
+    : null;
+  const currentModeStats = currentProfile ? getModeStats(currentProfile, mode) : createEmptyModeStats();
+  const sorted = getSortedPlayerStats(mode);
+
+  [ui.leaderboardMode2, ui.leaderboardMode3, ui.leaderboardMode4].forEach((button) => {
+    if (button) {
+      button.classList.toggle("active", button.dataset.mode === mode);
+    }
+  });
+  if (ui.refreshLeaderboard) {
+    ui.refreshLeaderboard.disabled = state.leaderboardRefreshing;
+    ui.refreshLeaderboard.textContent = state.leaderboardRefreshing ? "刷新中..." : "刷新排行";
+  }
+
+  const playerSignature = currentProfile
+    ? `${currentProfile.id}:${mode}:${currentModeStats.rounds}:${currentModeStats.wins}:${currentModeStats.totalScore}:${currentModeStats.bestScore}:${currentModeStats.lastScore}:${ui.playerIdHint.textContent}:${state.leaderboardRefreshing}`
+    : `empty:${mode}:${ui.playerIdHint.textContent}:${state.leaderboardRefreshing}`;
+  if (state.renderCache.playerStats !== playerSignature) {
+    state.renderCache.playerStats = playerSignature;
+    if (!currentProfile) {
+      ui.playerStatsCard.innerHTML = `
+        <p>当前还没有选定游戏 ID。</p>
+        <p>输入一个新的 ID 后开始游戏，成绩会分别记入 2 / 3 / 4 人模式排行榜。</p>
+      `;
+    } else {
+      ui.playerStatsCard.innerHTML = `
+        <p>当前 ID：${currentProfile.id}</p>
+        <p>${mode} 人模式 · 累计积分：${currentModeStats.totalScore} 分 · 局数：${currentModeStats.rounds} 局</p>
+        <p>胜场：${currentModeStats.wins} 局 · 单局最高：${currentModeStats.bestScore} 分 · 上一局：${currentModeStats.lastScore} 分</p>
+      `;
+    }
+  }
+
+  const leaderboardSignature = [
+    mode,
+    state.leaderboardRefreshing ? "refreshing" : "idle",
+    ...sorted.map((item) => {
+      const stats = getModeStats(item, mode);
+      return `${item.id}:${stats.bestScore}:${stats.totalScore}:${stats.wins}:${stats.rounds}`;
+    }),
+  ].join("|");
+  if (state.renderCache.leaderboard === leaderboardSignature) {
+    return;
+  }
+  state.renderCache.leaderboard = leaderboardSignature;
+
+  ui.leaderboardList.innerHTML = "";
+  if (!sorted.length) {
+    ui.leaderboardList.appendChild(createEmptyState("这个模式下还没有人打完过一局，先开始一局试试吧。"));
+    return;
+  }
+
+  sorted.forEach((item, index) => {
+    const stats = getModeStats(item, mode);
+    const article = document.createElement("article");
+    article.className = `leaderboard-item${item.id === state.currentPlayerId ? " active" : ""}`;
+    article.innerHTML = `
+      <div class="leaderboard-rank">#${index + 1}</div>
+      <div class="leaderboard-main">
+        <h3>${item.id}</h3>
+        <p>${mode} 人模式 · 单局最高 ${stats.bestScore} · 胜场 ${stats.wins} · 局数 ${stats.rounds}</p>
+      </div>
+      <div class="leaderboard-side">
+        <strong>${stats.bestScore}</strong>
+        <span>单局最高</span>
+      </div>
+    `;
+    ui.leaderboardList.appendChild(article);
+  });
+}
+
 function render() {
   renderAuthControls();
   renderRulesModal();
   renderSetupHistory();
   renderPlayerStatsDashboard();
+  renderSocialPanel();
 
   if (state.phase === "setup") {
+    updateGameLayoutScale();
     ui.heroSection.classList.remove("hidden");
     ui.setupPanel.classList.remove("hidden");
     ui.historyPanel.classList.toggle("hidden", !state.lastFinishedResult);
@@ -2307,6 +3361,47 @@ function render() {
   renderHumanHand(humanPlayer);
   renderLog();
   renderResults();
+  updateGameLayoutScale();
+}
+
+function updateGameLayoutScale() {
+  if (!ui.gameLayout || !ui.playStage) {
+    return;
+  }
+
+  if (state.phase === "setup") {
+    ui.playStage.style.zoom = "";
+    return;
+  }
+
+  if (window.innerWidth <= 1100) {
+    ui.playStage.style.zoom = "";
+    return;
+  }
+
+  const previousZoom = ui.playStage.style.zoom;
+  ui.playStage.style.zoom = "1";
+
+  const layoutWidth = Math.max(ui.playStage.scrollWidth, ui.playStage.offsetWidth, 1);
+  const layoutHeight = Math.max(ui.playStage.scrollHeight, ui.playStage.offsetHeight, 1);
+  const availableWidth = Math.max(window.innerWidth - 32, 1);
+  const topOffset = ui.gameLayout.getBoundingClientRect().top;
+  const availableHeight = Math.max(window.innerHeight - topOffset - 12, 1);
+
+  const widthScale = availableWidth / layoutWidth;
+  const heightScale = availableHeight / layoutHeight;
+  const scale = Math.max(0.62, Math.min(1, widthScale, heightScale));
+
+  if (!Number.isFinite(scale) || scale >= 0.995) {
+    ui.playStage.style.zoom = "";
+    return;
+  }
+
+  ui.playStage.style.zoom = scale.toFixed(3);
+
+  if (previousZoom !== ui.playStage.style.zoom) {
+    ui.playStage.style.setProperty("--auto-scale", ui.playStage.style.zoom);
+  }
 }
 
 function getStatusText() {

@@ -300,6 +300,12 @@ select {
   isolation: isolate;
 }
 
+.play-stage {
+  display: grid;
+  gap: 18px;
+  transform-origin: top center;
+}
+
 .game-layout::before {
   content: "";
   position: absolute;
@@ -1014,6 +1020,94 @@ select {
   padding: 16px;
 }
 
+.social-panel {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.social-panel.is-disabled {
+  opacity: 0.78;
+}
+
+.social-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  margin: 12px 0 10px;
+}
+
+.social-search-row input {
+  min-height: 42px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.82);
+  padding: 0 14px;
+  font: inherit;
+}
+
+.social-status {
+  margin: 0 0 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.social-room-card {
+  margin: 10px 0 14px;
+}
+
+.social-room-inner,
+.social-item {
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.72);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.social-item + .social-item,
+.social-card-list > * + * {
+  margin-top: 10px;
+}
+
+.social-room-inner p,
+.social-item p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.social-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.social-column {
+  min-width: 0;
+}
+
+.social-column h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.social-column-wide {
+  grid-column: span 1;
+}
+
+.social-inline-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .player-stats-card p {
   margin: 0;
   line-height: 1.7;
@@ -1022,6 +1116,43 @@ select {
 
 .leaderboard-block {
   margin-top: 18px;
+}
+
+.leaderboard-toolbar {
+  margin: 14px 0 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.leaderboard-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.leaderboard-tab,
+.leaderboard-refresh {
+  min-height: 38px;
+}
+
+.leaderboard-tab {
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text);
+  padding: 0 16px;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.leaderboard-tab.active {
+  background: rgba(180, 76, 43, 0.12);
+  border-color: rgba(180, 76, 43, 0.34);
+  color: #8a341a;
 }
 
 .leaderboard-list {
@@ -1853,6 +1984,30 @@ select {
   .leaderboard-side {
     grid-column: 2;
     text-align: left;
+  }
+
+  .leaderboard-toolbar {
+    align-items: stretch;
+  }
+
+  .leaderboard-tabs,
+  .leaderboard-refresh {
+    width: 100%;
+  }
+
+  .social-search-row,
+  .social-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .social-room-inner,
+  .social-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .social-inline-actions {
+    justify-content: flex-start;
   }
 
   .auth-row {
