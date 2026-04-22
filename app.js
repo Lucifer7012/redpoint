@@ -150,6 +150,8 @@ const state = {
   authStatusMessage: "正在连接 Firebase...",
   playerIdHintMessage: "",
   leaderboardLoaded: false,
+  hasBoundGameId: false,
+  gameIdEditable: true,
   renderCache: {
     humanSummary: "",
     humanHand: "",
@@ -364,7 +366,10 @@ function getDefaultPlayerIdHint() {
   if (!state.authUser) {
     return "先登录或注册账号，再创建全局唯一的游戏 ID。";
   }
-  if (state.currentPlayerId) {
+  if (state.hasBoundGameId && state.currentPlayerId) {
+    if (state.gameIdEditable) {
+      return `当前账号暂时绑定了 ID：${state.currentPlayerId}。因为还没产生正式战绩，你现在仍然可以改成别的 ID。`;
+    }
     return `当前账号已绑定唯一 ID：${state.currentPlayerId}`;
   }
   return "首次开始游戏时，会创建这个唯一 ID；创建后不能与别人重复，也不能再次修改。";
@@ -372,7 +377,7 @@ function getDefaultPlayerIdHint() {
 
 function renderAuthControls() {
   const signedIn = Boolean(state.authUser);
-  const lockedId = signedIn && Boolean(state.currentPlayerId);
+  const lockedId = signedIn && state.hasBoundGameId && !state.gameIdEditable;
 
   ui.authEmail.disabled = state.authBusy || signedIn;
   ui.authPassword.disabled = state.authBusy || signedIn;
@@ -434,6 +439,8 @@ async function initFirebase() {
         await loadCurrentUserProfile();
       } else {
         state.currentPlayerId = "";
+        state.hasBoundGameId = false;
+        state.gameIdEditable = true;
         state.playerIdHintMessage = "先登录或注册账号，再创建全局唯一的游戏 ID。";
         ui.playerId.value = "";
         ui.authPassword.value = "";
@@ -570,12 +577,16 @@ async function loadCurrentUserProfile() {
     const snapshot = await db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid).get();
     if (!snapshot.exists) {
       state.currentPlayerId = normalizePlayerId(ui.playerId.value || "");
+      state.hasBoundGameId = false;
+      state.gameIdEditable = true;
       state.playerIdHintMessage = getDefaultPlayerIdHint();
       return null;
     }
 
     const profile = profileFromData(snapshot.id, snapshot.data());
     state.currentPlayerId = profile.id;
+    state.hasBoundGameId = Boolean(profile.id);
+    state.gameIdEditable = Number(profile.rounds || 0) === 0;
     ui.playerId.value = profile.id;
     state.playerIdHintMessage = getDefaultPlayerIdHint();
     upsertPlayerProfile(profile);
@@ -600,17 +611,33 @@ async function prepareCurrentPlayerProfile() {
   }
 
   const profileRef = db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid);
+  const desiredPlayerId = normalizePlayerId(ui.playerId.value || state.currentPlayerId || "");
 
   try {
     const existingProfile = await profileRef.get();
     if (existingProfile.exists && existingProfile.data()?.gameId) {
       const profile = profileFromData(existingProfile.id, existingProfile.data());
-      state.currentPlayerId = profile.id;
-      ui.playerId.value = profile.id;
-      state.playerIdHintMessage = getDefaultPlayerIdHint();
-      upsertPlayerProfile(profile);
-      renderAuthControls();
-      return true;
+      const canReplace = Number(profile.rounds || 0) === 0;
+      state.hasBoundGameId = Boolean(profile.id);
+      state.gameIdEditable = canReplace;
+
+      if (!desiredPlayerId || desiredPlayerId === profile.id) {
+        state.currentPlayerId = profile.id;
+        ui.playerId.value = profile.id;
+        state.playerIdHintMessage = getDefaultPlayerIdHint();
+        upsertPlayerProfile(profile);
+        renderAuthControls();
+        return true;
+      }
+
+      if (!canReplace) {
+        state.currentPlayerId = profile.id;
+        ui.playerId.value = profile.id;
+        state.playerIdHintMessage = "这个账号已经产生正式战绩，游戏 ID 不能再修改了。";
+        upsertPlayerProfile(profile);
+        renderAuthControls();
+        return true;
+      }
     }
   } catch (error) {
     state.authStatusMessage = `检查游戏 ID 失败：${formatAuthError(error)}`;
@@ -618,7 +645,7 @@ async function prepareCurrentPlayerProfile() {
     return false;
   }
 
-  const playerId = normalizePlayerId(ui.playerId.value || state.currentPlayerId || "");
+  const playerId = desiredPlayerId;
   if (!playerId) {
     state.playerIdHintMessage = "请输入你想创建的游戏 ID，再开始本局。";
     renderAuthControls();
@@ -636,15 +663,22 @@ async function prepareCurrentPlayerProfile() {
   try {
     await db.runTransaction(async (transaction) => {
       const currentProfile = await transaction.get(profileRef);
-      if (currentProfile.exists && currentProfile.data()?.gameId) {
-        createdProfile = profileFromData(currentProfile.id, currentProfile.data());
+      const existingData = currentProfile.exists ? currentProfile.data() : {};
+      const previousGameId = existingData?.gameId || "";
+      const previousNormalized = previousGameId ? String(previousGameId).toLowerCase() : "";
+      const canReplace = !previousGameId || Number(existingData?.rounds || 0) === 0;
+      if (previousGameId && !canReplace) {
+        createdProfile = profileFromData(currentProfile.id, existingData);
         return;
       }
-
       const gameIdRef = db.collection(FIRESTORE_COLLECTIONS.gameIds).doc(normalizedId);
       const gameIdSnapshot = await transaction.get(gameIdRef);
-      if (gameIdSnapshot.exists) {
+      if (gameIdSnapshot.exists && gameIdSnapshot.data()?.uid !== state.authUser.uid) {
         throw new Error("GAME_ID_TAKEN");
+      }
+      if (previousNormalized && previousNormalized !== normalizedId) {
+        const previousGameIdRef = db.collection(FIRESTORE_COLLECTIONS.gameIds).doc(previousNormalized);
+        transaction.delete(previousGameIdRef);
       }
 
       const timestamp = firebase.firestore.FieldValue.serverTimestamp();
@@ -672,6 +706,8 @@ async function prepareCurrentPlayerProfile() {
 
     if (createdProfile) {
       state.currentPlayerId = createdProfile.id;
+      state.hasBoundGameId = Boolean(createdProfile.id);
+      state.gameIdEditable = Number(createdProfile.rounds || 0) === 0;
       ui.playerId.value = createdProfile.id;
       state.playerIdHintMessage = getDefaultPlayerIdHint();
       upsertPlayerProfile(createdProfile);
@@ -1800,6 +1836,8 @@ async function syncRoundResultToCloud(humanResult, isWin) {
 
     await loadCurrentUserProfile();
     await loadLeaderboard();
+    state.hasBoundGameId = true;
+    state.gameIdEditable = false;
     renderAuthControls();
     render();
   } catch (error) {
