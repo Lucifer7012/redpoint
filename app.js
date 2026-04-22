@@ -181,6 +181,11 @@ const state = {
   socialRoomInvites: [],
   socialActiveRoom: null,
   socialUnsubs: [],
+  multiplayer: {
+    active: false,
+    roomId: "",
+    localHand: [],
+  },
   renderCache: {
     humanSummary: "",
     humanHand: "",
@@ -405,6 +410,7 @@ function resetSocialState() {
   state.socialRoomInvites = [];
   state.socialActiveRoom = null;
   state.socialBusy = false;
+  clearMultiplayerState();
 }
 
 function clearSocialListeners() {
@@ -416,6 +422,133 @@ function clearSocialListeners() {
     }
   });
   state.socialUnsubs = [];
+}
+
+function clearMultiplayerState() {
+  state.multiplayer = {
+    active: false,
+    roomId: "",
+    localHand: [],
+  };
+}
+
+function isMultiplayerActive() {
+  return Boolean(state.multiplayer.active && state.socialActiveRoom?.gameState);
+}
+
+function createHiddenHand(count, uid) {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `hidden-${uid}-${index}`,
+    suit: "spades",
+    rank: "?",
+    playValue: 0,
+    scoreValue: 0,
+    hidden: true,
+  }));
+}
+
+function serializeRoomPlayersPublic() {
+  return state.players.map((player) => ({
+    uid: player.uid || player.id,
+    name: player.name,
+    handCount: player.hand.length,
+    captured: [...player.captured],
+    lastAction: player.lastAction ? { ...player.lastAction, cards: [...(player.lastAction.cards || [])] } : null,
+  }));
+}
+
+function serializeRoomGameState() {
+  return {
+    phase: state.phase,
+    tableCards: [...state.tableCards],
+    drawPile: [...state.drawPile],
+    pendingDrawCard: state.pendingDrawCard ? { ...state.pendingDrawCard } : null,
+    currentPlayerUid: getCurrentPlayer()?.uid || getCurrentPlayer()?.id || null,
+    playersPublic: serializeRoomPlayersPublic(),
+    log: [...state.log],
+    actionDisplay: state.actionDisplay ? { ...state.actionDisplay, cards: [...(state.actionDisplay.cards || [])] } : null,
+    feedback: state.feedback ? { ...state.feedback } : null,
+    lastFinishedResult: state.lastFinishedResult
+      ? state.lastFinishedResult.map((item) => ({ ...item, redCards: [...item.redCards] }))
+      : null,
+    lastFinishedAt: state.lastFinishedAt || "",
+  };
+}
+
+async function loadCurrentRoomHand(roomId) {
+  if (!db || !state.authUser || !roomId) {
+    return [];
+  }
+
+  const snapshot = await db.collection(FIRESTORE_COLLECTIONS.rooms).doc(roomId).collection("hands").doc(state.authUser.uid).get();
+  const data = snapshot.exists ? snapshot.data() : {};
+  return Array.isArray(data.cards) ? data.cards : [];
+}
+
+function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand) {
+  const gameState = room?.gameState;
+  if (!room || !gameState || !Array.isArray(gameState.playersPublic)) {
+    clearMultiplayerState();
+    return;
+  }
+
+  const members = Array.isArray(room.members) ? room.members : [];
+  const players = gameState.playersPublic.map((playerPublic) => {
+    const member = members.find((item) => item.uid === playerPublic.uid);
+    const isLocal = playerPublic.uid === state.authUser?.uid;
+    return {
+      id: playerPublic.uid,
+      uid: playerPublic.uid,
+      name: playerPublic.name || member?.gameId || "玩家",
+      isHuman: isLocal,
+      isRemote: !isLocal,
+      hand: isLocal ? [...localHand] : createHiddenHand(Number(playerPublic.handCount || 0), playerPublic.uid),
+      captured: Array.isArray(playerPublic.captured) ? [...playerPublic.captured] : [],
+      lastAction: playerPublic.lastAction || null,
+      diceTrail: [],
+    };
+  });
+
+  state.multiplayer.active = true;
+  state.multiplayer.roomId = room.id;
+  state.multiplayer.localHand = [...localHand];
+  state.players = players;
+  state.tableCards = Array.isArray(gameState.tableCards) ? [...gameState.tableCards] : [];
+  state.drawPile = Array.isArray(gameState.drawPile) ? [...gameState.drawPile] : [];
+  state.pendingDrawCard = gameState.pendingDrawCard || null;
+  state.log = Array.isArray(gameState.log) ? [...gameState.log] : [];
+  state.actionDisplay = gameState.actionDisplay || null;
+  state.feedback = gameState.feedback || null;
+  state.lastFinishedResult = Array.isArray(gameState.lastFinishedResult) ? [...gameState.lastFinishedResult] : null;
+  state.lastFinishedAt = gameState.lastFinishedAt || "";
+  state.currentPlayerIndex = Math.max(0, players.findIndex((player) => player.uid === gameState.currentPlayerUid));
+  state.phase = gameState.phase || "remote-turn";
+  state.settings.playerCount = Number(room.mode || state.settings.playerCount || 2);
+
+  ui.heroSection.classList.add("hidden");
+  ui.setupPanel.classList.add("hidden");
+  ui.historyPanel.classList.add("hidden");
+  ui.gameLayout.classList.remove("hidden");
+  render();
+}
+
+async function syncMultiplayerRoomState() {
+  if (!isMultiplayerActive() || !db || !state.authUser) {
+    return;
+  }
+
+  const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(state.multiplayer.roomId);
+  await roomRef.set({
+    status: "playing",
+    gameState: serializeRoomGameState(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+
+  const localPlayer = state.players.find((player) => player.uid === state.authUser.uid);
+  await roomRef.collection("hands").doc(state.authUser.uid).set({
+    cards: localPlayer ? [...localPlayer.hand] : [],
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
 }
 
 function getFriendPairId(uidA, uidB) {
@@ -498,6 +631,12 @@ async function refreshSocialData() {
 
   state.socialActiveRoom = activeRoom;
   await refreshFriendsList();
+  if (activeRoom?.status === "playing" && activeRoom.gameState) {
+    const localHand = await loadCurrentRoomHand(activeRoom.id);
+    applyMultiplayerRoomState(activeRoom, localHand);
+  } else if (!activeRoom && state.multiplayer.active) {
+    clearMultiplayerState();
+  }
   renderSocialPanel();
 }
 
@@ -715,6 +854,109 @@ async function handleCreateRoom(mode) {
   }
 }
 
+async function handleStartRoomMatch() {
+  if (!db || !state.authUser || !state.currentPlayerId) {
+    setSocialStatus("先登录并绑定游戏 ID，再开始联机对局。");
+    return;
+  }
+
+  const room = state.socialActiveRoom;
+  if (!room || room.status !== "waiting") {
+    setSocialStatus("当前没有等待中的房间。");
+    return;
+  }
+  if (room.hostUid !== state.authUser.uid) {
+    setSocialStatus("只有房主可以开始联机对局。");
+    return;
+  }
+
+  const members = Array.isArray(room.members) ? [...room.members] : [];
+  if (members.length !== Number(room.mode || 2)) {
+    setSocialStatus(`人数还没到齐，需要 ${room.mode} 人才能开始。`);
+    return;
+  }
+
+  state.socialBusy = true;
+  renderSocialPanel();
+  try {
+    const config = GAME_CONFIG[Number(room.mode || 2)];
+    const deck = shuffle(createDeck());
+    const orderedMembers = members
+      .slice()
+      .sort((a, b) => Number(a.joinedAt || 0) - Number(b.joinedAt || 0) || String(a.gameId || "").localeCompare(String(b.gameId || ""), "zh-CN"));
+
+    const players = orderedMembers.map((member) => ({
+      uid: member.uid,
+      id: member.uid,
+      name: member.gameId,
+      isHuman: member.uid === state.authUser.uid,
+      hand: deck.splice(0, config.hand),
+      captured: [],
+      lastAction: null,
+      diceTrail: [],
+    }));
+
+    const tableCards = deck.splice(0, config.table);
+    const drawPile = deck.splice(0, config.draw);
+    const gameState = {
+      phase: "human-turn",
+      tableCards,
+      drawPile,
+      pendingDrawCard: null,
+      currentPlayerUid: orderedMembers[0].uid,
+      playersPublic: players.map((player) => ({
+        uid: player.uid,
+        name: player.name,
+        handCount: player.hand.length,
+        captured: [],
+        lastAction: null,
+      })),
+      log: [
+        {
+          id: `room-start-${Date.now()}`,
+          message: `${room.mode} 人联机房开始对局。`,
+        },
+      ],
+      actionDisplay: null,
+      feedback: {
+        message: `${orderedMembers[0].gameId} 先手，联机对局开始。`,
+        type: "info",
+      },
+      lastFinishedResult: null,
+      lastFinishedAt: "",
+    };
+
+    const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(room.id);
+    const batch = db.batch();
+    batch.set(roomRef, {
+      status: "playing",
+      invitedUids: [],
+      gameState,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    players.forEach((player) => {
+      batch.set(roomRef.collection("hands").doc(player.uid), {
+        cards: [...player.hand],
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    });
+    await batch.commit();
+
+    const localPlayer = players.find((player) => player.uid === state.authUser.uid);
+    applyMultiplayerRoomState({
+      ...room,
+      status: "playing",
+      gameState,
+    }, localPlayer ? localPlayer.hand : []);
+    setSocialStatus("联机对局已开始。");
+  } catch (error) {
+    setSocialStatus(`开始联机失败：${formatAuthError(error)}`);
+  } finally {
+    state.socialBusy = false;
+    await refreshSocialData();
+  }
+}
+
 async function handleInviteFriend(friendUid, friendGameId) {
   if (!db || !state.authUser || !state.currentPlayerId) {
     setSocialStatus("先登录并绑定游戏 ID，再邀请好友。");
@@ -906,6 +1148,7 @@ function renderSocialPanel() {
       ? {
           id: room.id,
           mode: room.mode,
+          status: room.status,
           hostUid: room.hostUid,
           memberUids: room.memberUids,
           invitedUids: room.invitedUids,
@@ -991,6 +1234,17 @@ function renderSocialPanel() {
     button.disabled = state.socialBusy;
     button.addEventListener("click", handleLeaveRoom);
     card.appendChild(button);
+    const startButton = room.status === "waiting" && room.hostUid === state.authUser.uid && members.length === Number(room.mode || 2)
+      ? document.createElement("button")
+      : null;
+    if (startButton) {
+      startButton.className = "ghost-btn";
+      startButton.type = "button";
+      startButton.textContent = "开始联机";
+      startButton.disabled = state.socialBusy;
+      startButton.addEventListener("click", handleStartRoomMatch);
+      card.insertBefore(startButton, card.lastChild);
+    }
     ui.socialRoomCard.appendChild(card);
   }
 
@@ -2644,6 +2898,103 @@ function advanceTurn() {
   beginCurrentTurn();
 }
 
+function beginCurrentTurn() {
+  clearAiTimer();
+  clearFocusedTargets();
+  clearSelection(false);
+
+  const player = getCurrentPlayer();
+  if (!player) {
+    return;
+  }
+
+  if (player.isHuman) {
+    state.phase = "human-turn";
+    setFeedback(isMultiplayerActive() ? "轮到你了，你的操作会实时同步给房间里的其他玩家。" : "轮到你了，先选一张手牌，再决定钓牌还是弃到台面。", "info");
+    render();
+    return;
+  }
+
+  if (isMultiplayerActive()) {
+    state.phase = "remote-turn";
+    setFeedback(`${player.name} 正在操作，等对方出牌后会自动同步到你的桌面。`, "info");
+    render();
+    return;
+  }
+
+  state.phase = "ai-turn";
+  setFeedback(`${player.name} 正在思考出牌...`, "info");
+  render();
+  scheduleAiStep(runAiTurn, 900);
+}
+
+function startDrawPhase(player) {
+  state.pendingDrawCard = state.drawPile.shift() || null;
+  clearSelection(false);
+
+  if (!state.pendingDrawCard) {
+    pushLog("牌堆已空，本回合没有补枪。");
+    finishTurnAfterAction(player);
+    return;
+  }
+
+  if (player.isHuman) {
+    setActionDisplay({
+      playerId: player.id,
+      playerName: player.name,
+      text: `摸到 ${cardLabel(state.pendingDrawCard)}，可以立刻补枪`,
+      cards: [state.pendingDrawCard],
+    });
+    updateLastAction(player, `摸到 ${cardLabel(state.pendingDrawCard)}`, [state.pendingDrawCard]);
+    setFeedback(`你摸到了 ${cardLabel(state.pendingDrawCard)}，现在可以继续补枪。`, "info");
+    render();
+    if (isMultiplayerActive()) {
+      syncMultiplayerRoomState().catch((error) => {
+        state.authStatusMessage = `联机同步失败：${formatAuthError(error)}`;
+        renderAuthControls();
+      });
+    }
+    return;
+  }
+
+  setActionDisplay({
+    playerId: player.id,
+    playerName: player.name,
+    text: `摸到 ${cardLabel(state.pendingDrawCard)}，准备判断补枪`,
+    cards: [state.pendingDrawCard],
+  });
+  updateLastAction(player, `摸到 ${cardLabel(state.pendingDrawCard)}`, [state.pendingDrawCard]);
+  setFeedback(`${player.name} 摸到了一张牌。`, "info");
+  render();
+  scheduleAiStep(runAiTurn, 1100);
+}
+
+function finishTurnAfterAction(player) {
+  clearFocusedTargets();
+  if (isGameOver()) {
+    finishGame();
+    return;
+  }
+
+  if (isMultiplayerActive()) {
+    advanceTurn();
+    syncMultiplayerRoomState().catch((error) => {
+      state.authStatusMessage = `联机同步失败：${formatAuthError(error)}`;
+      renderAuthControls();
+    });
+    render();
+    return;
+  }
+
+  if (!player.isHuman) {
+    scheduleAiStep(advanceTurn, 1600);
+    render();
+    return;
+  }
+
+  advanceTurn();
+}
+
 function isGameOver() {
   return state.players.every((player) => player.hand.length === 0) && state.pendingDrawCard === null;
 }
@@ -2822,6 +3173,41 @@ async function syncRoundResultToCloud(humanResult, isWin) {
     renderAuthControls();
     render();
   }
+}
+
+function finishGame() {
+  clearAiTimer();
+  state.phase = "game-over";
+  const result = getRankedPlayers();
+  const humanResult = result.find((item) => item.name === "玩家 1" || item.name === state.currentPlayerId || item.name === getCurrentPlayer()?.name);
+  state.lastFinishedResult = result.map((item) => ({
+    ...item,
+    redCards: [...item.redCards],
+  }));
+  state.lastFinishedAt = new Date().toLocaleString("zh-CN", {
+    hour12: false,
+  });
+
+  const bestScore = result[0]?.score || 0;
+  const winners = result.filter((item) => item.score === bestScore).map((item) => item.name);
+  const localName = state.players.find((player) => player.uid === state.authUser?.uid)?.name || "玩家 1";
+  const localResult = result.find((item) => item.name === localName) || humanResult;
+  const isHumanWin = Boolean(localResult) && result.every((item) => item.name === localName || localResult.score > item.score);
+  const winnerText = winners.length > 1 ? `${winners.join("、")} 并列第一` : `${winners[0] || "无人"} 获胜`;
+
+  setFeedback(`结算完成，${winnerText}。`, "info");
+  pushLog(`游戏结束，${winnerText}。`);
+  showOverlay("本局结束", "本局结束", `${winnerText}。点击按钮查看完整结算榜单。`, "查看结果");
+  if (localResult && state.authUser && state.currentPlayerId) {
+    syncRoundResultToCloud(localResult, isHumanWin);
+  }
+  if (isMultiplayerActive()) {
+    syncMultiplayerRoomState().catch((error) => {
+      state.authStatusMessage = `联机同步失败：${formatAuthError(error)}`;
+      renderAuthControls();
+    });
+  }
+  render();
 }
 
 function resolveCapture(sourceCard, tableCards) {
@@ -3160,6 +3546,26 @@ function renderSetupHistory() {
     `;
     ui.historyGrid.appendChild(article);
   });
+}
+
+function getStatusText() {
+  if (state.phase === "dice-rolling") {
+    return "摇骰子中";
+  }
+  if (state.phase === "dice-result") {
+    return "摇骰子结果";
+  }
+  if (state.phase === "opening-deal") {
+    return state.openingStage === "reveal-table" ? "正在翻公共牌" : "正在发手牌";
+  }
+  if (state.phase === "game-over") {
+    const top = getRankedPlayers()[0];
+    return top ? `${top.name} 暂列第一，红牌 ${top.score} 分` : "本局结束";
+  }
+  if (state.phase === "ai-turn" || state.phase === "remote-turn") {
+    return `${getCurrentPlayer()?.name || "对手"} 正在行动`;
+  }
+  return "等待你操作";
 }
 
 function renderPlayerStatsDashboard() {
@@ -3954,6 +4360,26 @@ function createEmptyState(text) {
   element.className = "empty-state";
   element.textContent = text;
   return element;
+}
+
+function getStatusText() {
+  if (state.phase === "dice-rolling") {
+    return "摇骰子中";
+  }
+  if (state.phase === "dice-result") {
+    return "摇骰子结果";
+  }
+  if (state.phase === "opening-deal") {
+    return state.openingStage === "reveal-table" ? "正在翻公共牌" : "正在发手牌";
+  }
+  if (state.phase === "game-over") {
+    const top = getRankedPlayers()[0];
+    return top ? `${top.name} 暂列第一，红牌 ${top.score} 分` : "本局结束";
+  }
+  if (state.phase === "ai-turn" || state.phase === "remote-turn") {
+    return `${getCurrentPlayer()?.name || "对手"} 正在行动`;
+  }
+  return "等待你操作";
 }
 
 init();
