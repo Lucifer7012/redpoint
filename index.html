@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>钓红点</title>
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -33,6 +34,14 @@
       </div>
       <div class="setup-grid">
         <label>
+          <span>邮箱账号</span>
+          <input id="auth-email" type="email" autocomplete="username" placeholder="输入你的邮箱">
+        </label>
+        <label>
+          <span>登录密码</span>
+          <input id="auth-password" type="password" autocomplete="current-password" placeholder="输入密码">
+        </label>
+        <label>
           <span>玩家人数</span>
           <select id="player-count">
             <option value="2">2 人</option>
@@ -44,11 +53,46 @@
           <input type="checkbox" id="use-dice" checked>
           <span>启用摇骰子定先手</span>
         </label>
+        <label>
+          <span>游戏 ID</span>
+          <input id="player-id" type="text" maxlength="20" placeholder="输入你的游戏 ID">
+          <small id="player-id-hint">同一浏览器内可累计战绩和排行。</small>
+        </label>
+        <label>
+          <span>已有 ID</span>
+          <select id="player-id-select">
+            <option value="">选择已有 ID</option>
+          </select>
+        </label>
+      </div>
+      <div class="auth-row">
+        <button id="auth-submit" class="ghost-btn" type="button">登录 / 注册</button>
+        <button id="auth-logout" class="ghost-btn" type="button">退出登录</button>
+        <p id="auth-status" class="auth-status">还没有登录账号。</p>
       </div>
       <div class="button-row">
         <button id="start-game" class="primary-btn">开始游戏</button>
         <button class="ghost-btn rules-trigger" type="button">查看规则</button>
+        <button id="view-last-result" class="ghost-btn hidden" type="button">上一局结算</button>
       </div>
+      <div class="player-stats-card" id="player-stats-card"></div>
+      <div class="leaderboard-block">
+        <div class="panel-head compact-head">
+          <h2>本地排行榜</h2>
+          <p>按累计积分、胜场、局数排序，仅保存在当前浏览器。</p>
+        </div>
+        <div class="leaderboard-list" id="leaderboard-list"></div>
+      </div>
+    </section>
+
+    <section class="history-panel hidden" id="history-panel">
+      <div class="panel-head">
+        <div>
+          <h2>上一局结算</h2>
+          <p id="history-meta">返回到模式选择后，也可以继续查看上一局结果。</p>
+        </div>
+      </div>
+      <div class="result-grid" id="history-grid"></div>
     </section>
 
     <section class="game-layout hidden" id="game-layout">
@@ -57,7 +101,11 @@
           <p class="eyebrow">Table View</p>
           <h2 class="table-title">红点牌桌</h2>
         </div>
-        <button class="ghost-btn rules-trigger" type="button">规则说明</button>
+        <div class="topbar-actions">
+          <button id="back-to-setup" class="ghost-btn" type="button">返回</button>
+          <button id="restart-round" class="ghost-btn" type="button">重新开始</button>
+          <button class="ghost-btn rules-trigger" type="button">规则说明</button>
+        </div>
       </div>
 
       <div class="status-strip">
@@ -83,6 +131,13 @@
         <div class="seat-slot seat-right" id="seat-right"></div>
         <div class="seat-dice-layer" id="seat-dice-layer"></div>
         <div class="seat-result-layer" id="seat-result-layer"></div>
+        <div class="table-public-area">
+          <div class="table-public-head">
+            <h3>公共牌区</h3>
+            <p>台面上的公共明牌</p>
+          </div>
+          <div class="table-public-slot" id="table-public-slot"></div>
+        </div>
 
         <div class="center-stage">
           <div class="panel-head compact-head">
@@ -91,6 +146,20 @@
           </div>
 
           <div class="feedback-banner hidden" id="feedback-banner"></div>
+
+          <div class="draw-zone">
+            <div class="draw-pile" id="draw-pile-visual">
+              <div class="draw-pile__stack" aria-hidden="true">
+                <span class="draw-pile__card"></span>
+                <span class="draw-pile__card"></span>
+                <span class="draw-pile__card"></span>
+              </div>
+              <div class="draw-pile__meta">
+                <span>牌堆</span>
+                <strong id="draw-pile-count">0 张</strong>
+              </div>
+            </div>
+          </div>
 
           <div class="action-stage" id="action-stage">
             <div class="action-stage__meta">
@@ -219,6 +288,9 @@
     </div>
   </main>
 
+  <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore-compat.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -26,6 +26,23 @@ const VALUE_LABELS = {
   10: "10",
 };
 const DICE_SYMBOLS = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAtiIL6O85gozi1QvrcUyvKuuQWFGWWnTA",
+  authDomain: "redpoint-rank.firebaseapp.com",
+  projectId: "redpoint-rank",
+  storageBucket: "redpoint-rank.firebasestorage.app",
+  messagingSenderId: "342375707603",
+  appId: "1:342375707603:web:4ef04713a34d3996b2f526",
+};
+const FIRESTORE_COLLECTIONS = {
+  profiles: "profiles",
+  gameIds: "gameIds",
+  gameResults: "gameResults",
+};
+
+let firebaseApp = null;
+let auth = null;
+let db = null;
 
 const ui = {
   heroSection: document.getElementById("hero-section"),
@@ -38,17 +55,31 @@ const ui = {
   rulesAck: document.getElementById("rules-ack"),
   playerCount: document.getElementById("player-count"),
   useDice: document.getElementById("use-dice"),
+  authEmail: document.getElementById("auth-email"),
+  authPassword: document.getElementById("auth-password"),
+  authSubmit: document.getElementById("auth-submit"),
+  authLogout: document.getElementById("auth-logout"),
+  authStatus: document.getElementById("auth-status"),
+  playerId: document.getElementById("player-id"),
+  playerIdHint: document.getElementById("player-id-hint"),
+  playerIdSelect: document.getElementById("player-id-select"),
   startGame: document.getElementById("start-game"),
+  viewLastResult: document.getElementById("view-last-result"),
   restartGame: document.getElementById("restart-game"),
+  restartRound: document.getElementById("restart-round"),
+  backToSetup: document.getElementById("back-to-setup"),
   statusText: document.getElementById("status-text"),
   drawCount: document.getElementById("draw-count"),
   tableCount: document.getElementById("table-count"),
+  tablePublicSlot: document.getElementById("table-public-slot"),
   selectionHint: document.getElementById("selection-hint"),
   feedbackBanner: document.getElementById("feedback-banner"),
   actionStage: document.getElementById("action-stage"),
   actionTitle: document.getElementById("action-title"),
   actionCopy: document.getElementById("action-copy"),
   actionCards: document.getElementById("action-cards"),
+  drawPileVisual: document.getElementById("draw-pile-visual"),
+  drawPileCount: document.getElementById("draw-pile-count"),
   drawPreview: document.getElementById("draw-preview"),
   drawPreviewText: document.getElementById("draw-preview-text"),
   drawPreviewCard: document.getElementById("draw-preview-card"),
@@ -66,6 +97,11 @@ const ui = {
   logList: document.getElementById("log-list"),
   resultPanel: document.getElementById("result-panel"),
   resultGrid: document.getElementById("result-grid"),
+  historyPanel: document.getElementById("history-panel"),
+  historyGrid: document.getElementById("history-grid"),
+  historyMeta: document.getElementById("history-meta"),
+  playerStatsCard: document.getElementById("player-stats-card"),
+  leaderboardList: document.getElementById("leaderboard-list"),
   passOverlay: document.getElementById("pass-overlay"),
   overlayTag: document.getElementById("overlay-tag"),
   overlayTitle: document.getElementById("overlay-title"),
@@ -100,13 +136,30 @@ const state = {
   diceInterval: null,
   diceTimeout: null,
   diceResultTimeout: null,
+  openingStage: null,
+  openingTimers: [],
+  roundPlan: null,
+  lastFinishedResult: null,
+  lastFinishedAt: "",
+  playerStats: {},
+  currentPlayerId: "",
+  authUser: null,
+  authBusy: false,
+  authReady: false,
+  authStatusMessage: "正在连接 Firebase...",
+  playerIdHintMessage: "",
+  leaderboardLoaded: false,
   renderCache: {
     humanSummary: "",
     humanHand: "",
     tableCards: "",
+    drawPile: "",
     actionStage: "",
     log: "",
     results: "",
+    history: "",
+    playerStats: "",
+    leaderboard: "",
     seats: {},
     seatDice: "",
     seatResults: "",
@@ -128,18 +181,43 @@ function init() {
   ui.rulesBackdrop.addEventListener("click", closeRulesModal);
   ui.rulesClose.addEventListener("click", closeRulesModal);
   ui.rulesAck.addEventListener("click", closeRulesModal);
-  ui.startGame.addEventListener("click", () => {
-    startGame(Number(ui.playerCount.value), ui.useDice.checked);
+  ui.authSubmit.addEventListener("click", handleAuthSubmit);
+  ui.authLogout.addEventListener("click", handleAuthLogout);
+  ui.playerId.addEventListener("input", handlePlayerIdInput);
+  ui.startGame.addEventListener("click", async () => {
+    await startGame(Number(ui.playerCount.value), ui.useDice.checked);
   });
+  ui.viewLastResult.addEventListener("click", handleViewLastResult);
   ui.restartGame.addEventListener("click", () => {
     startGame(state.settings.playerCount, state.settings.useDice);
   });
+  ui.restartRound.addEventListener("click", () => {
+    startGame(state.settings.playerCount, state.settings.useDice);
+  });
+  ui.backToSetup.addEventListener("click", handleBackToSetup);
   ui.overlayButton.addEventListener("click", handleOverlayButton);
   ui.confirmAction.addEventListener("click", handleConfirmAction);
   ui.discardAction.addEventListener("click", handleDiscardAction);
   ui.clearSelection.addEventListener("click", clearSelection);
   document.addEventListener("keydown", handleKeyDown);
+
+  const legacyIdLabel = ui.playerIdSelect?.closest("label");
+  if (legacyIdLabel) {
+    legacyIdLabel.classList.add("hidden");
+  }
+  const leaderboardTitle = document.querySelector(".leaderboard-block .compact-head h2");
+  const leaderboardCopy = document.querySelector(".leaderboard-block .compact-head p");
+  if (leaderboardTitle) {
+    leaderboardTitle.textContent = "云端排行榜";
+  }
+  if (leaderboardCopy) {
+    leaderboardCopy.textContent = "按累计积分、胜场、局数排序，不同电脑和手机会共用同一份榜单。";
+  }
+
+  state.playerIdHintMessage = "先登录或注册账号，再创建全局唯一的游戏 ID。";
+  renderAuthControls();
   render();
+  initFirebase();
 }
 
 function handleKeyDown(event) {
@@ -156,6 +234,438 @@ function openRulesModal() {
 function closeRulesModal() {
   state.rulesOpen = false;
   renderRulesModal();
+}
+
+function normalizePlayerId(value) {
+  return value.replace(/\s+/g, " ").trim().slice(0, 20);
+}
+
+function getSortedPlayerStats() {
+  return Object.values(state.playerStats)
+    .sort((a, b) =>
+      b.totalScore - a.totalScore
+      || b.wins - a.wins
+      || b.rounds - a.rounds
+      || a.id.localeCompare(b.id, "zh-CN"),
+    );
+}
+
+function ensurePlayerProfile(playerId) {
+  if (!state.playerStats[playerId]) {
+    state.playerStats[playerId] = {
+      id: playerId,
+      rounds: 0,
+      wins: 0,
+      totalScore: 0,
+      bestScore: 0,
+      lastScore: 0,
+    };
+  }
+  return state.playerStats[playerId];
+}
+
+function hydratePlayerIdControls() {
+  const sorted = getSortedPlayerStats();
+  ui.playerIdSelect.innerHTML = '<option value="">选择已有 ID</option>';
+  sorted.forEach((item) => {
+    const option = document.createElement("option");
+    option.value = item.id;
+    option.textContent = `${item.id} · ${item.totalScore} 分`;
+    ui.playerIdSelect.appendChild(option);
+  });
+
+  ui.playerId.value = state.currentPlayerId || "";
+  ui.playerIdSelect.value = state.currentPlayerId && state.playerStats[state.currentPlayerId]
+    ? state.currentPlayerId
+    : "";
+}
+
+function handlePlayerIdSelect() {
+  if (!ui.playerIdSelect.value) {
+    return;
+  }
+  state.currentPlayerId = ui.playerIdSelect.value;
+  ui.playerId.value = state.currentPlayerId;
+  localStorage.setItem(LAST_PLAYER_ID_STORAGE_KEY, state.currentPlayerId);
+  render();
+}
+
+function handlePlayerIdInput() {
+  state.currentPlayerId = normalizePlayerId(ui.playerId.value);
+  render();
+}
+
+function prepareCurrentPlayerProfile() {
+  const playerId = normalizePlayerId(ui.playerId.value || state.currentPlayerId || "");
+  if (!playerId) {
+    ui.playerIdHint.textContent = "请先输入一个游戏 ID，再开始对局。";
+    return false;
+  }
+
+  state.currentPlayerId = playerId;
+  ui.playerId.value = playerId;
+  ensurePlayerProfile(playerId);
+  savePlayerStats();
+  localStorage.setItem(LAST_PLAYER_ID_STORAGE_KEY, playerId);
+  hydratePlayerIdControls();
+  ui.playerIdHint.textContent = "同一浏览器内可累计战绩和排行。";
+  return true;
+}
+
+function getPlayerProfileDefaults(playerId = "", uid = "") {
+  return {
+    id: playerId,
+    uid,
+    rounds: 0,
+    wins: 0,
+    totalScore: 0,
+    bestScore: 0,
+    lastScore: 0,
+  };
+}
+
+function profileFromData(uid, data = {}) {
+  return {
+    ...getPlayerProfileDefaults(data.gameId || "", uid),
+    rounds: Number(data.rounds || 0),
+    wins: Number(data.wins || 0),
+    totalScore: Number(data.totalScore || 0),
+    bestScore: Number(data.bestScore || 0),
+    lastScore: Number(data.lastScore || 0),
+  };
+}
+
+function upsertPlayerProfile(profile) {
+  if (!profile?.id) {
+    return;
+  }
+
+  state.playerStats = {
+    ...state.playerStats,
+    [profile.id]: profile,
+  };
+}
+
+function maskEmail(email) {
+  if (!email || !email.includes("@")) {
+    return "已登录账号";
+  }
+
+  const [name, domain] = email.split("@");
+  const safeName = name.length <= 2
+    ? `${name[0] || "*"}*`
+    : `${name.slice(0, 2)}***`;
+  return `${safeName}@${domain}`;
+}
+
+function getDefaultPlayerIdHint() {
+  if (!state.authUser) {
+    return "先登录或注册账号，再创建全局唯一的游戏 ID。";
+  }
+  if (state.currentPlayerId) {
+    return `当前账号已绑定唯一 ID：${state.currentPlayerId}`;
+  }
+  return "首次开始游戏时，会创建这个唯一 ID；创建后不能与别人重复，也不能再次修改。";
+}
+
+function renderAuthControls() {
+  const signedIn = Boolean(state.authUser);
+  const lockedId = signedIn && Boolean(state.currentPlayerId);
+
+  ui.authEmail.disabled = state.authBusy || signedIn;
+  ui.authPassword.disabled = state.authBusy || signedIn;
+  ui.authSubmit.disabled = state.authBusy || signedIn || !auth;
+  ui.authLogout.disabled = state.authBusy || !signedIn;
+  ui.startGame.disabled = state.authBusy || !signedIn || !state.authReady;
+  ui.playerId.disabled = state.authBusy || !signedIn || lockedId;
+  ui.authStatus.textContent = state.authStatusMessage;
+  ui.playerId.value = state.currentPlayerId || ui.playerId.value;
+  ui.playerIdHint.textContent = state.playerIdHintMessage || getDefaultPlayerIdHint();
+}
+
+function formatAuthError(error) {
+  const code = error?.code || "";
+  if (code === "auth/invalid-email") {
+    return "邮箱格式不正确。";
+  }
+  if (code === "auth/missing-password" || code === "auth/weak-password") {
+    return "密码至少需要 6 位。";
+  }
+  if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
+    return "密码不正确。";
+  }
+  if (code === "auth/email-already-in-use") {
+    return "这个邮箱已经注册，请直接登录。";
+  }
+  if (code === "auth/too-many-requests") {
+    return "尝试次数过多，请稍后再试。";
+  }
+  return error?.message || "出现了一点问题，请稍后再试。";
+}
+
+async function initFirebase() {
+  if (!window.firebase) {
+    state.authReady = true;
+    state.authStatusMessage = "Firebase SDK 加载失败，请检查网络或刷新页面。";
+    renderAuthControls();
+    render();
+    return;
+  }
+
+  try {
+    firebaseApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(FIREBASE_CONFIG);
+    auth = firebase.auth();
+    db = firebase.firestore();
+    state.authStatusMessage = "Firebase 已连接，正在读取账号状态...";
+    renderAuthControls();
+    render();
+
+    await loadLeaderboard();
+
+    auth.onAuthStateChanged(async (user) => {
+      state.authUser = user;
+      state.authReady = true;
+
+      if (user) {
+        state.authStatusMessage = `已登录：${maskEmail(user.email)}`;
+        await loadCurrentUserProfile();
+      } else {
+        state.currentPlayerId = "";
+        state.playerIdHintMessage = "先登录或注册账号，再创建全局唯一的游戏 ID。";
+        ui.playerId.value = "";
+        ui.authPassword.value = "";
+        state.authStatusMessage = "还没有登录账号。";
+      }
+
+      await loadLeaderboard();
+      renderAuthControls();
+      render();
+    });
+  } catch (error) {
+    state.authReady = true;
+    state.authStatusMessage = `Firebase 初始化失败：${formatAuthError(error)}`;
+    renderAuthControls();
+    render();
+  }
+}
+
+async function handleAuthSubmit() {
+  if (!auth) {
+    state.authStatusMessage = "Firebase 还没准备好，请稍等一下再登录。";
+    renderAuthControls();
+    render();
+    return;
+  }
+
+  const email = ui.authEmail.value.trim();
+  const password = ui.authPassword.value;
+
+  if (!email || !password) {
+    state.authStatusMessage = "先输入邮箱和密码，再登录或注册。";
+    renderAuthControls();
+    render();
+    return;
+  }
+
+  state.authBusy = true;
+  state.authStatusMessage = "正在登录账号...";
+  renderAuthControls();
+  render();
+
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch (error) {
+    if (error?.code === "auth/user-not-found") {
+      state.authStatusMessage = "没有找到这个账号，正在自动注册...";
+      renderAuthControls();
+      render();
+      try {
+        await auth.createUserWithEmailAndPassword(email, password);
+      } catch (createError) {
+        state.authStatusMessage = formatAuthError(createError);
+      }
+    } else {
+      state.authStatusMessage = formatAuthError(error);
+    }
+  } finally {
+    state.authBusy = false;
+    renderAuthControls();
+    render();
+  }
+}
+
+async function handleAuthLogout() {
+  if (!auth || !state.authUser) {
+    return;
+  }
+
+  state.authBusy = true;
+  state.authStatusMessage = "正在退出登录...";
+  renderAuthControls();
+  render();
+
+  try {
+    await auth.signOut();
+  } catch (error) {
+    state.authStatusMessage = formatAuthError(error);
+  } finally {
+    state.authBusy = false;
+    renderAuthControls();
+    render();
+  }
+}
+
+async function loadLeaderboard() {
+  if (!db) {
+    return;
+  }
+
+  try {
+    const snapshot = await db.collection(FIRESTORE_COLLECTIONS.profiles).get();
+    const nextStats = {};
+    snapshot.forEach((doc) => {
+      const profile = profileFromData(doc.id, doc.data());
+      if (profile.id) {
+        nextStats[profile.id] = profile;
+      }
+    });
+    state.playerStats = nextStats;
+    state.leaderboardLoaded = true;
+  } catch (error) {
+    state.authStatusMessage = `读取排行榜失败：${formatAuthError(error)}`;
+  }
+}
+
+async function loadCurrentUserProfile() {
+  if (!db || !state.authUser) {
+    return null;
+  }
+
+  try {
+    const snapshot = await db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid).get();
+    if (!snapshot.exists) {
+      state.currentPlayerId = normalizePlayerId(ui.playerId.value || "");
+      state.playerIdHintMessage = getDefaultPlayerIdHint();
+      return null;
+    }
+
+    const profile = profileFromData(snapshot.id, snapshot.data());
+    state.currentPlayerId = profile.id;
+    ui.playerId.value = profile.id;
+    state.playerIdHintMessage = getDefaultPlayerIdHint();
+    upsertPlayerProfile(profile);
+    return profile;
+  } catch (error) {
+    state.authStatusMessage = `读取账号资料失败：${formatAuthError(error)}`;
+    return null;
+  }
+}
+
+async function prepareCurrentPlayerProfile() {
+  if (!state.authReady || !db || !auth) {
+    state.authStatusMessage = "Firebase 还没准备好，请稍等一下再开始。";
+    renderAuthControls();
+    return false;
+  }
+
+  if (!state.authUser) {
+    state.authStatusMessage = "请先登录或注册账号。";
+    renderAuthControls();
+    return false;
+  }
+
+  const profileRef = db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid);
+
+  try {
+    const existingProfile = await profileRef.get();
+    if (existingProfile.exists && existingProfile.data()?.gameId) {
+      const profile = profileFromData(existingProfile.id, existingProfile.data());
+      state.currentPlayerId = profile.id;
+      ui.playerId.value = profile.id;
+      state.playerIdHintMessage = getDefaultPlayerIdHint();
+      upsertPlayerProfile(profile);
+      renderAuthControls();
+      return true;
+    }
+  } catch (error) {
+    state.authStatusMessage = `检查游戏 ID 失败：${formatAuthError(error)}`;
+    renderAuthControls();
+    return false;
+  }
+
+  const playerId = normalizePlayerId(ui.playerId.value || state.currentPlayerId || "");
+  if (!playerId) {
+    state.playerIdHintMessage = "请输入你想创建的游戏 ID，再开始本局。";
+    renderAuthControls();
+    return false;
+  }
+
+  const normalizedId = playerId.toLowerCase();
+  let createdProfile = null;
+
+  state.authBusy = true;
+  state.playerIdHintMessage = "正在检查这个游戏 ID 是否可用...";
+  renderAuthControls();
+  render();
+
+  try {
+    await db.runTransaction(async (transaction) => {
+      const currentProfile = await transaction.get(profileRef);
+      if (currentProfile.exists && currentProfile.data()?.gameId) {
+        createdProfile = profileFromData(currentProfile.id, currentProfile.data());
+        return;
+      }
+
+      const gameIdRef = db.collection(FIRESTORE_COLLECTIONS.gameIds).doc(normalizedId);
+      const gameIdSnapshot = await transaction.get(gameIdRef);
+      if (gameIdSnapshot.exists) {
+        throw new Error("GAME_ID_TAKEN");
+      }
+
+      const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+      const payload = {
+        uid: state.authUser.uid,
+        gameId: playerId,
+        gameIdNormalized: normalizedId,
+        rounds: 0,
+        wins: 0,
+        totalScore: 0,
+        bestScore: 0,
+        lastScore: 0,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      };
+
+      transaction.set(profileRef, payload, { merge: true });
+      transaction.set(gameIdRef, {
+        uid: state.authUser.uid,
+        gameId: playerId,
+        createdAt: timestamp,
+      });
+      createdProfile = profileFromData(state.authUser.uid, payload);
+    });
+
+    if (createdProfile) {
+      state.currentPlayerId = createdProfile.id;
+      ui.playerId.value = createdProfile.id;
+      state.playerIdHintMessage = getDefaultPlayerIdHint();
+      upsertPlayerProfile(createdProfile);
+    }
+
+    await loadLeaderboard();
+    renderAuthControls();
+    return true;
+  } catch (error) {
+    state.playerIdHintMessage = error?.message === "GAME_ID_TAKEN"
+      ? "这个游戏 ID 已经被别人用了，换一个新的再试。"
+      : `创建游戏 ID 失败：${formatAuthError(error)}`;
+    renderAuthControls();
+    return false;
+  } finally {
+    state.authBusy = false;
+    renderAuthControls();
+    render();
+  }
 }
 
 function clearAiTimer() {
@@ -180,6 +690,56 @@ function clearDiceTimers() {
   }
 }
 
+function clearOpeningTimers() {
+  state.openingTimers.forEach((timer) => clearTimeout(timer));
+  state.openingTimers = [];
+}
+
+function scheduleOpeningStep(callback, delay) {
+  const timer = setTimeout(() => {
+    state.openingTimers = state.openingTimers.filter((item) => item !== timer);
+    callback();
+  }, delay);
+  state.openingTimers.push(timer);
+}
+
+function clearAllRoundTimers() {
+  clearAiTimer();
+  clearDiceTimers();
+  clearOpeningTimers();
+}
+
+function handleBackToSetup() {
+  returnToSetup();
+  if (state.lastFinishedResult) {
+    setTimeout(() => {
+      ui.historyPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 0);
+  }
+}
+
+function handleViewLastResult() {
+  if (!state.lastFinishedResult) {
+    return;
+  }
+  ui.historyPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function returnToSetup() {
+  clearAllRoundTimers();
+  state.phase = "setup";
+  state.pendingDrawCard = null;
+  state.selectedHandCardId = null;
+  state.selectedTable = new Set();
+  state.focusedTableIds = new Set();
+  state.feedback = null;
+  state.actionDisplay = null;
+  state.diceAnimation = null;
+  state.openingStage = null;
+  state.roundPlan = null;
+  render();
+}
+
 function scheduleAiStep(callback, delay = 900) {
   clearAiTimer();
   state.aiTimer = setTimeout(() => {
@@ -188,7 +748,123 @@ function scheduleAiStep(callback, delay = 900) {
   }, delay);
 }
 
-function startGame(playerCount, useDice) {
+function buildRoundPlan(playerCount, useDice) {
+  const config = GAME_CONFIG[playerCount];
+  const deck = shuffle(createDeck());
+  const players = Array.from({ length: playerCount }, (_, index) => ({
+    id: `p-${index + 1}`,
+    name: `玩家 ${index + 1}`,
+    isHuman: index === 0,
+    hand: deck.splice(0, config.hand),
+    captured: [],
+    diceTrail: [],
+    lastAction: null,
+  }));
+
+  let orderedPlayers = players;
+  const setupLog = [
+    `开始新对局，${playerCount} 人模式。`,
+    `每人手牌 ${config.hand} 张，台面 ${config.table} 张，牌堆 ${config.draw} 张。`,
+  ];
+
+  if (useDice) {
+    const diceResult = resolveTurnOrder(players);
+    orderedPlayers = diceResult.order.map((index) => players[index]);
+    state.diceSummary = diceResult.summary;
+    setupLog.push(...diceResult.notes);
+  } else {
+    state.diceSummary = [];
+    setupLog.push("未启用摇骰子，按默认座次开始。");
+  }
+
+  return {
+    players: orderedPlayers,
+    tableCards: deck.splice(0, config.table),
+    drawPile: deck.splice(0, config.draw),
+    setupLog,
+  };
+}
+
+function startGameRound(playerCount, useDice) {
+  clearAllRoundTimers();
+  const roundPlan = buildRoundPlan(playerCount, useDice);
+
+  state.phase = useDice ? "dice-rolling" : "opening-deal";
+  state.players = roundPlan.players.map((player) => ({
+    ...player,
+    hand: [],
+    captured: [],
+    lastAction: null,
+  }));
+  state.roundPlan = {
+    playerHands: Object.fromEntries(roundPlan.players.map((player) => [player.id, [...player.hand]])),
+    tableCards: [...roundPlan.tableCards],
+    drawPile: [...roundPlan.drawPile],
+  };
+  state.tableCards = [];
+  state.drawPile = [];
+  state.currentPlayerIndex = 0;
+  state.pendingDrawCard = null;
+  state.selectedHandCardId = null;
+  state.selectedTable = new Set();
+  state.focusedTableIds = new Set();
+  state.feedback = null;
+  state.log = [];
+  state.actionDisplay = null;
+  state.diceAnimation = null;
+  state.openingStage = null;
+  state.renderCache = {
+    humanSummary: "",
+    humanHand: "",
+    tableCards: "",
+    drawPile: "",
+    actionStage: "",
+    log: "",
+    results: "",
+    history: "",
+    seats: {},
+    seatDice: "",
+    seatResults: "",
+    seenCards: {
+      hand: new Set(),
+      table: new Set(),
+      action: new Set(),
+    },
+  };
+  state.settings = { playerCount, useDice };
+
+  roundPlan.players.forEach((player, index) => {
+    pushLog(`${index + 1} 号位：${player.name}${player.isHuman ? "（你）" : "（电脑）"}`);
+  });
+  roundPlan.setupLog.reverse().forEach((entry) => pushLog(entry));
+
+  hideOverlay();
+  render();
+
+  if (useDice) {
+    setActionDisplay({
+      playerId: "dice",
+      playerName: "开局阶段",
+      text: "所有玩家正在摇骰子决定先手",
+      cards: [],
+      tone: "draw",
+    });
+    setFeedback("摇骰子中，牌还没有发出，请先看各座位前的骰子。", "info");
+    render();
+    startDiceSequence();
+    return;
+  }
+
+  startOpeningSequence();
+}
+
+async function startGame(playerCount, useDice) {
+  if (!(await prepareCurrentPlayerProfile())) {
+    render();
+    return;
+  }
+  startGameRound(playerCount, useDice);
+  return;
   clearAiTimer();
   clearDiceTimers();
   const config = GAME_CONFIG[playerCount];
@@ -240,6 +916,7 @@ function startGame(playerCount, useDice) {
     humanSummary: "",
     humanHand: "",
     tableCards: "",
+    drawPile: "",
     actionStage: "",
     log: "",
     results: "",
@@ -439,9 +1116,82 @@ function startDiceSequence() {
 
     state.diceResultTimeout = setTimeout(() => {
       state.diceAnimation = null;
-      beginCurrentTurn();
+      startOpeningSequence();
     }, 2200);
   }, 3200);
+}
+
+function startOpeningSequence() {
+  if (!state.roundPlan) {
+    beginCurrentTurn();
+    return;
+  }
+
+  clearOpeningTimers();
+  state.phase = "opening-deal";
+  state.openingStage = "deal-hands";
+  state.tableCards = [];
+  state.drawPile = [];
+  state.pendingDrawCard = null;
+  clearSelection(false);
+  clearFocusedTargets();
+  setActionDisplay({
+    playerId: "setup",
+    playerName: "开局发牌",
+    text: "正在给每位玩家发手牌",
+    cards: [],
+    tone: "draw",
+  });
+  setFeedback("骰子结束，开始发手牌。", "info");
+  render();
+
+  const maxHand = Math.max(...state.players.map((player) => state.roundPlan.playerHands[player.id]?.length || 0), 0);
+  let elapsed = 120;
+
+  for (let roundIndex = 0; roundIndex < maxHand; roundIndex += 1) {
+    state.players.forEach((player) => {
+      const nextCard = state.roundPlan.playerHands[player.id]?.[roundIndex];
+      if (!nextCard) {
+        return;
+      }
+      scheduleOpeningStep(() => {
+        player.hand.push(nextCard);
+        render();
+      }, elapsed);
+      elapsed += 120;
+    });
+  }
+
+  scheduleOpeningStep(() => {
+    state.openingStage = "reveal-table";
+    setActionDisplay({
+      playerId: "setup",
+      playerName: "开局发牌",
+      text: "正在逐张翻开桌面公共牌",
+      cards: [],
+      tone: "reveal",
+    });
+    setFeedback("手牌发完了，正在翻开桌面公共牌。", "info");
+    render();
+  }, elapsed);
+  elapsed += 180;
+
+  state.roundPlan.tableCards.forEach((card) => {
+    scheduleOpeningStep(() => {
+      state.tableCards.push(card);
+      render();
+    }, elapsed);
+    elapsed += 130;
+  });
+
+  scheduleOpeningStep(() => {
+    state.drawPile = [...state.roundPlan.drawPile];
+    state.roundPlan = null;
+    state.openingStage = null;
+    setFeedback("发牌完成，准备进入首回合。", "info");
+    render();
+    beginCurrentTurn();
+  }, elapsed + 120);
 }
 
 function handleOverlayButton() {
@@ -952,14 +1702,86 @@ function finishGame() {
   clearAiTimer();
   state.phase = "game-over";
   const result = getRankedPlayers();
+  const humanResult = result.find((item) => item.name === "玩家 1");
+  state.lastFinishedResult = result.map((item) => ({
+    ...item,
+    redCards: [...item.redCards],
+  }));
+  state.lastFinishedAt = new Date().toLocaleString("zh-CN", {
+    hour12: false,
+  });
   const bestScore = result[0].score;
   const winners = result.filter((item) => item.score === bestScore).map((item) => item.name);
   const winnerText = winners.length > 1 ? `${winners.join("、")} 并列第一` : `${winners[0]} 获胜`;
 
+  if (false && humanResult) {
+    currentProfile.rounds += 1;
+    currentProfile.totalScore += humanResult.score;
+    currentProfile.lastScore = humanResult.score;
+    currentProfile.bestScore = Math.max(currentProfile.bestScore, humanResult.score);
+    if (winners.includes("玩家 1")) {
+      currentProfile.wins += 1;
+    }
+    savePlayerStats();
+    localStorage.setItem(LAST_PLAYER_ID_STORAGE_KEY, currentProfile.id);
+    hydratePlayerIdControls();
+  }
+
   setFeedback(`结算完成：${winnerText}。`, "info");
   pushLog(`游戏结束，${winnerText}。`);
   showOverlay("本局结束", "本局结束", `${winnerText}。点击按钮查看完整结算榜单。`, "查看结果");
+  if (humanResult && state.authUser && state.currentPlayerId) {
+    syncRoundResultToCloud(humanResult, winners.includes("鐜╁ 1"));
+  }
   render();
+}
+
+async function syncRoundResultToCloud(humanResult, isWin) {
+  if (!db || !state.authUser || !state.currentPlayerId) {
+    return;
+  }
+
+  try {
+    const profileRef = db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid);
+    const resultRef = db.collection(FIRESTORE_COLLECTIONS.gameResults).doc();
+    await db.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(profileRef);
+      const currentData = snapshot.exists ? snapshot.data() : {};
+      const nextProfile = {
+        uid: state.authUser.uid,
+        gameId: state.currentPlayerId,
+        gameIdNormalized: state.currentPlayerId.toLowerCase(),
+        rounds: Number(currentData.rounds || 0) + 1,
+        wins: Number(currentData.wins || 0) + (isWin ? 1 : 0),
+        totalScore: Number(currentData.totalScore || 0) + humanResult.score,
+        bestScore: Math.max(Number(currentData.bestScore || 0), humanResult.score),
+        lastScore: humanResult.score,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+
+      if (!snapshot.exists) {
+        nextProfile.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+
+      transaction.set(profileRef, nextProfile, { merge: true });
+      transaction.set(resultRef, {
+        uid: state.authUser.uid,
+        gameId: state.currentPlayerId,
+        score: humanResult.score,
+        isWin,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    });
+
+    await loadCurrentUserProfile();
+    await loadLeaderboard();
+    renderAuthControls();
+    render();
+  } catch (error) {
+    state.authStatusMessage = `云端结算写入失败：${formatAuthError(error)}`;
+    renderAuthControls();
+    render();
+  }
 }
 
 function resolveCapture(sourceCard, tableCards) {
@@ -1264,18 +2086,116 @@ function isRedCard(card) {
   return SUITS.find((item) => item.key === card.suit)?.red || false;
 }
 
+function renderSetupHistory() {
+  ui.viewLastResult.classList.toggle("hidden", !state.lastFinishedResult);
+
+  const signature = !state.lastFinishedResult
+    ? "hidden"
+    : state.lastFinishedResult.map((item) => `${item.name}:${item.score}:${item.captured}`).join("|");
+
+  if (state.renderCache.history === signature) {
+    return;
+  }
+  state.renderCache.history = signature;
+
+  if (!state.lastFinishedResult) {
+    ui.historyGrid.innerHTML = "";
+    return;
+  }
+
+  ui.historyMeta.textContent = `上一局结束于 ${state.lastFinishedAt}。`;
+  ui.historyGrid.innerHTML = "";
+  state.lastFinishedResult.forEach((item, index) => {
+    const redCardText = item.redCards.length
+      ? item.redCards.map((card) => `${cardLabel(card)}(${card.scoreValue})`).join("、")
+      : "本局没有赢到红牌";
+    const article = document.createElement("article");
+    article.className = `result-card${index === 0 ? " top" : ""}`;
+    article.innerHTML = `
+      <p class="result-rank">第 ${index + 1} 名</p>
+      <h3>${item.name}</h3>
+      <p class="result-score">${item.score} 分</p>
+      <p class="result-meta">已赢 ${item.captured} 张牌，红牌 ${item.redCards.length} 张</p>
+      <p class="result-red-cards">${redCardText}</p>
+    `;
+    ui.historyGrid.appendChild(article);
+  });
+}
+
+function renderPlayerStatsDashboard() {
+  const currentProfile = state.currentPlayerId && state.playerStats[state.currentPlayerId]
+    ? state.playerStats[state.currentPlayerId]
+    : null;
+  const sorted = getSortedPlayerStats();
+
+  const playerSignature = currentProfile
+    ? `${currentProfile.id}:${currentProfile.rounds}:${currentProfile.wins}:${currentProfile.totalScore}:${currentProfile.bestScore}:${currentProfile.lastScore}:${ui.playerIdHint.textContent}`
+    : `empty:${ui.playerIdHint.textContent}`;
+  if (state.renderCache.playerStats !== playerSignature) {
+    state.renderCache.playerStats = playerSignature;
+    if (!currentProfile) {
+      ui.playerStatsCard.innerHTML = `
+        <p>当前还没有选定游戏 ID。</p>
+        <p>输入一个新的 ID，或者从已有 ID 里选一个，就能累计局数和积分。</p>
+      `;
+    } else {
+      ui.playerStatsCard.innerHTML = `
+        <p>当前 ID：${currentProfile.id}</p>
+        <p>累计积分：${currentProfile.totalScore} 分 · 总局数：${currentProfile.rounds} 局</p>
+        <p>胜场：${currentProfile.wins} 局 · 单局最高：${currentProfile.bestScore} 分 · 上一局：${currentProfile.lastScore} 分</p>
+      `;
+    }
+  }
+
+  const leaderboardSignature = sorted.map((item) =>
+    `${item.id}:${item.totalScore}:${item.wins}:${item.rounds}:${item.bestScore}`,
+  ).join("|");
+  if (state.renderCache.leaderboard === leaderboardSignature) {
+    return;
+  }
+  state.renderCache.leaderboard = leaderboardSignature;
+
+  ui.leaderboardList.innerHTML = "";
+  if (!sorted.length) {
+    ui.leaderboardList.appendChild(createEmptyState("还没有人打完过一局，先创建一个游戏 ID 开始吧。"));
+    return;
+  }
+
+  sorted.forEach((item, index) => {
+    const article = document.createElement("article");
+    article.className = `leaderboard-item${item.id === state.currentPlayerId ? " active" : ""}`;
+    article.innerHTML = `
+      <div class="leaderboard-rank">#${index + 1}</div>
+      <div class="leaderboard-main">
+        <h3>${item.id}</h3>
+        <p>累计积分 ${item.totalScore} · 胜场 ${item.wins} · 局数 ${item.rounds}</p>
+      </div>
+      <div class="leaderboard-side">
+        <strong>${item.bestScore}</strong>
+        <span>单局最高</span>
+      </div>
+    `;
+    ui.leaderboardList.appendChild(article);
+  });
+}
+
 function render() {
+  renderAuthControls();
   renderRulesModal();
+  renderSetupHistory();
+  renderPlayerStatsDashboard();
 
   if (state.phase === "setup") {
     ui.heroSection.classList.remove("hidden");
     ui.setupPanel.classList.remove("hidden");
+    ui.historyPanel.classList.toggle("hidden", !state.lastFinishedResult);
     ui.gameLayout.classList.add("hidden");
     return;
   }
 
   ui.heroSection.classList.add("hidden");
   ui.setupPanel.classList.add("hidden");
+  ui.historyPanel.classList.add("hidden");
   ui.gameLayout.classList.remove("hidden");
 
   const currentPlayer = getCurrentPlayer();
@@ -1299,11 +2219,11 @@ function render() {
 
   const humanPlayer = state.players.find((player) => player.isHuman);
   const humanDiceSignature = state.diceAnimation ? `${state.diceAnimation.stage}:${state.diceAnimation.faces[humanPlayer.id] || 1}` : "no-dice";
-  const humanSummarySignature = `${humanPlayer.hand.length}|${getRedScore(humanPlayer.captured)}|${humanDiceSignature}`;
+  const humanSummarySignature = `${humanPlayer.hand.length}|${getRedScore(humanPlayer.captured)}|${humanDiceSignature}|${state.currentPlayerId}`;
   if (state.renderCache.humanSummary !== humanSummarySignature) {
     state.renderCache.humanSummary = humanSummarySignature;
     ui.humanSummary.innerHTML = `
-      <p>身份：你</p>
+      <p>身份：你${state.currentPlayerId ? ` · ID：${state.currentPlayerId}` : ""}</p>
       <p>剩余手牌：${humanPlayer.hand.length} 张</p>
       <p>已赢红牌：${getRedScore(humanPlayer.captured)} 分</p>
       ${renderDiceWidget(humanPlayer)}
@@ -1316,6 +2236,7 @@ function render() {
   ui.clearSelection.disabled = !canUseControls;
 
   renderFeedback();
+  renderDrawPile();
   renderActionStage();
   renderDrawPreview();
   renderSeats();
@@ -1332,6 +2253,9 @@ function getStatusText() {
   if (state.phase === "dice-result") {
     return "摇骰子结果";
   }
+  if (state.phase === "opening-deal") {
+    return state.openingStage === "reveal-table" ? "正在翻公共牌" : "正在发手牌";
+  }
   if (state.phase === "game-over") {
     const top = getRankedPlayers()[0];
     return `${top.name} 暂列第一，红牌 ${top.score} 分`;
@@ -1344,7 +2268,7 @@ function getStatusText() {
 
 function getTurnNote(currentPlayer) {
   if (state.phase === "game-over") {
-    return "本局已经结束，可以查看下方结算榜单。";
+    return "本局已经结束，可以查看桌面上的结算卡，或返回模式选择查看上一局结算。";
   }
 
   if (state.phase === "dice-rolling") {
@@ -1353,6 +2277,12 @@ function getTurnNote(currentPlayer) {
 
   if (state.phase === "dice-result") {
     return `${currentPlayer.name}${currentPlayer.isHuman ? "（你）" : ""} 拿到先手，马上开始。`;
+  }
+
+  if (state.phase === "opening-deal") {
+    return state.openingStage === "reveal-table"
+      ? "手牌已经发完，正在逐张翻开桌面公共牌。"
+      : "骰子结束后，正在依次把手牌发给所有玩家。";
   }
 
   if (!currentPlayer?.isHuman) {
@@ -1367,6 +2297,11 @@ function getTurnNote(currentPlayer) {
 }
 
 function getSelectionHint() {
+  if (state.phase === "opening-deal") {
+    return state.openingStage === "reveal-table"
+      ? "桌面公共牌会依次翻开，翻完后才正式开始第一回合。"
+      : "开局发牌中，当前不能操作。";
+  }
   if (state.phase === "ai-turn") {
     return "电脑玩家正在出牌，请观察桌面中央和各座位前方的动作。";
   }
@@ -1432,6 +2367,17 @@ function renderActionStage() {
   });
 }
 
+function renderDrawPile() {
+  const signature = `${state.drawPile.length}|${state.pendingDrawCard?.id || "none"}|${getCurrentPlayer()?.isHuman ? "human" : "ai"}`;
+  if (state.renderCache.drawPile === signature) {
+    return;
+  }
+  state.renderCache.drawPile = signature;
+
+  ui.drawPileCount.textContent = `${state.drawPile.length} 张`;
+  ui.drawPileVisual.classList.toggle("empty", state.drawPile.length === 0);
+}
+
 function renderDrawPreview() {
   if (!state.pendingDrawCard || !getCurrentPlayer()?.isHuman) {
     ui.drawPreview.classList.add("hidden");
@@ -1478,8 +2424,8 @@ function getSeatAssignments() {
   if (state.players.length === 2) {
     seats.top = opponents[0] || null;
   } else if (state.players.length === 3) {
-    seats["top-left"] = opponents[0] || null;
-    seats["top-right"] = opponents[1] || null;
+    seats.top = opponents[0] || null;
+    seats.left = opponents[1] || null;
   } else if (state.players.length === 4) {
     seats.left = opponents[0] || null;
     seats.top = opponents[1] || null;
@@ -1653,6 +2599,10 @@ function renderSeatResults(seats) {
 }
 
 function renderTableCards(selectedSourceCard) {
+  if (ui.tableCards.parentElement !== ui.tablePublicSlot) {
+    ui.tablePublicSlot.appendChild(ui.tableCards);
+  }
+
   const currentPlayer = getCurrentPlayer();
   const playableIds = currentPlayer?.isHuman && state.phase === "human-turn" ? getPlayableTargetIds(selectedSourceCard) : new Set();
   const signature = [
@@ -1671,7 +2621,10 @@ function renderTableCards(selectedSourceCard) {
 
   ui.tableCards.innerHTML = "";
   if (state.tableCards.length === 0) {
-    ui.tableCards.appendChild(createEmptyState("公共牌区暂时没有明牌"));
+    const emptyText = state.phase === "opening-deal"
+      ? "公共牌正在逐张翻开"
+      : "公共牌区暂时没有明牌";
+    ui.tableCards.appendChild(createEmptyState(emptyText));
     return;
   }
 
@@ -1709,7 +2662,10 @@ function renderHumanHand(humanPlayer) {
 
   ui.handCards.innerHTML = "";
   if (!humanPlayer || humanPlayer.hand.length === 0) {
-    ui.handCards.appendChild(createEmptyState("你的手牌已经出完"));
+    const emptyText = state.phase === "opening-deal"
+      ? "正在发你的手牌"
+      : "你的手牌已经出完";
+    ui.handCards.appendChild(createEmptyState(emptyText));
     return;
   }
 
