@@ -246,7 +246,7 @@ select {
 
 .auth-row {
   display: grid;
-  grid-template-columns: auto auto minmax(220px, 1fr);
+  grid-template-columns: auto auto auto minmax(220px, 1fr);
   gap: 12px;
   align-items: center;
   margin: 0 0 18px;

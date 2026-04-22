@@ -57,7 +57,8 @@ const ui = {
   useDice: document.getElementById("use-dice"),
   authEmail: document.getElementById("auth-email"),
   authPassword: document.getElementById("auth-password"),
-  authSubmit: document.getElementById("auth-submit"),
+  authLogin: document.getElementById("auth-login"),
+  authRegister: document.getElementById("auth-register"),
   authLogout: document.getElementById("auth-logout"),
   authStatus: document.getElementById("auth-status"),
   playerId: document.getElementById("player-id"),
@@ -181,7 +182,8 @@ function init() {
   ui.rulesBackdrop.addEventListener("click", closeRulesModal);
   ui.rulesClose.addEventListener("click", closeRulesModal);
   ui.rulesAck.addEventListener("click", closeRulesModal);
-  ui.authSubmit.addEventListener("click", handleAuthSubmit);
+  ui.authLogin.addEventListener("click", handleAuthLogin);
+  ui.authRegister.addEventListener("click", handleAuthRegister);
   ui.authLogout.addEventListener("click", handleAuthLogout);
   ui.playerId.addEventListener("input", handlePlayerIdInput);
   ui.startGame.addEventListener("click", async () => {
@@ -374,7 +376,8 @@ function renderAuthControls() {
 
   ui.authEmail.disabled = state.authBusy || signedIn;
   ui.authPassword.disabled = state.authBusy || signedIn;
-  ui.authSubmit.disabled = state.authBusy || signedIn || !auth;
+  ui.authLogin.disabled = state.authBusy || signedIn || !auth;
+  ui.authRegister.disabled = state.authBusy || signedIn || !auth;
   ui.authLogout.disabled = state.authBusy || !signedIn;
   ui.startGame.disabled = state.authBusy || !signedIn || !state.authReady;
   ui.playerId.disabled = state.authBusy || !signedIn || lockedId;
@@ -392,7 +395,7 @@ function formatAuthError(error) {
     return "密码至少需要 6 位。";
   }
   if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
-    return "密码不正确。";
+    return "账号不存在，或邮箱/密码不匹配。";
   }
   if (code === "auth/email-already-in-use") {
     return "这个邮箱已经注册，请直接登录。";
@@ -449,24 +452,34 @@ async function initFirebase() {
   }
 }
 
-async function handleAuthSubmit() {
-  if (!auth) {
-    state.authStatusMessage = "Firebase 还没准备好，请稍等一下再登录。";
-    renderAuthControls();
-    render();
-    return;
-  }
-
+function getAuthFormCredentials() {
   const email = ui.authEmail.value.trim();
   const password = ui.authPassword.value;
 
-  if (!email || !password) {
-    state.authStatusMessage = "先输入邮箱和密码，再登录或注册。";
+  if (!auth) {
+    state.authStatusMessage = "Firebase 还没准备好，请稍等一下再操作。";
     renderAuthControls();
     render();
+    return null;
+  }
+
+  if (!email || !password) {
+    state.authStatusMessage = "先输入邮箱和密码，再进行登录或注册。";
+    renderAuthControls();
+    render();
+    return null;
+  }
+
+  return { email, password };
+}
+
+async function handleAuthLogin() {
+  const credentials = getAuthFormCredentials();
+  if (!credentials) {
     return;
   }
 
+  const { email, password } = credentials;
   state.authBusy = true;
   state.authStatusMessage = "正在登录账号...";
   renderAuthControls();
@@ -475,18 +488,30 @@ async function handleAuthSubmit() {
   try {
     await auth.signInWithEmailAndPassword(email, password);
   } catch (error) {
-    if (error?.code === "auth/user-not-found") {
-      state.authStatusMessage = "没有找到这个账号，正在自动注册...";
-      renderAuthControls();
-      render();
-      try {
-        await auth.createUserWithEmailAndPassword(email, password);
-      } catch (createError) {
-        state.authStatusMessage = formatAuthError(createError);
-      }
-    } else {
-      state.authStatusMessage = formatAuthError(error);
-    }
+    state.authStatusMessage = formatAuthError(error);
+  } finally {
+    state.authBusy = false;
+    renderAuthControls();
+    render();
+  }
+}
+
+async function handleAuthRegister() {
+  const credentials = getAuthFormCredentials();
+  if (!credentials) {
+    return;
+  }
+
+  const { email, password } = credentials;
+  state.authBusy = true;
+  state.authStatusMessage = "正在注册账号...";
+  renderAuthControls();
+  render();
+
+  try {
+    await auth.createUserWithEmailAndPassword(email, password);
+  } catch (error) {
+    state.authStatusMessage = formatAuthError(error);
   } finally {
     state.authBusy = false;
     renderAuthControls();
