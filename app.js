@@ -1535,6 +1535,70 @@ function getTurnNote(currentPlayer) {
   return "现在由你出牌。先选手牌，再决定钓牌还是弃到台面。";
 }
 
+function renderSeat(container, player) {
+  const key = container.id;
+  const signature = !player
+    ? "empty"
+    : [
+        player.id,
+        player.hand.length,
+        getRedScore(player.captured),
+        player.id === getCurrentPlayer()?.id ? "active" : "idle",
+        player.lastAction?.stamp || 0,
+        player.lastAction?.text || "",
+        player.lastAction?.cards?.map((card) => card.id).join(",") || "",
+        player.isRemote ? "remote" : player.isHuman ? "human" : "bot",
+      ].join("|");
+
+  if (state.renderCache.seats[key] === signature) {
+    return;
+  }
+  state.renderCache.seats[key] = signature;
+
+  container.innerHTML = "";
+  if (!player) {
+    return;
+  }
+
+  const seat = document.createElement("article");
+  seat.className = `seat-card${player.id === getCurrentPlayer()?.id ? " active" : ""}`;
+
+  const backs = Array.from({ length: Math.min(player.hand.length, 6) }, (_, index) => `
+    <div class="card-back" style="--stack-index:${index}"></div>
+  `).join("");
+
+  const lastCards = player.lastAction?.cards?.map((card) => `
+    <div class="seat-mini-card ${isRedCard(card) ? "red" : "black"}">${card.rank}${cardSymbol(card)}</div>
+  `).join("") || "";
+
+  const seatRole = player.isHuman
+    ? "你"
+    : player.isRemote
+      ? "好友"
+      : "电脑";
+
+  seat.innerHTML = `
+    <div>
+      <h3>${player.name}（${seatRole}）</h3>
+      <p class="seat-meta">
+        <span>手牌 ${player.hand.length}</span>
+        <span>红牌 ${getRedScore(player.captured)}</span>
+      </p>
+    </div>
+    <div class="seat-backs">
+      ${backs}
+      <span class="card-back-count">${player.hand.length}</span>
+    </div>
+    <div class="seat-action">
+      <p class="seat-action-copy">${player.lastAction?.text || "暂未出牌"}</p>
+      <div class="seat-action-cards">${lastCards}</div>
+    </div>
+    ${renderDiceWidget(player)}
+  `;
+
+  container.appendChild(seat);
+}
+
 function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand) {
   const gameState = room?.gameState;
   if (!room || !gameState || !Array.isArray(gameState.playersPublic)) {
