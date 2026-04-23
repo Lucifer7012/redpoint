@@ -1687,6 +1687,168 @@ function renderSeat(container, player) {
   container.appendChild(seat);
 }
 
+function isRemoteSeatPlayer(player) {
+  return Boolean(
+    player &&
+    player.uid &&
+    state.multiplayer?.active &&
+    state.authUser?.uid &&
+    player.uid !== state.authUser.uid
+  );
+}
+
+function getPlayerRoleLabel(player) {
+  if (!player) {
+    return "";
+  }
+  if (player.isHuman || player.uid === state.authUser?.uid) {
+    return "你";
+  }
+  if (isRemoteSeatPlayer(player) || player.isRemote) {
+    return "好友";
+  }
+  return "电脑";
+}
+
+function getPlayerDisplayName(player, includeRole = true) {
+  if (!player) {
+    return "玩家";
+  }
+  if (!includeRole) {
+    return player.name || "玩家";
+  }
+  return `${player.name || "玩家"}（${getPlayerRoleLabel(player)}）`;
+}
+
+function renderSeat(container, player) {
+  const key = container.id;
+  const signature = !player
+    ? "empty"
+    : [
+        player.id,
+        player.name,
+        player.hand.length,
+        getRedScore(player.captured),
+        player.id === getCurrentPlayer()?.id ? "active" : "idle",
+        player.lastAction?.stamp || 0,
+        player.lastAction?.text || "",
+        player.lastAction?.cards?.map((card) => card.id).join(",") || "",
+        getPlayerRoleLabel(player),
+      ].join("|");
+
+  if (state.renderCache.seats[key] === signature) {
+    return;
+  }
+  state.renderCache.seats[key] = signature;
+
+  container.innerHTML = "";
+  if (!player) {
+    return;
+  }
+
+  const seat = document.createElement("article");
+  seat.className = `seat-card${player.id === getCurrentPlayer()?.id ? " active" : ""}`;
+
+  const backs = Array.from({ length: Math.min(player.hand.length, 6) }, (_, index) => `
+    <div class="card-back" style="--stack-index:${index}"></div>
+  `).join("");
+
+  const lastCards = player.lastAction?.cards?.map((card) => `
+    <div class="seat-mini-card ${isRedCard(card) ? "red" : "black"}">${card.rank}${cardSymbol(card)}</div>
+  `).join("") || "";
+
+  seat.innerHTML = `
+    <div>
+      <h3>${getPlayerDisplayName(player)}</h3>
+      <p class="seat-meta">
+        <span>手牌 ${player.hand.length}</span>
+        <span>红牌 ${getRedScore(player.captured)}</span>
+      </p>
+    </div>
+    <div class="seat-backs">
+      ${backs}
+      <span class="card-back-count">${player.hand.length}</span>
+    </div>
+    <div class="seat-action">
+      <p class="seat-action-copy">${player.lastAction?.text || "暂未出牌"}</p>
+      <div class="seat-action-cards">${lastCards}</div>
+    </div>
+    ${renderDiceWidget(player)}
+  `;
+
+  container.appendChild(seat);
+}
+
+function renderSeatResults(seats) {
+  if (!ui.seatResultLayer) {
+    return;
+  }
+
+  const rankedPlayers = state.phase === "game-over" ? getRankedPlayers() : [];
+  const resultByName = new Map(rankedPlayers.map((item, index) => [item.name, { ...item, rank: index + 1 }]));
+  const activePlayers = Object.entries(seats)
+    .filter(([, player]) => Boolean(player))
+    .map(([slot, player]) => ({ slot, player, result: resultByName.get(player.name) || null }));
+
+  const signature = state.phase !== "game-over"
+    ? "hidden"
+    : activePlayers.map(({ slot, player, result }) => {
+      if (!result) {
+        return `${slot}:${player.id}:none`;
+      }
+      return [
+        slot,
+        player.id,
+        getPlayerRoleLabel(player),
+        result.rank,
+        result.score,
+        result.captured,
+        result.redCards.map((card) => card.id).join(","),
+      ].join(":");
+    }).join("|");
+
+  if (state.renderCache.seatResults === signature) {
+    return;
+  }
+  state.renderCache.seatResults = signature;
+
+  ui.seatResultLayer.innerHTML = "";
+  if (state.phase !== "game-over") {
+    return;
+  }
+
+  activePlayers.forEach(({ slot, player, result }) => {
+    if (!result) {
+      return;
+    }
+
+    const article = document.createElement("article");
+    article.className = `seat-result seat-result-${slot}${result.rank === 1 ? " top" : ""}`;
+    const redCardsHtml = result.redCards.length
+      ? result.redCards
+        .map((card) => `<span class="seat-result__card">${cardSymbol(card)}${card.rank} ${card.scoreValue}</span>`)
+        .join("")
+      : '<p class="seat-result__empty">本局未赢到红牌</p>';
+
+    article.innerHTML = `
+      <div class="seat-result__header">
+        <span class="seat-result__rank">第 ${result.rank} 名</span>
+        ${result.rank === 1 ? '<span class="seat-result__winner">最高分</span>' : ""}
+      </div>
+      <div>
+        <h3>${getPlayerDisplayName(player)}</h3>
+        <p class="seat-result__score">${result.score} 分</p>
+      </div>
+      <div class="seat-result__meta">
+        <span>红牌 ${result.redCards.length} 张</span>
+        <span>总赢牌 ${result.captured} 张</span>
+      </div>
+      <div class="seat-result__cards">${redCardsHtml}</div>
+    `;
+    ui.seatResultLayer.appendChild(article);
+  });
+}
+
 function getPlayerRoleLabel(player) {
   if (!player) {
     return "";
