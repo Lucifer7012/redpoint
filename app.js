@@ -1335,6 +1335,127 @@ function renderSocialPanel() {
   }
 }
 
+function renderSeat(container, player) {
+  const key = container.id;
+  const signature = !player
+    ? "empty"
+    : [
+        player.id,
+        player.hand.length,
+        getRedScore(player.captured),
+        player.id === getCurrentPlayer()?.id ? "active" : "idle",
+        player.lastAction?.stamp || 0,
+        player.lastAction?.text || "",
+        player.lastAction?.cards?.map((card) => card.id).join(",") || "",
+        player.isRemote ? "remote" : player.isHuman ? "human" : "bot",
+      ].join("|");
+
+  if (state.renderCache.seats[key] === signature) {
+    return;
+  }
+  state.renderCache.seats[key] = signature;
+
+  container.innerHTML = "";
+  if (!player) {
+    return;
+  }
+
+  const seat = document.createElement("article");
+  seat.className = `seat-card${player.id === getCurrentPlayer()?.id ? " active" : ""}`;
+
+  const backs = Array.from({ length: Math.min(player.hand.length, 6) }, (_, index) => `
+    <div class="card-back" style="--stack-index:${index}"></div>
+  `).join("");
+
+  const lastCards = player.lastAction?.cards?.map((card) => `
+    <div class="seat-mini-card ${isRedCard(card) ? "red" : "black"}">${card.rank}${cardSymbol(card)}</div>
+  `).join("") || "";
+
+  const seatRole = player.isHuman
+    ? "你"
+    : player.isRemote
+      ? "好友"
+      : "电脑";
+
+  seat.innerHTML = `
+    <div>
+      <h3>${player.name}（${seatRole}）</h3>
+      <p class="seat-meta">
+        <span>手牌 ${player.hand.length}</span>
+        <span>红牌 ${getRedScore(player.captured)}</span>
+      </p>
+    </div>
+    <div class="seat-backs">
+      ${backs}
+      <span class="card-back-count">${player.hand.length}</span>
+    </div>
+    <div class="seat-action">
+      <p class="seat-action-copy">${player.lastAction?.text || "暂未出牌"}</p>
+      <div class="seat-action-cards">${lastCards}</div>
+    </div>
+    ${renderDiceWidget(player)}
+  `;
+
+  container.appendChild(seat);
+}
+
+function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand) {
+  const gameState = room?.gameState;
+  if (!room || !gameState || !Array.isArray(gameState.playersPublic)) {
+    clearMultiplayerState();
+    return;
+  }
+
+  const members = Array.isArray(room.members) ? room.members : [];
+  const players = gameState.playersPublic.map((playerPublic) => {
+    const member = members.find((item) => item.uid === playerPublic.uid);
+    const isLocal = playerPublic.uid === state.authUser?.uid;
+    return {
+      id: playerPublic.uid,
+      uid: playerPublic.uid,
+      name: playerPublic.name || member?.gameId || "玩家",
+      isHuman: isLocal,
+      isRemote: !isLocal,
+      hand: isLocal ? [...localHand] : createHiddenHand(Number(playerPublic.handCount || 0), playerPublic.uid),
+      captured: Array.isArray(playerPublic.captured) ? [...playerPublic.captured] : [],
+      lastAction: playerPublic.lastAction || null,
+      diceTrail: [],
+    };
+  });
+
+  state.multiplayer.active = true;
+  state.multiplayer.roomId = room.id;
+  state.multiplayer.localHand = [...localHand];
+  state.players = players;
+  state.tableCards = Array.isArray(gameState.tableCards) ? [...gameState.tableCards] : [];
+  state.drawPile = Array.isArray(gameState.drawPile) ? [...gameState.drawPile] : [];
+  state.pendingDrawCard = gameState.pendingDrawCard || null;
+  state.log = Array.isArray(gameState.log) ? [...gameState.log] : [];
+  state.actionDisplay = gameState.actionDisplay || null;
+  state.feedback = gameState.feedback || null;
+  state.lastFinishedResult = Array.isArray(gameState.lastFinishedResult) ? [...gameState.lastFinishedResult] : null;
+  state.lastFinishedAt = gameState.lastFinishedAt || "";
+  state.currentPlayerIndex = Math.max(0, players.findIndex((player) => player.uid === gameState.currentPlayerUid));
+  state.settings.playerCount = Number(room.mode || state.settings.playerCount || 2);
+
+  const currentPlayer = players[state.currentPlayerIndex];
+  const syncedPhase = gameState.phase || "remote-turn";
+  const sharedPhase = new Set(["dice-rolling", "dice-result", "opening-deal", "game-over"]);
+  if (sharedPhase.has(syncedPhase)) {
+    state.phase = syncedPhase;
+  } else if (currentPlayer?.uid === state.authUser?.uid) {
+    state.phase = "human-turn";
+  } else {
+    state.phase = "remote-turn";
+  }
+
+  ui.heroSection.classList.add("hidden");
+  ui.setupPanel.classList.add("hidden");
+  ui.historyPanel.classList.add("hidden");
+  ui.gameLayout.classList.remove("hidden");
+  render();
+}
+
 function handleKeyDown(event) {
   if (event.key === "Escape" && state.rulesOpen) {
     closeRulesModal();
@@ -4042,6 +4163,12 @@ function renderSeat(container, player) {
   const lastCards = player.lastAction?.cards?.map((card) => `
     <div class="seat-mini-card ${isRedCard(card) ? "red" : "black"}">${card.rank}${cardSymbol(card)}</div>
   `).join("") || "";
+
+  const seatRole = player.isHuman
+    ? "你"
+    : player.isRemote
+      ? "好友"
+      : "电脑";
 
   seat.innerHTML = `
     <div>
