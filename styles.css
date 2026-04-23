@@ -1052,6 +1052,26 @@ select {
   margin: 0 0 12px;
   color: var(--muted);
   line-height: 1.6;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(51, 77, 72, 0.12);
+}
+
+.social-status.is-info {
+  color: var(--muted);
+}
+
+.social-status.is-success {
+  color: #226247;
+  background: rgba(94, 167, 120, 0.12);
+  border-color: rgba(94, 167, 120, 0.24);
+}
+
+.social-status.is-error {
+  color: #9a3c24;
+  background: rgba(180, 76, 43, 0.1);
+  border-color: rgba(180, 76, 43, 0.22);
 }
 
 .social-room-card {

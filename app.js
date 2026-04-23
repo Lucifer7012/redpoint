@@ -175,6 +175,7 @@ const state = {
   gameIdEditable: true,
   socialBusy: false,
   socialStatusMessage: "",
+  socialStatusTone: "info",
   socialSearchResult: null,
   socialFriendRequests: [],
   socialFriends: [],
@@ -398,8 +399,9 @@ function bindSocialPanelRefs() {
   }
 }
 
-function setSocialStatus(message) {
+function setSocialStatus(message, tone = "info") {
   state.socialStatusMessage = message;
+  state.socialStatusTone = tone;
   renderSocialPanel();
 }
 
@@ -410,6 +412,7 @@ function resetSocialState() {
   state.socialRoomInvites = [];
   state.socialActiveRoom = null;
   state.socialBusy = false;
+  state.socialStatusTone = "info";
   clearMultiplayerState();
 }
 
@@ -1290,8 +1293,14 @@ function renderSocialPanel() {
       accept.className = "ghost-btn";
       accept.type = "button";
       accept.textContent = "加入";
-      accept.disabled = state.socialBusy || Boolean(room);
-      accept.addEventListener("click", () => handleRespondRoomInvite(item.id, true));
+      accept.disabled = state.socialBusy;
+      accept.addEventListener("click", () => {
+        if (room) {
+          setSocialStatus("你当前已经在一个房间里了，先关闭或离开当前房间，再加入新的房间邀请。");
+          return;
+        }
+        handleRespondRoomInvite(item.id, true);
+      });
       const reject = document.createElement("button");
       reject.className = "ghost-btn";
       reject.type = "button";
@@ -4383,3 +4392,338 @@ function getStatusText() {
 }
 
 init();
+
+function formatAuthError(error) {
+  const code = error?.code || "";
+  if (code === "auth/invalid-email") {
+    return "邮箱格式不正确。";
+  }
+  if (code === "auth/missing-password" || code === "auth/weak-password") {
+    return "密码至少需要 6 位。";
+  }
+  if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
+    return "账号不存在，或邮箱/密码不匹配。";
+  }
+  if (code === "auth/email-already-in-use") {
+    return "这个邮箱已经注册，请直接登录。";
+  }
+  if (code === "auth/too-many-requests") {
+    return "尝试次数过多，请稍后再试。";
+  }
+  if (code === "permission-denied") {
+    return "数据库权限拦住了这次操作，请更新 Firestore 规则。";
+  }
+  return error?.message || "出现了一点问题，请稍后再试。";
+}
+
+async function handleRespondRoomInvite(inviteId, accept) {
+  if (!db || !state.authUser || !state.currentPlayerId) {
+    return;
+  }
+
+  state.socialBusy = true;
+  renderSocialPanel();
+  try {
+    const inviteRef = db.collection(FIRESTORE_COLLECTIONS.roomInvites).doc(inviteId);
+    await db.runTransaction(async (transaction) => {
+      const inviteSnap = await transaction.get(inviteRef);
+      if (!inviteSnap.exists) {
+        throw new Error("INVITE_MISSING");
+      }
+      const invite = inviteSnap.data();
+      if (!accept) {
+        transaction.set(inviteRef, {
+          status: "rejected",
+          respondedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+        return;
+      }
+
+      const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(invite.roomId);
+      const roomSnap = await transaction.get(roomRef);
+      if (!roomSnap.exists) {
+        throw new Error("ROOM_MISSING");
+      }
+      const room = roomSnap.data();
+      const memberUids = Array.isArray(room.memberUids) ? [...room.memberUids] : [];
+      const members = Array.isArray(room.members) ? [...room.members] : [];
+      if (room.status !== "waiting") {
+        throw new Error("ROOM_CLOSED");
+      }
+      if (!memberUids.includes(state.authUser.uid)) {
+        if (memberUids.length >= Number(room.mode || 2)) {
+          throw new Error("ROOM_FULL");
+        }
+        memberUids.push(state.authUser.uid);
+        members.push({
+          uid: state.authUser.uid,
+          gameId: state.currentPlayerId,
+          joinedAt: Date.now(),
+        });
+      }
+
+      transaction.set(roomRef, {
+        memberUids,
+        members,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      transaction.set(inviteRef, {
+        status: "accepted",
+        respondedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    });
+
+    setSocialStatus(accept ? "已加入好友房间。" : "已拒绝房间邀请。", "success");
+  } catch (error) {
+    const permissionBlocked = error?.code === "permission-denied";
+    const message = error?.message === "ROOM_FULL"
+      ? "这个房间已经满了，没法再加入。"
+      : error?.message === "ROOM_CLOSED"
+        ? "这个房间已经不是等待状态了，不能再加入。"
+        : error?.message === "ROOM_MISSING"
+          ? "这个房间已经不存在了。"
+          : permissionBlocked
+            ? "加入失败：不是你还在别的房间里，而是 Firebase 规则还没允许被邀请的人把自己加入房间，所以数据库把这一步拦住了。"
+            : `处理房间邀请失败：${formatAuthError(error)}`;
+    setSocialStatus(message, "error");
+  } finally {
+    state.socialBusy = false;
+    await refreshSocialData();
+  }
+}
+
+function renderSocialPanel() {
+  if (!ui.socialPanel || !ui.socialStatus || !ui.socialSearchResult || !ui.socialFriendRequests || !ui.socialFriends || !ui.socialRoomInvites || !ui.socialRoomCard) {
+    return;
+  }
+
+  const signedIn = Boolean(state.authUser);
+  const room = state.socialActiveRoom;
+  const signature = JSON.stringify({
+    signedIn,
+    currentPlayerId: state.currentPlayerId,
+    socialBusy: state.socialBusy,
+    socialStatusMessage: state.socialStatusMessage,
+    socialStatusTone: state.socialStatusTone,
+    socialSearchResult: state.socialSearchResult,
+    socialFriendRequests: state.socialFriendRequests.map((item) => [item.id, item.fromGameId, item.toGameId]),
+    socialFriends: state.socialFriends.map((item) => [item.uid, item.gameId]),
+    socialRoomInvites: state.socialRoomInvites.map((item) => [item.id, item.fromGameId, item.mode]),
+    socialActiveRoom: room
+      ? {
+          id: room.id,
+          mode: room.mode,
+          status: room.status,
+          hostUid: room.hostUid,
+          memberUids: room.memberUids,
+          invitedUids: room.invitedUids,
+          members: (room.members || []).map((member) => [member.uid, member.gameId]),
+        }
+      : null,
+  });
+
+  if (state.renderCache.social === signature) {
+    return;
+  }
+  state.renderCache.social = signature;
+
+  ui.socialPanel.classList.toggle("is-disabled", !signedIn);
+  ui.socialSearchInput.disabled = !signedIn || state.socialBusy;
+  ui.socialSearchButton.disabled = !signedIn || state.socialBusy;
+  ui.socialStatus.className = `social-status is-${state.socialStatusTone || "info"}`;
+  ui.socialStatus.textContent = state.socialStatusMessage || (signedIn
+    ? "现在可以搜索好友、处理邀请、创建房间。"
+    : "登录后可以搜索好友并创建房间。");
+
+  ui.socialSearchResult.innerHTML = "";
+  if (state.socialSearchResult?.type === "found") {
+    const result = state.socialSearchResult;
+    const card = document.createElement("article");
+    card.className = "social-item";
+    card.innerHTML = `
+      <div>
+        <strong>${result.gameId}</strong>
+        <p>${result.isSelf ? "这是你自己的游戏 ID。" : result.isFriend ? "已经是你的好友了。" : "可以发送好友申请。"}</p>
+      </div>
+    `;
+    const action = document.createElement("button");
+    action.className = "ghost-btn";
+    action.type = "button";
+    action.textContent = result.isSelf ? "本人" : result.isFriend ? "已是好友" : "添加好友";
+    action.disabled = result.isSelf || result.isFriend || state.socialBusy;
+    if (!action.disabled) {
+      action.addEventListener("click", () => handleSendFriendRequest(result.uid, result.gameId));
+    }
+    card.appendChild(action);
+    ui.socialSearchResult.appendChild(card);
+  }
+
+  ui.socialRoomCard.innerHTML = "";
+  if (!signedIn) {
+    ui.socialRoomCard.appendChild(createEmptyState("登录后可以创建好友房间。"));
+  } else if (!room) {
+    const wrap = document.createElement("div");
+    wrap.className = "social-room-inner";
+    wrap.innerHTML = `
+      <div>
+        <strong>还没有等待中的房间</strong>
+        <p>先创建一个 2 / 3 / 4 人房，再邀请好友加入。</p>
+      </div>
+    `;
+    const actions = document.createElement("div");
+    actions.className = "social-inline-actions";
+    ["2", "3", "4"].forEach((mode) => {
+      const button = document.createElement("button");
+      button.className = "ghost-btn";
+      button.type = "button";
+      button.textContent = `创建${mode}人房`;
+      button.disabled = state.socialBusy || !state.currentPlayerId;
+      button.addEventListener("click", () => handleCreateRoom(mode));
+      actions.appendChild(button);
+    });
+    wrap.appendChild(actions);
+    ui.socialRoomCard.appendChild(wrap);
+  } else {
+    const members = Array.isArray(room.members) ? room.members : [];
+    const targetCount = Number(room.mode || 2);
+    const slotsLeft = Math.max(0, targetCount - members.length);
+    const memberText = members.map((member) => member.gameId).join("、");
+    const roomStatusText = room.status === "playing"
+      ? "联机对局进行中"
+      : slotsLeft > 0
+        ? `等待中，还差 ${slotsLeft} 人`
+        : "人数已满，可以开始联机";
+    const card = document.createElement("div");
+    card.className = "social-room-inner";
+    card.innerHTML = `
+      <div>
+        <strong>${room.mode} 人房 · ${room.hostUid === state.authUser.uid ? "你是房主" : "好友房间"}</strong>
+        <p>房间状态：${roomStatusText}</p>
+        <p>当前成员：${memberText || "暂无"}</p>
+      </div>
+    `;
+    const button = document.createElement("button");
+    button.className = "ghost-btn";
+    button.type = "button";
+    button.textContent = room.hostUid === state.authUser.uid ? "关闭房间" : "离开房间";
+    button.disabled = state.socialBusy;
+    button.addEventListener("click", handleLeaveRoom);
+    card.appendChild(button);
+    const startButton = room.status === "waiting" && room.hostUid === state.authUser.uid && members.length === targetCount
+      ? document.createElement("button")
+      : null;
+    if (startButton) {
+      startButton.className = "ghost-btn";
+      startButton.type = "button";
+      startButton.textContent = "开始联机";
+      startButton.disabled = state.socialBusy;
+      startButton.addEventListener("click", handleStartRoomMatch);
+      card.insertBefore(startButton, card.lastChild);
+    }
+    ui.socialRoomCard.appendChild(card);
+  }
+
+  ui.socialFriendRequests.innerHTML = "";
+  if (!state.socialFriendRequests.length) {
+    ui.socialFriendRequests.appendChild(createEmptyState("还没有新的好友申请。"));
+  } else {
+    state.socialFriendRequests.forEach((item) => {
+      const card = document.createElement("article");
+      card.className = "social-item";
+      card.innerHTML = `<div><strong>${item.fromGameId}</strong><p>想加你为好友</p></div>`;
+      const actions = document.createElement("div");
+      actions.className = "social-inline-actions";
+      const accept = document.createElement("button");
+      accept.className = "ghost-btn";
+      accept.type = "button";
+      accept.textContent = "通过";
+      accept.disabled = state.socialBusy;
+      accept.addEventListener("click", () => handleRespondFriendRequest(item.id, true));
+      const reject = document.createElement("button");
+      reject.className = "ghost-btn";
+      reject.type = "button";
+      reject.textContent = "拒绝";
+      reject.disabled = state.socialBusy;
+      reject.addEventListener("click", () => handleRespondFriendRequest(item.id, false));
+      actions.append(accept, reject);
+      card.appendChild(actions);
+      ui.socialFriendRequests.appendChild(card);
+    });
+  }
+
+  ui.socialRoomInvites.innerHTML = "";
+  if (!state.socialRoomInvites.length) {
+    ui.socialRoomInvites.appendChild(createEmptyState("还没有新的房间邀请。"));
+  } else {
+    state.socialRoomInvites.forEach((item) => {
+      const card = document.createElement("article");
+      card.className = "social-item";
+      card.innerHTML = `<div><strong>${item.fromGameId}</strong><p>邀请你进入 ${item.mode} 人房</p></div>`;
+      const actions = document.createElement("div");
+      actions.className = "social-inline-actions";
+      const accept = document.createElement("button");
+      accept.className = "ghost-btn";
+      accept.type = "button";
+      accept.textContent = room ? "先离开当前房间" : "加入";
+      accept.disabled = state.socialBusy;
+      accept.addEventListener("click", () => {
+        if (room) {
+          setSocialStatus("你当前还在一个房间里，先点上面的“关闭房间”或“离开房间”，再来加入这个邀请。", "error");
+          return;
+        }
+        handleRespondRoomInvite(item.id, true);
+      });
+      const reject = document.createElement("button");
+      reject.className = "ghost-btn";
+      reject.type = "button";
+      reject.textContent = "拒绝";
+      reject.disabled = state.socialBusy;
+      reject.addEventListener("click", () => handleRespondRoomInvite(item.id, false));
+      actions.append(accept, reject);
+      card.appendChild(actions);
+      ui.socialRoomInvites.appendChild(card);
+    });
+  }
+
+  ui.socialFriends.innerHTML = "";
+  if (!state.socialFriends.length) {
+    ui.socialFriends.appendChild(createEmptyState("还没有好友，先去搜索一个游戏 ID 吧。"));
+  } else {
+    state.socialFriends.forEach((friend) => {
+      const card = document.createElement("article");
+      card.className = "social-item";
+      const memberUids = room?.memberUids || [];
+      const invitedUids = room?.invitedUids || [];
+      const roomMode = room?.mode || "";
+      let inviteText = "先创建房间";
+      let inviteDisabled = true;
+
+      if (room) {
+        if (room.hostUid !== state.authUser.uid) {
+          inviteText = "仅房主可邀请";
+        } else if (memberUids.includes(friend.uid)) {
+          inviteText = "已在房间";
+        } else if (invitedUids.includes(friend.uid)) {
+          inviteText = "已邀请";
+        } else if (memberUids.length >= Number(room.mode || 2)) {
+          inviteText = "房间已满";
+        } else {
+          inviteText = "邀请进房";
+          inviteDisabled = false;
+        }
+      }
+
+      card.innerHTML = `<div><strong>${friend.gameId}</strong><p>${room ? `可邀请进入 ${roomMode} 人房` : "先创建房间再邀请"}</p></div>`;
+      const invite = document.createElement("button");
+      invite.className = "ghost-btn";
+      invite.type = "button";
+      invite.textContent = inviteText;
+      invite.disabled = state.socialBusy || inviteDisabled;
+      if (!invite.disabled) {
+        invite.addEventListener("click", () => handleInviteFriend(friend.uid, friend.gameId));
+      }
+      card.appendChild(invite);
+      ui.socialFriends.appendChild(card);
+    });
+  }
+}
