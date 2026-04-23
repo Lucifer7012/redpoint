@@ -1399,6 +1399,142 @@ function renderSeat(container, player) {
   container.appendChild(seat);
 }
 
+function captureHandCard(player, sourceCard, targets, resolution, fromHuman) {
+  const cardIndex = player.hand.findIndex((card) => card.id === sourceCard.id);
+  if (cardIndex === -1) {
+    setFeedback("没找到这张手牌，已重置当前选择。", "error");
+    clearSelection();
+    return;
+  }
+
+  const playedCard = player.hand.splice(cardIndex, 1)[0];
+  removeTableCards(targets);
+  player.captured.push(playedCard, ...targets);
+
+  if (player.uid === state.authUser?.uid) {
+    state.multiplayer.localHand = [...player.hand];
+  }
+
+  updateLastAction(player, resolution.description, [playedCard, ...targets]);
+  setActionDisplay({
+    playerId: player.id,
+    playerName: player.name,
+    text: resolution.description,
+    cards: [playedCard, ...targets],
+    tone: "collect",
+  });
+  pushLog(`${player.name} 打出 ${cardLabel(playedCard)}，${resolution.description}。`);
+  clearSelection(false);
+  setFeedback(
+    fromHuman
+      ? `你成功得牌：${[playedCard, ...targets].map(cardLabel).join("、")}`
+      : `${player.name} 完成了一次钓牌。`,
+    "info",
+  );
+  startDrawPhase(player);
+}
+
+function discardHandCard(player, sourceCard, fromHuman) {
+  const cardIndex = player.hand.findIndex((card) => card.id === sourceCard.id);
+  if (cardIndex === -1) {
+    setFeedback("没找到这张手牌，已重置当前选择。", "error");
+    clearSelection();
+    return;
+  }
+
+  const discardedCard = player.hand.splice(cardIndex, 1)[0];
+  state.tableCards.push(discardedCard);
+
+  if (player.uid === state.authUser?.uid) {
+    state.multiplayer.localHand = [...player.hand];
+  }
+
+  updateLastAction(player, `弃下 ${cardLabel(discardedCard)}`, [discardedCard]);
+  setActionDisplay({
+    playerId: player.id,
+    playerName: player.name,
+    text: `弃下 ${cardLabel(discardedCard)}`,
+    cards: [discardedCard],
+    tone: "discard",
+  });
+  pushLog(`${player.name} 打出 ${cardLabel(discardedCard)}，未钓牌，留在台面。`);
+  clearSelection(false);
+  setFeedback(
+    fromHuman
+      ? `你将 ${cardLabel(discardedCard)} 放到了桌面。`
+      : `${player.name} 放了一张牌到桌面。`,
+    "info",
+  );
+  startDrawPhase(player);
+}
+
+function getStatusText() {
+  const currentPlayer = getCurrentPlayer();
+  if (state.phase === "dice-rolling") {
+    return "摇骰子中";
+  }
+  if (state.phase === "dice-result") {
+    return "摇骰子结果";
+  }
+  if (state.phase === "opening-deal") {
+    return state.openingStage === "reveal-table" ? "正在翻公共牌" : "正在发手牌";
+  }
+  if (state.phase === "game-over") {
+    const top = getRankedPlayers()[0];
+    return top ? `${top.name} 暂列第一，红牌 ${top.score} 分` : "本局结束";
+  }
+  if (isMultiplayerActive()) {
+    if (currentPlayer?.uid === state.authUser?.uid) {
+      return state.pendingDrawCard ? "当前轮到你补枪" : "当前轮到你出牌";
+    }
+    return `当前轮到 ${currentPlayer?.name || "好友"}（好友）出牌`;
+  }
+  if (state.phase === "ai-turn" || state.phase === "remote-turn") {
+    return `${currentPlayer?.name || "对手"} 正在行动`;
+  }
+  return "等待你操作";
+}
+
+function getTurnNote(currentPlayer) {
+  if (state.phase === "game-over") {
+    return "本局已经结束，可以查看桌面上的结算卡，或返回模式选择查看上一局结算。";
+  }
+
+  if (state.phase === "dice-rolling") {
+    return "所有玩家都在摇骰子，几秒后会自动显示结果。";
+  }
+
+  if (state.phase === "dice-result") {
+    return `${currentPlayer.name}${currentPlayer.isHuman ? "（你）" : ""} 拿到先手，马上开始。`;
+  }
+
+  if (state.phase === "opening-deal") {
+    return state.openingStage === "reveal-table"
+      ? "手牌已经发完，正在逐张翻开桌面公共牌。"
+      : "骰子结束后，正在依次把手牌发给所有玩家。";
+  }
+
+  if (isMultiplayerActive()) {
+    if (currentPlayer?.uid === state.authUser?.uid) {
+      if (state.pendingDrawCard) {
+        return `你摸到了 ${cardLabel(state.pendingDrawCard)}，现在可以继续补枪。`;
+      }
+      return "现在轮到你出牌。先选手牌，再决定钓牌还是弃到台面。";
+    }
+    return `${currentPlayer?.name || "好友"}（好友）的动作会直接同步到你的桌面。`;
+  }
+
+  if (!currentPlayer?.isHuman) {
+    return `${currentPlayer.name} 的动作会直接展示在牌桌中央。`;
+  }
+
+  if (state.pendingDrawCard) {
+    return `你摸到了 ${cardLabel(state.pendingDrawCard)}，现在可以继续补枪。`;
+  }
+
+  return "现在由你出牌。先选手牌，再决定钓牌还是弃到台面。";
+}
+
 function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand) {
   const gameState = room?.gameState;
   if (!room || !gameState || !Array.isArray(gameState.playersPublic)) {
@@ -2578,6 +2714,17 @@ function getCurrentPlayer() {
   return state.players[state.currentPlayerIndex];
 }
 
+function isLocalTurnPlayable() {
+  const currentPlayer = getCurrentPlayer();
+  return Boolean(
+    currentPlayer?.isHuman
+    && (
+      state.phase === "human-turn"
+      || (isMultiplayerActive() && currentPlayer.uid === state.authUser?.uid)
+    )
+  );
+}
+
 function beginCurrentTurn() {
   clearAiTimer();
   clearFocusedTargets();
@@ -2789,7 +2936,7 @@ function chooseDiscardCard(cards) {
 
 function handleConfirmAction() {
   const player = getCurrentPlayer();
-  if (!player || !player.isHuman || state.phase !== "human-turn") {
+  if (!player || !player.isHuman || !isLocalTurnPlayable()) {
     return;
   }
 
@@ -2824,7 +2971,7 @@ function handleConfirmAction() {
 
 function handleDiscardAction() {
   const player = getCurrentPlayer();
-  if (!player || !player.isHuman || state.phase !== "human-turn") {
+  if (!player || !player.isHuman || !isLocalTurnPlayable()) {
     return;
   }
 
@@ -3490,7 +3637,7 @@ function getSingleSelectionMessage(sourceCard, targetCard) {
 
 function selectHandCard(cardId) {
   const player = getCurrentPlayer();
-  if (!player || !player.isHuman || state.phase !== "human-turn" || state.pendingDrawCard) {
+  if (!player || !player.isHuman || !isLocalTurnPlayable() || state.pendingDrawCard) {
     return;
   }
 
@@ -3503,7 +3650,7 @@ function selectHandCard(cardId) {
 
 function toggleTableCard(cardId) {
   const player = getCurrentPlayer();
-  if (!player || !player.isHuman || state.phase !== "human-turn") {
+  if (!player || !player.isHuman || !isLocalTurnPlayable()) {
     return;
   }
 
@@ -3883,7 +4030,7 @@ function render() {
     `;
   }
 
-  const canUseControls = currentPlayer?.isHuman && state.phase === "human-turn";
+  const canUseControls = isLocalTurnPlayable();
   ui.confirmAction.disabled = !canUseControls;
   ui.discardAction.disabled = !canUseControls;
   ui.clearSelection.disabled = !canUseControls;
@@ -4304,7 +4451,7 @@ function renderTableCards(selectedSourceCard) {
   }
 
   const currentPlayer = getCurrentPlayer();
-  const playableIds = currentPlayer?.isHuman && state.phase === "human-turn" ? getPlayableTargetIds(selectedSourceCard) : new Set();
+  const playableIds = isLocalTurnPlayable() ? getPlayableTargetIds(selectedSourceCard) : new Set();
   const signature = [
     state.tableCards.map((card) => card.id).join(","),
     [...state.selectedTable].sort().join(","),
@@ -4337,7 +4484,7 @@ function renderTableCards(selectedSourceCard) {
       table: true,
       playable: playableIds.has(card.id),
       onClick: () => toggleTableCard(card.id),
-      disabled: !currentPlayer?.isHuman || state.phase !== "human-turn",
+      disabled: !isLocalTurnPlayable(),
       cardIndex: index,
       animate: shouldAnimate,
     }));
@@ -4376,7 +4523,7 @@ function renderHumanHand(humanPlayer) {
       selected: state.selectedHandCardId === card.id,
       hiddenZone: true,
       onClick: () => selectHandCard(card.id),
-      disabled: getCurrentPlayer()?.id !== humanPlayer.id || state.phase !== "human-turn" || Boolean(state.pendingDrawCard),
+      disabled: !isLocalTurnPlayable() || getCurrentPlayer()?.id !== humanPlayer.id || Boolean(state.pendingDrawCard),
       cardIndex: index,
       animate: shouldAnimate,
     }));
