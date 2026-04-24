@@ -2080,10 +2080,27 @@ function appendTableCards(cards) {
 function resolveLocalMultiplayerHand(playerPublic, loadedLocalHand, currentPlayerUid = "") {
   const expectedCount = Number(playerPublic?.handCount || 0);
   const currentLocalPlayer = state.players.find((player) => player.uid === state.authUser?.uid);
+  const currentLocalHand = Array.isArray(currentLocalPlayer?.hand) ? currentLocalPlayer.hand : null;
+  const cachedLocalHand = Array.isArray(state.multiplayer?.localHand) ? state.multiplayer.localHand : null;
+
+  if (
+    playerPublic?.uid === state.authUser?.uid
+    && currentPlayerUid === state.authUser?.uid
+    && state.pendingDrawCard
+  ) {
+    const optimisticHand = [currentLocalHand, cachedLocalHand]
+      .filter((cards) => Array.isArray(cards))
+      .sort((a, b) => a.length - b.length)[0];
+
+    if (optimisticHand) {
+      return [...optimisticHand];
+    }
+  }
+
   const candidates = [
     Array.isArray(loadedLocalHand) ? loadedLocalHand : null,
-    Array.isArray(currentLocalPlayer?.hand) ? currentLocalPlayer.hand : null,
-    Array.isArray(state.multiplayer?.localHand) ? state.multiplayer.localHand : null,
+    currentLocalHand,
+    cachedLocalHand,
   ];
 
   const matchingHand = candidates.find((cards) => Array.isArray(cards) && cards.length === expectedCount);
@@ -2092,10 +2109,7 @@ function resolveLocalMultiplayerHand(playerPublic, loadedLocalHand, currentPlaye
   }
 
   if (playerPublic?.uid === state.authUser?.uid && currentPlayerUid === state.authUser?.uid) {
-    const optimisticHand = [
-      Array.isArray(currentLocalPlayer?.hand) ? currentLocalPlayer.hand : null,
-      Array.isArray(state.multiplayer?.localHand) ? state.multiplayer.localHand : null,
-    ]
+    const optimisticHand = [currentLocalHand, cachedLocalHand]
       .filter((cards) => Array.isArray(cards))
       .sort((a, b) => a.length - b.length)[0];
 
