@@ -186,6 +186,7 @@ const state = {
     active: false,
     roomId: "",
     localHand: [],
+    syncQueue: Promise.resolve(),
   },
   renderCache: {
     humanSummary: "",
@@ -1291,6 +1292,7 @@ function clearMultiplayerState() {
     active: false,
     roomId: "",
     localHand: [],
+    syncQueue: Promise.resolve(),
   };
 }
 
@@ -1348,39 +1350,46 @@ async function loadCurrentRoomHand(roomId) {
 }
 
 async function syncMultiplayerRoomState() {
-  if (!isMultiplayerActive() || !db || !state.authUser) {
-    return;
-  }
+  const syncTask = async () => {
+    if (!isMultiplayerActive() || !db || !state.authUser) {
+      return;
+    }
 
-  const roomId = state.multiplayer.roomId || state.socialActiveRoom?.id;
-  if (!roomId) {
-    return;
-  }
+    const roomId = state.multiplayer.roomId || state.socialActiveRoom?.id;
+    if (!roomId) {
+      return;
+    }
 
-  const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(roomId);
-  const nextGameState = serializeRoomGameState();
-  await roomRef.set({
-    status: "playing",
-    gameState: nextGameState,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-  }, { merge: true });
-
-  const localPlayer = state.players.find((player) => player.uid === state.authUser.uid);
-  const nextLocalHand = localPlayer ? [...localPlayer.hand] : [];
-  state.multiplayer.roomId = roomId;
-  state.multiplayer.localHand = nextLocalHand;
-  if (state.socialActiveRoom?.id === roomId) {
-    state.socialActiveRoom = {
-      ...state.socialActiveRoom,
+    const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(roomId);
+    const nextGameState = serializeRoomGameState();
+    await roomRef.set({
       status: "playing",
       gameState: nextGameState,
-    };
-  }
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
 
-  await roomRef.collection("hands").doc(state.authUser.uid).set({
-    cards: nextLocalHand,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-  }, { merge: true });
+    const localPlayer = state.players.find((player) => player.uid === state.authUser.uid);
+    const nextLocalHand = localPlayer ? [...localPlayer.hand] : [];
+    state.multiplayer.roomId = roomId;
+    state.multiplayer.localHand = nextLocalHand;
+    if (state.socialActiveRoom?.id === roomId) {
+      state.socialActiveRoom = {
+        ...state.socialActiveRoom,
+        status: "playing",
+        gameState: nextGameState,
+      };
+    }
+
+    await roomRef.collection("hands").doc(state.authUser.uid).set({
+      cards: nextLocalHand,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  };
+
+  state.multiplayer.syncQueue = (state.multiplayer.syncQueue || Promise.resolve())
+    .catch(() => {})
+    .then(syncTask);
+  return state.multiplayer.syncQueue;
 }
 
 function getFriendPairId(uidA, uidB) {
