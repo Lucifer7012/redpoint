@@ -1347,6 +1347,42 @@ async function loadCurrentRoomHand(roomId) {
   return Array.isArray(data.cards) ? data.cards : [];
 }
 
+async function syncMultiplayerRoomState() {
+  if (!isMultiplayerActive() || !db || !state.authUser) {
+    return;
+  }
+
+  const roomId = state.multiplayer.roomId || state.socialActiveRoom?.id;
+  if (!roomId) {
+    return;
+  }
+
+  const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(roomId);
+  const nextGameState = serializeRoomGameState();
+  await roomRef.set({
+    status: "playing",
+    gameState: nextGameState,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+
+  const localPlayer = state.players.find((player) => player.uid === state.authUser.uid);
+  const nextLocalHand = localPlayer ? [...localPlayer.hand] : [];
+  state.multiplayer.roomId = roomId;
+  state.multiplayer.localHand = nextLocalHand;
+  if (state.socialActiveRoom?.id === roomId) {
+    state.socialActiveRoom = {
+      ...state.socialActiveRoom,
+      status: "playing",
+      gameState: nextGameState,
+    };
+  }
+
+  await roomRef.collection("hands").doc(state.authUser.uid).set({
+    cards: nextLocalHand,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+}
+
 function getFriendPairId(uidA, uidB) {
   return [uidA, uidB].sort().join("__");
 }
