@@ -2077,6 +2077,23 @@ function appendTableCards(cards) {
   state.tableCards = dedupeCards([...state.tableCards, ...nextCards]);
 }
 
+function resolveLocalMultiplayerHand(playerPublic, loadedLocalHand) {
+  const expectedCount = Number(playerPublic?.handCount || 0);
+  const currentLocalPlayer = state.players.find((player) => player.uid === state.authUser?.uid);
+  const candidates = [
+    Array.isArray(loadedLocalHand) ? loadedLocalHand : null,
+    Array.isArray(currentLocalPlayer?.hand) ? currentLocalPlayer.hand : null,
+    Array.isArray(state.multiplayer?.localHand) ? state.multiplayer.localHand : null,
+  ];
+
+  const matchingHand = candidates.find((cards) => Array.isArray(cards) && cards.length === expectedCount);
+  if (matchingHand) {
+    return [...matchingHand];
+  }
+
+  return Array.isArray(loadedLocalHand) ? [...loadedLocalHand] : [];
+}
+
 function captureHandCard(player, sourceCard, targets, resolution, fromHuman) {
   const cardIndex = player.hand.findIndex((card) => card.id === sourceCard.id);
   if (cardIndex === -1) {
@@ -2157,13 +2174,16 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
   const players = gameState.playersPublic.map((playerPublic) => {
     const member = members.find((item) => item.uid === playerPublic.uid);
     const isLocal = playerPublic.uid === state.authUser?.uid;
+    const resolvedHand = isLocal
+      ? resolveLocalMultiplayerHand(playerPublic, localHand)
+      : createHiddenHand(Number(playerPublic.handCount || 0), playerPublic.uid);
     return {
       id: playerPublic.uid,
       uid: playerPublic.uid,
       name: playerPublic.name || member?.gameId || "玩家",
       isHuman: isLocal,
       isRemote: !isLocal,
-      hand: isLocal ? [...localHand] : createHiddenHand(Number(playerPublic.handCount || 0), playerPublic.uid),
+      hand: resolvedHand,
       captured: Array.isArray(playerPublic.captured) ? [...playerPublic.captured] : [],
       lastAction: playerPublic.lastAction || null,
       diceTrail: [],
@@ -2172,7 +2192,7 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
 
   state.multiplayer.active = true;
   state.multiplayer.roomId = room.id;
-  state.multiplayer.localHand = [...localHand];
+  state.multiplayer.localHand = [...(players.find((player) => player.uid === state.authUser?.uid)?.hand || [])];
   state.players = players;
   state.tableCards = dedupeCards(gameState.tableCards);
   state.drawPile = Array.isArray(gameState.drawPile) ? [...gameState.drawPile] : [];
