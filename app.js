@@ -1362,14 +1362,20 @@ async function syncMultiplayerRoomState() {
 
     const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(roomId);
     const nextGameState = serializeRoomGameState();
-    await roomRef.set({
+    const localPlayer = state.players.find((player) => player.uid === state.authUser.uid);
+    const nextLocalHand = localPlayer ? [...localPlayer.hand] : [];
+    const batch = db.batch();
+    batch.set(roomRef, {
       status: "playing",
       gameState: nextGameState,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
+    batch.set(roomRef.collection("hands").doc(state.authUser.uid), {
+      cards: nextLocalHand,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    await batch.commit();
 
-    const localPlayer = state.players.find((player) => player.uid === state.authUser.uid);
-    const nextLocalHand = localPlayer ? [...localPlayer.hand] : [];
     state.multiplayer.roomId = roomId;
     state.multiplayer.localHand = nextLocalHand;
     if (state.socialActiveRoom?.id === roomId) {
@@ -1379,11 +1385,6 @@ async function syncMultiplayerRoomState() {
         gameState: nextGameState,
       };
     }
-
-    await roomRef.collection("hands").doc(state.authUser.uid).set({
-      cards: nextLocalHand,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    }, { merge: true });
   };
 
   state.multiplayer.syncQueue = (state.multiplayer.syncQueue || Promise.resolve())
