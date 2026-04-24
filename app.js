@@ -311,151 +311,868 @@ function ensureLeaderboardControls() {
   }
 }
 
-function getPlayerRoleLabel(player) {
-  if (!player) {
-    return "";
-  }
-  if (player.isHuman) {
-    return "你";
-  }
-  if (player.isRemote) {
-    return "好友";
-  }
-  return "电脑";
-}
-
-function getPlayerDisplayName(player, includeRole = true) {
-  if (!player) {
-    return "玩家";
-  }
-  if (!includeRole) {
-    return player.name || "玩家";
-  }
-  return `${player.name || "玩家"}（${getPlayerRoleLabel(player)}）`;
-}
-
-function getStatusText() {
-  const currentPlayer = getCurrentPlayer();
-
-  if (state.phase === "dice-rolling") {
-    return "摇骰子中";
-  }
-  if (state.phase === "dice-result") {
-    return "摇骰子结果";
-  }
-  if (state.phase === "opening-deal") {
-    return state.openingStage === "reveal-table" ? "正在翻开公共牌" : "正在发手牌";
-  }
-  if (state.phase === "game-over") {
-    const top = getRankedPlayers()[0];
-    if (!top) {
-      return "本局结束";
-    }
-    const topPlayer = state.players.find((player) => player.name === top.name);
-    return `${getPlayerDisplayName(topPlayer || { name: top.name })} 暂列第一，红牌 ${top.score} 分`;
-  }
-  if (isMultiplayerActive()) {
-    if (currentPlayer?.uid === state.authUser?.uid) {
-      return state.pendingDrawCard ? "当前轮到你补枪" : "当前轮到你出牌";
-    }
-    return `当前轮到 ${getPlayerDisplayName(currentPlayer)} 出牌`;
-  }
-  if (state.phase === "ai-turn" || state.phase === "remote-turn") {
-    return `${getPlayerDisplayName(currentPlayer)} 正在行动`;
-  }
-  return "等待你操作";
-}
-
-function getTurnNote(currentPlayer) {
-  if (state.phase === "game-over") {
-    return "本局已经结束，可以查看桌面上的结算卡，或返回模式选择查看上一局结算。";
-  }
-
-  if (state.phase === "dice-rolling") {
-    return "所有玩家都在摇骰子，几秒后会自动显示结果。";
-  }
-
-  if (state.phase === "dice-result") {
-    return `${getPlayerDisplayName(currentPlayer)} 拿到先手，马上开始。`;
-  }
-
-  if (state.phase === "opening-deal") {
-    return state.openingStage === "reveal-table"
-      ? "手牌已经发完，正在逐张翻开桌面公共牌。"
-      : "骰子结束后，正在依次把手牌发给所有玩家。";
-  }
-
-  if (isMultiplayerActive()) {
-    if (currentPlayer?.uid === state.authUser?.uid) {
-      if (state.pendingDrawCard) {
-        return `你摸到了 ${cardLabel(state.pendingDrawCard)}，现在可以继续补枪。`;
-      }
-      return "现在轮到你出牌。先选手牌，再决定钓牌还是弃到台面。";
-    }
-    return `${getPlayerDisplayName(currentPlayer)} 的动作会直接同步到你的桌面。`;
-  }
-
-  if (!currentPlayer?.isHuman) {
-    return `${getPlayerDisplayName(currentPlayer)} 的动作会直接展示在牌桌中央。`;
-  }
-
-  if (state.pendingDrawCard) {
-    return `你摸到了 ${cardLabel(state.pendingDrawCard)}，现在可以继续补枪。`;
-  }
-
-  return "现在由你出牌。先选手牌，再决定钓牌还是弃到台面。";
-}
-
-function renderSeatResults(seats) {
-  if (!ui.seatResultLayer) {
+function renderSocialPanel() {
+  if (!ui.socialPanel || !ui.socialStatus || !ui.socialSearchResult || !ui.socialFriendRequests || !ui.socialFriends || !ui.socialRoomInvites || !ui.socialRoomCard) {
     return;
   }
 
-  ui.seatResultLayer.innerHTML = "";
-  if (state.phase !== "game-over" || !state.lastFinishedResult?.length) {
-    return;
-  }
-
-  const resultsByName = new Map(state.lastFinishedResult.map((item) => [item.name, item]));
-  const activePlayers = Object.entries(seats)
-    .filter(([, player]) => Boolean(player))
-    .map(([slot, player]) => ({
-      slot,
-      player,
-      result: resultsByName.get(player.name),
-    }));
-
-  activePlayers.forEach(({ slot, player, result }) => {
-    if (!result) {
-      return;
-    }
-
-    const article = document.createElement("article");
-    article.className = `seat-result seat-result-${slot}${result.rank === 1 ? " top" : ""}`;
-    const redCardsHtml = result.redCards.length
-      ? result.redCards
-        .map((card) => `<span class="seat-result__card">${cardSymbol(card)}${card.rank} ${card.scoreValue}</span>`)
-        .join("")
-      : '<p class="seat-result__empty">本局未赢到红牌</p>';
-
-    article.innerHTML = `
-      <div class="seat-result__header">
-        <span class="seat-result__rank">第 ${result.rank} 名</span>
-        ${result.rank === 1 ? '<span class="seat-result__winner">最高分</span>' : ""}
-      </div>
-      <div>
-        <h3>${getPlayerDisplayName(player)}</h3>
-        <p class="seat-result__score">${result.score} 分</p>
-      </div>
-      <div class="seat-result__meta">
-        <span>红牌 ${result.redCards.length} 张</span>
-        <span>总赢牌 ${result.captured} 张</span>
-      </div>
-      <div class="seat-result__cards">${redCardsHtml}</div>
-    `;
-    ui.seatResultLayer.appendChild(article);
+  const signedIn = Boolean(state.authUser);
+  const room = state.socialActiveRoom;
+  const signature = JSON.stringify({
+    signedIn,
+    currentPlayerId: state.currentPlayerId,
+    socialBusy: state.socialBusy,
+    socialStatusMessage: state.socialStatusMessage,
+    socialStatusTone: state.socialStatusTone,
+    socialSearchResult: state.socialSearchResult,
+    socialFriendRequests: state.socialFriendRequests.map((item) => [item.id, item.fromGameId, item.toGameId]),
+    socialFriends: state.socialFriends.map((item) => [item.uid, item.gameId]),
+    socialRoomInvites: state.socialRoomInvites.map((item) => [item.id, item.fromGameId, item.mode]),
+    socialActiveRoom: room
+      ? {
+          id: room.id,
+          mode: room.mode,
+          status: room.status,
+          hostUid: room.hostUid,
+          memberUids: room.memberUids,
+          invitedUids: room.invitedUids,
+          members: (room.members || []).map((member) => [member.uid, member.gameId]),
+        }
+      : null,
   });
+
+  if (state.renderCache.social === signature) {
+    return;
+  }
+  state.renderCache.social = signature;
+
+  ui.socialPanel.classList.toggle("is-disabled", !signedIn);
+  ui.socialSearchInput.disabled = !signedIn || state.socialBusy;
+  ui.socialSearchButton.disabled = !signedIn || state.socialBusy;
+  ui.socialStatus.className = `social-status is-${state.socialStatusTone || "info"}`;
+  ui.socialStatus.textContent = state.socialStatusMessage || (signedIn
+    ? "现在可以搜索好友、处理邀请、创建房间。"
+    : "登录后可以搜索好友并创建房间。");
+
+  ui.socialSearchResult.innerHTML = "";
+  if (state.socialSearchResult?.type === "found") {
+    const result = state.socialSearchResult;
+    const card = document.createElement("article");
+    card.className = "social-item";
+    card.innerHTML = `
+      <div>
+        <strong>${result.gameId}</strong>
+        <p>${result.isSelf ? "这是你自己的游戏 ID。" : result.isFriend ? "已经是你的好友了。" : "可以发送好友申请。"}</p>
+      </div>
+    `;
+    const action = document.createElement("button");
+    action.className = "ghost-btn";
+    action.type = "button";
+    action.textContent = result.isSelf ? "本人" : result.isFriend ? "已是好友" : "添加好友";
+    action.disabled = result.isSelf || result.isFriend || state.socialBusy;
+    if (!action.disabled) {
+      action.addEventListener("click", () => handleSendFriendRequest(result.uid, result.gameId));
+    }
+    card.appendChild(action);
+    ui.socialSearchResult.appendChild(card);
+  }
+
+  ui.socialRoomCard.innerHTML = "";
+  if (!signedIn) {
+    ui.socialRoomCard.appendChild(createEmptyState("登录后可以创建好友房间。"));
+  } else if (!room) {
+    const wrap = document.createElement("div");
+    wrap.className = "social-room-inner";
+    wrap.innerHTML = `
+      <div>
+        <strong>还没有等待中的房间</strong>
+        <p>先创建一个 2 / 3 / 4 人房，再邀请好友加入。</p>
+      </div>
+    `;
+    const actions = document.createElement("div");
+    actions.className = "social-inline-actions";
+    ["2", "3", "4"].forEach((mode) => {
+      const button = document.createElement("button");
+      button.className = "ghost-btn";
+      button.type = "button";
+      button.textContent = `创建${mode}人房`;
+      button.disabled = state.socialBusy || !state.currentPlayerId;
+      button.addEventListener("click", () => handleCreateRoom(mode));
+      actions.appendChild(button);
+    });
+    wrap.appendChild(actions);
+    ui.socialRoomCard.appendChild(wrap);
+  } else {
+    const members = Array.isArray(room.members) ? room.members : [];
+    const targetCount = Number(room.mode || 2);
+    const slotsLeft = Math.max(0, targetCount - members.length);
+    const memberText = members.map((member) => member.gameId).join("、");
+    const roomStatusText = room.status === "playing"
+      ? "联机对局进行中"
+      : slotsLeft > 0
+        ? `等待中，还差 ${slotsLeft} 人`
+        : "人数已满，可以开始联机";
+    const card = document.createElement("div");
+    card.className = "social-room-inner";
+    card.innerHTML = `
+      <div>
+        <strong>${room.mode} 人房 · ${room.hostUid === state.authUser.uid ? "你是房主" : "好友房间"}</strong>
+        <p>房间状态：${roomStatusText}</p>
+        <p>当前成员：${memberText || "暂无"}</p>
+      </div>
+    `;
+    const button = document.createElement("button");
+    button.className = "ghost-btn";
+    button.type = "button";
+    button.textContent = room.hostUid === state.authUser.uid ? "关闭房间" : "离开房间";
+    button.disabled = state.socialBusy;
+    button.addEventListener("click", handleLeaveRoom);
+    card.appendChild(button);
+    const startButton = room.status === "waiting" && room.hostUid === state.authUser.uid && members.length === targetCount
+      ? document.createElement("button")
+      : null;
+    if (startButton) {
+      startButton.className = "ghost-btn";
+      startButton.type = "button";
+      startButton.textContent = "开始联机";
+      startButton.disabled = state.socialBusy;
+      startButton.addEventListener("click", handleStartRoomMatch);
+      card.insertBefore(startButton, card.lastChild);
+    }
+    ui.socialRoomCard.appendChild(card);
+  }
+
+  ui.socialFriendRequests.innerHTML = "";
+  if (!state.socialFriendRequests.length) {
+    ui.socialFriendRequests.appendChild(createEmptyState("还没有新的好友申请。"));
+  } else {
+    state.socialFriendRequests.forEach((item) => {
+      const card = document.createElement("article");
+      card.className = "social-item";
+      card.innerHTML = `<div><strong>${item.fromGameId}</strong><p>想加你为好友</p></div>`;
+      const actions = document.createElement("div");
+      actions.className = "social-inline-actions";
+      const accept = document.createElement("button");
+      accept.className = "ghost-btn";
+      accept.type = "button";
+      accept.textContent = "通过";
+      accept.disabled = state.socialBusy;
+      accept.addEventListener("click", () => handleRespondFriendRequest(item.id, true));
+      const reject = document.createElement("button");
+      reject.className = "ghost-btn";
+      reject.type = "button";
+      reject.textContent = "拒绝";
+      reject.disabled = state.socialBusy;
+      reject.addEventListener("click", () => handleRespondFriendRequest(item.id, false));
+      actions.append(accept, reject);
+      card.appendChild(actions);
+      ui.socialFriendRequests.appendChild(card);
+    });
+  }
+
+  ui.socialRoomInvites.innerHTML = "";
+  if (!state.socialRoomInvites.length) {
+    ui.socialRoomInvites.appendChild(createEmptyState("还没有新的房间邀请。"));
+  } else {
+    state.socialRoomInvites.forEach((item) => {
+      const card = document.createElement("article");
+      card.className = "social-item";
+      card.innerHTML = `<div><strong>${item.fromGameId}</strong><p>邀请你进入 ${item.mode} 人房</p></div>`;
+      const actions = document.createElement("div");
+      actions.className = "social-inline-actions";
+      const accept = document.createElement("button");
+      accept.className = "ghost-btn";
+      accept.type = "button";
+      accept.textContent = room ? "先离开当前房间" : "加入";
+      accept.disabled = state.socialBusy;
+      accept.addEventListener("click", () => {
+        if (room) {
+          setSocialStatus("你当前还在一个房间里，先点上面的“关闭房间”或“离开房间”，再来加入这个邀请。", "error");
+          return;
+        }
+        handleRespondRoomInvite(item.id, true);
+      });
+      const reject = document.createElement("button");
+      reject.className = "ghost-btn";
+      reject.type = "button";
+      reject.textContent = "拒绝";
+      reject.disabled = state.socialBusy;
+      reject.addEventListener("click", () => handleRespondRoomInvite(item.id, false));
+      actions.append(accept, reject);
+      card.appendChild(actions);
+      ui.socialRoomInvites.appendChild(card);
+    });
+  }
+
+  ui.socialFriends.innerHTML = "";
+  if (!state.socialFriends.length) {
+    ui.socialFriends.appendChild(createEmptyState("还没有好友，先去搜索一个游戏 ID 吧。"));
+  } else {
+    state.socialFriends.forEach((friend) => {
+      const card = document.createElement("article");
+      card.className = "social-item";
+      const memberUids = room?.memberUids || [];
+      const invitedUids = room?.invitedUids || [];
+      const roomMode = room?.mode || "";
+      let inviteText = "先创建房间";
+      let inviteDisabled = true;
+
+      if (room) {
+        if (room.hostUid !== state.authUser.uid) {
+          inviteText = "仅房主可邀请";
+        } else if (memberUids.includes(friend.uid)) {
+          inviteText = "已在房间";
+        } else if (invitedUids.includes(friend.uid)) {
+          inviteText = "重新邀请";
+          inviteDisabled = false;
+        } else if (memberUids.length >= Number(room.mode || 2)) {
+          inviteText = "房间已满";
+        } else {
+          inviteText = "邀请进房";
+          inviteDisabled = false;
+        }
+      }
+
+      card.innerHTML = `<div><strong>${friend.gameId}</strong><p>${room ? `可邀请进入 ${roomMode} 人房` : "先创建房间再邀请"}</p></div>`;
+      const invite = document.createElement("button");
+      invite.className = "ghost-btn";
+      invite.type = "button";
+      invite.textContent = inviteText;
+      invite.disabled = state.socialBusy || inviteDisabled;
+      if (!invite.disabled) {
+        invite.addEventListener("click", () => handleInviteFriend(friend.uid, friend.gameId));
+      }
+      card.appendChild(invite);
+      ui.socialFriends.appendChild(card);
+    });
+  }
 }
+
+function renderSocialPanel() {
+  if (!ui.socialPanel || !ui.socialStatus || !ui.socialSearchResult || !ui.socialFriendRequests || !ui.socialFriends || !ui.socialRoomInvites || !ui.socialRoomCard) {
+    return;
+  }
+
+  const signedIn = Boolean(state.authUser);
+  const room = state.socialActiveRoom;
+  const signature = JSON.stringify({
+    signedIn,
+    currentPlayerId: state.currentPlayerId,
+    socialBusy: state.socialBusy,
+    socialStatusMessage: state.socialStatusMessage,
+    socialStatusTone: state.socialStatusTone,
+    socialSearchResult: state.socialSearchResult,
+    socialFriendRequests: state.socialFriendRequests.map((item) => [item.id, item.fromGameId, item.toGameId]),
+    socialFriends: state.socialFriends.map((item) => [item.uid, item.gameId]),
+    socialRoomInvites: state.socialRoomInvites.map((item) => [item.id, item.fromGameId, item.mode]),
+    socialActiveRoom: room
+      ? {
+          id: room.id,
+          mode: room.mode,
+          status: room.status,
+          hostUid: room.hostUid,
+          memberUids: room.memberUids,
+          invitedUids: room.invitedUids,
+          members: (room.members || []).map((member) => [member.uid, member.gameId]),
+        }
+      : null,
+  });
+
+  if (state.renderCache.social === signature) {
+    return;
+  }
+  state.renderCache.social = signature;
+
+  ui.socialPanel.classList.toggle("is-disabled", !signedIn);
+  ui.socialSearchInput.disabled = !signedIn || state.socialBusy;
+  ui.socialSearchButton.disabled = !signedIn || state.socialBusy;
+  ui.socialStatus.className = `social-status is-${state.socialStatusTone || "info"}`;
+  ui.socialStatus.textContent = state.socialStatusMessage || (signedIn
+    ? "现在可以搜索好友、处理邀请、创建房间。"
+    : "登录后可以搜索好友并创建房间。");
+
+  ui.socialSearchResult.innerHTML = "";
+  if (state.socialSearchResult?.type === "found") {
+    const result = state.socialSearchResult;
+    const card = document.createElement("article");
+    card.className = "social-item";
+    card.innerHTML = `
+      <div>
+        <strong>${result.gameId}</strong>
+        <p>${result.isSelf ? "这是你自己的游戏 ID。" : result.isFriend ? "已经是你的好友了。" : "可以发送好友申请。"}</p>
+      </div>
+    `;
+    const action = document.createElement("button");
+    action.className = "ghost-btn";
+    action.type = "button";
+    action.textContent = result.isSelf ? "本人" : result.isFriend ? "已是好友" : "添加好友";
+    action.disabled = result.isSelf || result.isFriend || state.socialBusy;
+    if (!action.disabled) {
+      action.addEventListener("click", () => handleSendFriendRequest(result.uid, result.gameId));
+    }
+    card.appendChild(action);
+    ui.socialSearchResult.appendChild(card);
+  }
+
+  ui.socialRoomCard.innerHTML = "";
+  if (!signedIn) {
+    ui.socialRoomCard.appendChild(createEmptyState("登录后可以创建好友房间。"));
+  } else if (!room) {
+    const wrap = document.createElement("div");
+    wrap.className = "social-room-inner";
+    wrap.innerHTML = `
+      <div>
+        <strong>还没有等待中的房间</strong>
+        <p>先创建一个 2 / 3 / 4 人房，再邀请好友加入。</p>
+      </div>
+    `;
+    const actions = document.createElement("div");
+    actions.className = "social-inline-actions";
+    ["2", "3", "4"].forEach((mode) => {
+      const button = document.createElement("button");
+      button.className = "ghost-btn";
+      button.type = "button";
+      button.textContent = `创建${mode}人房`;
+      button.disabled = state.socialBusy || !state.currentPlayerId;
+      button.addEventListener("click", () => handleCreateRoom(mode));
+      actions.appendChild(button);
+    });
+    wrap.appendChild(actions);
+    ui.socialRoomCard.appendChild(wrap);
+  } else {
+    const members = Array.isArray(room.members) ? room.members : [];
+    const targetCount = Number(room.mode || 2);
+    const slotsLeft = Math.max(0, targetCount - members.length);
+    const memberText = members.map((member) => member.gameId).join("、");
+    const roomStatusText = room.status === "playing"
+      ? "联机对局进行中"
+      : slotsLeft > 0
+        ? `等待中，还差 ${slotsLeft} 人`
+        : "人数已满，可以开始联机";
+    const card = document.createElement("div");
+    card.className = "social-room-inner";
+    card.innerHTML = `
+      <div>
+        <strong>${room.mode} 人房 · ${room.hostUid === state.authUser.uid ? "你是房主" : "好友房间"}</strong>
+        <p>房间状态：${roomStatusText}</p>
+        <p>当前成员：${memberText || "暂无"}</p>
+      </div>
+    `;
+    const button = document.createElement("button");
+    button.className = "ghost-btn";
+    button.type = "button";
+    button.textContent = room.hostUid === state.authUser.uid ? "关闭房间" : "离开房间";
+    button.disabled = state.socialBusy;
+    button.addEventListener("click", handleLeaveRoom);
+    card.appendChild(button);
+    const startButton = room.status === "waiting" && room.hostUid === state.authUser.uid && members.length === targetCount
+      ? document.createElement("button")
+      : null;
+    if (startButton) {
+      startButton.className = "ghost-btn";
+      startButton.type = "button";
+      startButton.textContent = "开始联机";
+      startButton.disabled = state.socialBusy;
+      startButton.addEventListener("click", handleStartRoomMatch);
+      card.insertBefore(startButton, card.lastChild);
+    }
+    ui.socialRoomCard.appendChild(card);
+  }
+
+  ui.socialFriendRequests.innerHTML = "";
+  if (!state.socialFriendRequests.length) {
+    ui.socialFriendRequests.appendChild(createEmptyState("还没有新的好友申请。"));
+  } else {
+    state.socialFriendRequests.forEach((item) => {
+      const card = document.createElement("article");
+      card.className = "social-item";
+      card.innerHTML = `<div><strong>${item.fromGameId}</strong><p>想加你为好友</p></div>`;
+      const actions = document.createElement("div");
+      actions.className = "social-inline-actions";
+      const accept = document.createElement("button");
+      accept.className = "ghost-btn";
+      accept.type = "button";
+      accept.textContent = "通过";
+      accept.disabled = state.socialBusy;
+      accept.addEventListener("click", () => handleRespondFriendRequest(item.id, true));
+      const reject = document.createElement("button");
+      reject.className = "ghost-btn";
+      reject.type = "button";
+      reject.textContent = "拒绝";
+      reject.disabled = state.socialBusy;
+      reject.addEventListener("click", () => handleRespondFriendRequest(item.id, false));
+      actions.append(accept, reject);
+      card.appendChild(actions);
+      ui.socialFriendRequests.appendChild(card);
+    });
+  }
+
+  ui.socialRoomInvites.innerHTML = "";
+  if (!state.socialRoomInvites.length) {
+    ui.socialRoomInvites.appendChild(createEmptyState("还没有新的房间邀请。"));
+  } else {
+    state.socialRoomInvites.forEach((item) => {
+      const card = document.createElement("article");
+      card.className = "social-item";
+      card.innerHTML = `<div><strong>${item.fromGameId}</strong><p>邀请你进入 ${item.mode} 人房</p></div>`;
+      const actions = document.createElement("div");
+      actions.className = "social-inline-actions";
+      const accept = document.createElement("button");
+      accept.className = "ghost-btn";
+      accept.type = "button";
+      accept.textContent = room ? "先离开当前房间" : "加入";
+      accept.disabled = state.socialBusy;
+      accept.addEventListener("click", () => {
+        if (room) {
+          setSocialStatus("你当前还在一个房间里，先点上面的“关闭房间”或“离开房间”，再来加入这个邀请。", "error");
+          return;
+        }
+        handleRespondRoomInvite(item.id, true);
+      });
+      const reject = document.createElement("button");
+      reject.className = "ghost-btn";
+      reject.type = "button";
+      reject.textContent = "拒绝";
+      reject.disabled = state.socialBusy;
+      reject.addEventListener("click", () => handleRespondRoomInvite(item.id, false));
+      actions.append(accept, reject);
+      card.appendChild(actions);
+      ui.socialRoomInvites.appendChild(card);
+    });
+  }
+
+  ui.socialFriends.innerHTML = "";
+  if (!state.socialFriends.length) {
+    ui.socialFriends.appendChild(createEmptyState("还没有好友，先去搜索一个游戏 ID 吧。"));
+  } else {
+    state.socialFriends.forEach((friend) => {
+      const card = document.createElement("article");
+      card.className = "social-item";
+      const memberUids = room?.memberUids || [];
+      const invitedUids = room?.invitedUids || [];
+      const roomMode = room?.mode || "";
+      let inviteText = "先创建房间";
+      let inviteDisabled = true;
+
+      if (room) {
+        if (room.hostUid !== state.authUser.uid) {
+          inviteText = "仅房主可邀请";
+        } else if (memberUids.includes(friend.uid)) {
+          inviteText = "已在房间";
+        } else if (invitedUids.includes(friend.uid)) {
+          inviteText = "重新邀请";
+          inviteDisabled = false;
+        } else if (memberUids.length >= Number(room.mode || 2)) {
+          inviteText = "房间已满";
+        } else {
+          inviteText = "邀请进房";
+          inviteDisabled = false;
+        }
+      }
+
+      card.innerHTML = `<div><strong>${friend.gameId}</strong><p>${room ? `可邀请进入 ${roomMode} 人房` : "先创建房间再邀请"}</p></div>`;
+      const invite = document.createElement("button");
+      invite.className = "ghost-btn";
+      invite.type = "button";
+      invite.textContent = inviteText;
+      invite.disabled = state.socialBusy || inviteDisabled;
+      if (!invite.disabled) {
+        invite.addEventListener("click", () => handleInviteFriend(friend.uid, friend.gameId));
+      }
+      card.appendChild(invite);
+      ui.socialFriends.appendChild(card);
+    });
+  }
+}
+
+function renderSocialPanel() {
+  if (!ui.socialPanel || !ui.socialStatus || !ui.socialSearchResult || !ui.socialFriendRequests || !ui.socialFriends || !ui.socialRoomInvites || !ui.socialRoomCard) {
+    return;
+  }
+
+  const signedIn = Boolean(state.authUser);
+  const room = state.socialActiveRoom;
+  const signature = JSON.stringify({
+    signedIn,
+    currentPlayerId: state.currentPlayerId,
+    socialBusy: state.socialBusy,
+    socialStatusMessage: state.socialStatusMessage,
+    socialStatusTone: state.socialStatusTone,
+    socialSearchResult: state.socialSearchResult,
+    socialFriendRequests: state.socialFriendRequests.map((item) => [item.id, item.fromGameId, item.toGameId]),
+    socialFriends: state.socialFriends.map((item) => [item.uid, item.gameId]),
+    socialRoomInvites: state.socialRoomInvites.map((item) => [item.id, item.fromGameId, item.mode]),
+    socialActiveRoom: room
+      ? {
+          id: room.id,
+          mode: room.mode,
+          status: room.status,
+          hostUid: room.hostUid,
+          memberUids: room.memberUids,
+          invitedUids: room.invitedUids,
+          members: (room.members || []).map((member) => [member.uid, member.gameId]),
+        }
+      : null,
+  });
+
+  if (state.renderCache.social === signature) {
+    return;
+  }
+  state.renderCache.social = signature;
+
+  ui.socialPanel.classList.toggle("is-disabled", !signedIn);
+  ui.socialSearchInput.disabled = !signedIn || state.socialBusy;
+  ui.socialSearchButton.disabled = !signedIn || state.socialBusy;
+  ui.socialStatus.className = `social-status is-${state.socialStatusTone || "info"}`;
+  ui.socialStatus.textContent = state.socialStatusMessage || (signedIn
+    ? "现在可以搜索好友、处理邀请、创建房间。"
+    : "登录后可以搜索好友并创建房间。");
+
+  ui.socialSearchResult.innerHTML = "";
+  if (state.socialSearchResult?.type === "found") {
+    const result = state.socialSearchResult;
+    const card = document.createElement("article");
+    card.className = "social-item";
+    card.innerHTML = `
+      <div>
+        <strong>${result.gameId}</strong>
+        <p>${result.isSelf ? "这是你自己的游戏 ID。" : result.isFriend ? "已经是你的好友了。" : "可以发送好友申请。"}</p>
+      </div>
+    `;
+    const action = document.createElement("button");
+    action.className = "ghost-btn";
+    action.type = "button";
+    action.textContent = result.isSelf ? "本人" : result.isFriend ? "已是好友" : "添加好友";
+    action.disabled = result.isSelf || result.isFriend || state.socialBusy;
+    if (!action.disabled) {
+      action.addEventListener("click", () => handleSendFriendRequest(result.uid, result.gameId));
+    }
+    card.appendChild(action);
+    ui.socialSearchResult.appendChild(card);
+  }
+
+  ui.socialRoomCard.innerHTML = "";
+  if (!signedIn) {
+    ui.socialRoomCard.appendChild(createEmptyState("登录后可以创建好友房间。"));
+  } else if (!room) {
+    const wrap = document.createElement("div");
+    wrap.className = "social-room-inner";
+    wrap.innerHTML = `
+      <div>
+        <strong>还没有等待中的房间</strong>
+        <p>先创建一个 2 / 3 / 4 人房，再邀请好友加入。</p>
+      </div>
+    `;
+    const actions = document.createElement("div");
+    actions.className = "social-inline-actions";
+    ["2", "3", "4"].forEach((mode) => {
+      const button = document.createElement("button");
+      button.className = "ghost-btn";
+      button.type = "button";
+      button.textContent = `创建${mode}人房`;
+      button.disabled = state.socialBusy || !state.currentPlayerId;
+      button.addEventListener("click", () => handleCreateRoom(mode));
+      actions.appendChild(button);
+    });
+    wrap.appendChild(actions);
+    ui.socialRoomCard.appendChild(wrap);
+  } else {
+    const members = Array.isArray(room.members) ? room.members : [];
+    const targetCount = Number(room.mode || 2);
+    const slotsLeft = Math.max(0, targetCount - members.length);
+    const memberText = members.map((member) => member.gameId).join("、");
+    const roomStatusText = room.status === "playing"
+      ? "联机对局进行中"
+      : slotsLeft > 0
+        ? `等待中，还差 ${slotsLeft} 人`
+        : "人数已满，可以开始联机";
+    const card = document.createElement("div");
+    card.className = "social-room-inner";
+    card.innerHTML = `
+      <div>
+        <strong>${room.mode} 人房 · ${room.hostUid === state.authUser.uid ? "你是房主" : "好友房间"}</strong>
+        <p>房间状态：${roomStatusText}</p>
+        <p>当前成员：${memberText || "暂无"}</p>
+      </div>
+    `;
+    const button = document.createElement("button");
+    button.className = "ghost-btn";
+    button.type = "button";
+    button.textContent = room.hostUid === state.authUser.uid ? "关闭房间" : "离开房间";
+    button.disabled = state.socialBusy;
+    button.addEventListener("click", handleLeaveRoom);
+    card.appendChild(button);
+    const startButton = room.status === "waiting" && room.hostUid === state.authUser.uid && members.length === targetCount
+      ? document.createElement("button")
+      : null;
+    if (startButton) {
+      startButton.className = "ghost-btn";
+      startButton.type = "button";
+      startButton.textContent = "开始联机";
+      startButton.disabled = state.socialBusy;
+      startButton.addEventListener("click", handleStartRoomMatch);
+      card.insertBefore(startButton, card.lastChild);
+    }
+    ui.socialRoomCard.appendChild(card);
+  }
+
+  ui.socialFriendRequests.innerHTML = "";
+  if (!state.socialFriendRequests.length) {
+    ui.socialFriendRequests.appendChild(createEmptyState("还没有新的好友申请。"));
+  } else {
+    state.socialFriendRequests.forEach((item) => {
+      const card = document.createElement("article");
+      card.className = "social-item";
+      card.innerHTML = `<div><strong>${item.fromGameId}</strong><p>想加你为好友</p></div>`;
+      const actions = document.createElement("div");
+      actions.className = "social-inline-actions";
+      const accept = document.createElement("button");
+      accept.className = "ghost-btn";
+      accept.type = "button";
+      accept.textContent = "通过";
+      accept.disabled = state.socialBusy;
+      accept.addEventListener("click", () => handleRespondFriendRequest(item.id, true));
+      const reject = document.createElement("button");
+      reject.className = "ghost-btn";
+      reject.type = "button";
+      reject.textContent = "拒绝";
+      reject.disabled = state.socialBusy;
+      reject.addEventListener("click", () => handleRespondFriendRequest(item.id, false));
+      actions.append(accept, reject);
+      card.appendChild(actions);
+      ui.socialFriendRequests.appendChild(card);
+    });
+  }
+
+  ui.socialRoomInvites.innerHTML = "";
+  if (!state.socialRoomInvites.length) {
+    ui.socialRoomInvites.appendChild(createEmptyState("还没有新的房间邀请。"));
+  } else {
+    state.socialRoomInvites.forEach((item) => {
+      const card = document.createElement("article");
+      card.className = "social-item";
+      card.innerHTML = `<div><strong>${item.fromGameId}</strong><p>邀请你进入 ${item.mode} 人房</p></div>`;
+      const actions = document.createElement("div");
+      actions.className = "social-inline-actions";
+      const accept = document.createElement("button");
+      accept.className = "ghost-btn";
+      accept.type = "button";
+      accept.textContent = room ? "先离开当前房间" : "加入";
+      accept.disabled = state.socialBusy;
+      accept.addEventListener("click", () => {
+        if (room) {
+          setSocialStatus("你当前还在一个房间里，先点上面的“关闭房间”或“离开房间”，再来加入这个邀请。", "error");
+          return;
+        }
+        handleRespondRoomInvite(item.id, true);
+      });
+      const reject = document.createElement("button");
+      reject.className = "ghost-btn";
+      reject.type = "button";
+      reject.textContent = "拒绝";
+      reject.disabled = state.socialBusy;
+      reject.addEventListener("click", () => handleRespondRoomInvite(item.id, false));
+      actions.append(accept, reject);
+      card.appendChild(actions);
+      ui.socialRoomInvites.appendChild(card);
+    });
+  }
+
+  ui.socialFriends.innerHTML = "";
+  if (!state.socialFriends.length) {
+    ui.socialFriends.appendChild(createEmptyState("还没有好友，先去搜索一个游戏 ID 吧。"));
+  } else {
+    state.socialFriends.forEach((friend) => {
+      const card = document.createElement("article");
+      card.className = "social-item";
+      const memberUids = room?.memberUids || [];
+      const invitedUids = room?.invitedUids || [];
+      const roomMode = room?.mode || "";
+      let inviteText = "先创建房间";
+      let inviteDisabled = true;
+
+      if (room) {
+        if (room.hostUid !== state.authUser.uid) {
+          inviteText = "仅房主可邀请";
+        } else if (memberUids.includes(friend.uid)) {
+          inviteText = "已在房间";
+        } else if (invitedUids.includes(friend.uid)) {
+          inviteText = "重新邀请";
+          inviteDisabled = false;
+        } else if (memberUids.length >= Number(room.mode || 2)) {
+          inviteText = "房间已满";
+        } else {
+          inviteText = "邀请进房";
+          inviteDisabled = false;
+        }
+      }
+
+      card.innerHTML = `<div><strong>${friend.gameId}</strong><p>${room ? `可邀请进入 ${roomMode} 人房` : "先创建房间再邀请"}</p></div>`;
+      const invite = document.createElement("button");
+      invite.className = "ghost-btn";
+      invite.type = "button";
+      invite.textContent = inviteText;
+      invite.disabled = state.socialBusy || inviteDisabled;
+      if (!invite.disabled) {
+        invite.addEventListener("click", () => handleInviteFriend(friend.uid, friend.gameId));
+      }
+      card.appendChild(invite);
+      ui.socialFriends.appendChild(card);
+    });
+  }
+}
+
+async function handleInviteFriend(friendUid, friendGameId) {
+  if (!db || !state.authUser || !state.currentPlayerId) {
+    setSocialStatus("先登录并绑定游戏 ID，再邀请好友。");
+    return;
+  }
+
+  const room = state.socialActiveRoom;
+  if (!room || room.status !== "waiting") {
+    setSocialStatus("请先创建一个等待中的房间。");
+    return;
+  }
+  if (room.hostUid !== state.authUser.uid) {
+    setSocialStatus("只有房主可以继续邀请好友。");
+    return;
+  }
+  if ((room.memberUids || []).includes(friendUid)) {
+    setSocialStatus(`${friendGameId} 已经在房间里了。`);
+    return;
+  }
+  if ((room.memberUids || []).length >= Number(room.mode || 2)) {
+    setSocialStatus("房间人数已经满了。");
+    return;
+  }
+
+  state.socialBusy = true;
+  renderSocialPanel();
+  try {
+    if ((room.invitedUids || []).includes(friendUid)) {
+      const pendingInvite = await db.collection(FIRESTORE_COLLECTIONS.roomInvites)
+        .where("roomId", "==", room.id)
+        .where("toUid", "==", friendUid)
+        .where("status", "==", "pending")
+        .limit(1)
+        .get();
+
+      if (!pendingInvite.empty) {
+        setSocialStatus(`已经邀请过 ${friendGameId} 了。`);
+        return;
+      }
+
+      await db.collection(FIRESTORE_COLLECTIONS.rooms).doc(room.id).set({
+        invitedUids: firebase.firestore.FieldValue.arrayRemove(friendUid),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    }
+
+    await db.collection(FIRESTORE_COLLECTIONS.roomInvites).add({
+      roomId: room.id,
+      mode: Number(room.mode || 2),
+      fromUid: state.authUser.uid,
+      fromGameId: state.currentPlayerId,
+      toUid: friendUid,
+      toGameId: friendGameId,
+      status: "pending",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    await db.collection(FIRESTORE_COLLECTIONS.rooms).doc(room.id).set({
+      invitedUids: firebase.firestore.FieldValue.arrayUnion(friendUid),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    setSocialStatus(`已邀请 ${friendGameId} 进入 ${room.mode} 人房。`, "success");
+  } catch (error) {
+    setSocialStatus(`发送房间邀请失败：${formatAuthError(error)}`, "error");
+  } finally {
+    state.socialBusy = false;
+    await refreshSocialData();
+  }
+}
+
+async function handleRespondRoomInvite(inviteId, accept) {
+  if (!db || !state.authUser || !state.currentPlayerId) {
+    return;
+  }
+
+  state.socialBusy = true;
+  renderSocialPanel();
+  try {
+    const inviteRef = db.collection(FIRESTORE_COLLECTIONS.roomInvites).doc(inviteId);
+    await db.runTransaction(async (transaction) => {
+      const inviteSnap = await transaction.get(inviteRef);
+      if (!inviteSnap.exists) {
+        throw new Error("INVITE_MISSING");
+      }
+      const invite = inviteSnap.data();
+      const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(invite.roomId);
+
+      if (!accept) {
+        transaction.set(roomRef, {
+          invitedUids: firebase.firestore.FieldValue.arrayRemove(invite.toUid),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+        transaction.set(inviteRef, {
+          status: "rejected",
+          respondedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+        return;
+      }
+
+      const roomSnap = await transaction.get(roomRef);
+      if (!roomSnap.exists) {
+        throw new Error("ROOM_MISSING");
+      }
+      const room = roomSnap.data();
+      const memberUids = Array.isArray(room.memberUids) ? [...room.memberUids] : [];
+      const members = Array.isArray(room.members) ? [...room.members] : [];
+      if (room.status !== "waiting") {
+        throw new Error("ROOM_CLOSED");
+      }
+      if (!memberUids.includes(state.authUser.uid)) {
+        if (memberUids.length >= Number(room.mode || 2)) {
+          throw new Error("ROOM_FULL");
+        }
+        memberUids.push(state.authUser.uid);
+        members.push({
+          uid: state.authUser.uid,
+          gameId: state.currentPlayerId,
+          joinedAt: Date.now(),
+        });
+      }
+
+      transaction.set(roomRef, {
+        memberUids,
+        members,
+        invitedUids: firebase.firestore.FieldValue.arrayRemove(invite.toUid),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      transaction.set(inviteRef, {
+        status: "accepted",
+        respondedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    });
+
+    setSocialStatus(accept ? "已加入好友房间。" : "已拒绝房间邀请。", "success");
+  } catch (error) {
+    const permissionBlocked = error?.code === "permission-denied";
+    const message = error?.message === "ROOM_FULL"
+      ? "这个房间已经满了，没法再加入。"
+      : error?.message === "ROOM_CLOSED"
+        ? "这个房间已经不是等待状态了，不能再加入。"
+        : error?.message === "ROOM_MISSING"
+          ? "这个房间已经不存在了。"
+          : permissionBlocked
+            ? "加入失败：不是你还在别的房间里，而是 Firebase 规则还没允许被邀请的人把自己加入房间，所以数据库把这一步拦住了。"
+            : `处理房间邀请失败：${formatAuthError(error)}`;
+    setSocialStatus(message, "error");
+  } finally {
+    state.socialBusy = false;
+    await refreshSocialData();
+  }
+}
+
 
 async function refreshLeaderboardNow() {
   state.leaderboardRefreshing = true;
@@ -605,7 +1322,7 @@ function serializeRoomPlayersPublic() {
 function serializeRoomGameState() {
   return {
     phase: state.phase,
-    tableCards: [...state.tableCards],
+    tableCards: dedupeCards(state.tableCards),
     drawPile: [...state.drawPile],
     pendingDrawCard: state.pendingDrawCard ? { ...state.pendingDrawCard } : null,
     currentPlayerUid: getCurrentPlayer()?.uid || getCurrentPlayer()?.id || null,
@@ -628,72 +1345,6 @@ async function loadCurrentRoomHand(roomId) {
   const snapshot = await db.collection(FIRESTORE_COLLECTIONS.rooms).doc(roomId).collection("hands").doc(state.authUser.uid).get();
   const data = snapshot.exists ? snapshot.data() : {};
   return Array.isArray(data.cards) ? data.cards : [];
-}
-
-function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand) {
-  const gameState = room?.gameState;
-  if (!room || !gameState || !Array.isArray(gameState.playersPublic)) {
-    clearMultiplayerState();
-    return;
-  }
-
-  const members = Array.isArray(room.members) ? room.members : [];
-  const players = gameState.playersPublic.map((playerPublic) => {
-    const member = members.find((item) => item.uid === playerPublic.uid);
-    const isLocal = playerPublic.uid === state.authUser?.uid;
-    return {
-      id: playerPublic.uid,
-      uid: playerPublic.uid,
-      name: playerPublic.name || member?.gameId || "玩家",
-      isHuman: isLocal,
-      isRemote: !isLocal,
-      hand: isLocal ? [...localHand] : createHiddenHand(Number(playerPublic.handCount || 0), playerPublic.uid),
-      captured: Array.isArray(playerPublic.captured) ? [...playerPublic.captured] : [],
-      lastAction: playerPublic.lastAction || null,
-      diceTrail: [],
-    };
-  });
-
-  state.multiplayer.active = true;
-  state.multiplayer.roomId = room.id;
-  state.multiplayer.localHand = [...localHand];
-  state.players = players;
-  state.tableCards = Array.isArray(gameState.tableCards) ? [...gameState.tableCards] : [];
-  state.drawPile = Array.isArray(gameState.drawPile) ? [...gameState.drawPile] : [];
-  state.pendingDrawCard = gameState.pendingDrawCard || null;
-  state.log = Array.isArray(gameState.log) ? [...gameState.log] : [];
-  state.actionDisplay = gameState.actionDisplay || null;
-  state.feedback = gameState.feedback || null;
-  state.lastFinishedResult = Array.isArray(gameState.lastFinishedResult) ? [...gameState.lastFinishedResult] : null;
-  state.lastFinishedAt = gameState.lastFinishedAt || "";
-  state.currentPlayerIndex = Math.max(0, players.findIndex((player) => player.uid === gameState.currentPlayerUid));
-  state.phase = gameState.phase || "remote-turn";
-  state.settings.playerCount = Number(room.mode || state.settings.playerCount || 2);
-
-  ui.heroSection.classList.add("hidden");
-  ui.setupPanel.classList.add("hidden");
-  ui.historyPanel.classList.add("hidden");
-  ui.gameLayout.classList.remove("hidden");
-  render();
-}
-
-async function syncMultiplayerRoomState() {
-  if (!isMultiplayerActive() || !db || !state.authUser) {
-    return;
-  }
-
-  const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(state.multiplayer.roomId);
-  await roomRef.set({
-    status: "playing",
-    gameState: serializeRoomGameState(),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-  }, { merge: true });
-
-  const localPlayer = state.players.find((player) => player.uid === state.authUser.uid);
-  await roomRef.collection("hands").doc(state.authUser.uid).set({
-    cards: localPlayer ? [...localPlayer.hand] : [],
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-  }, { merge: true });
 }
 
 function getFriendPairId(uidA, uidB) {
@@ -774,12 +1425,31 @@ async function refreshSocialData() {
       return bTime - aTime;
     })[0] || null;
 
-  state.socialActiveRoom = activeRoom;
+  let normalizedActiveRoom = activeRoom;
+  if (activeRoom) {
+    try {
+      const outgoingInvitesSnap = await db.collection(FIRESTORE_COLLECTIONS.roomInvites)
+        .where("roomId", "==", activeRoom.id)
+        .where("fromUid", "==", currentUid)
+        .where("status", "==", "pending")
+        .get();
+
+      const pendingInviteUids = outgoingInvitesSnap.docs.map((doc) => doc.data()?.toUid).filter(Boolean);
+      normalizedActiveRoom = {
+        ...activeRoom,
+        invitedUids: pendingInviteUids,
+      };
+    } catch (error) {
+      normalizedActiveRoom = activeRoom;
+    }
+  }
+
+  state.socialActiveRoom = normalizedActiveRoom;
   await refreshFriendsList();
-  if (activeRoom?.status === "playing" && activeRoom.gameState) {
-    const localHand = await loadCurrentRoomHand(activeRoom.id);
-    applyMultiplayerRoomState(activeRoom, localHand);
-  } else if (!activeRoom && state.multiplayer.active) {
+  if (normalizedActiveRoom?.status === "playing" && normalizedActiveRoom.gameState) {
+    const localHand = await loadCurrentRoomHand(normalizedActiveRoom.id);
+    applyMultiplayerRoomState(normalizedActiveRoom, localHand);
+  } else if (!normalizedActiveRoom && state.multiplayer.active) {
     clearMultiplayerState();
   }
   renderSocialPanel();
@@ -1273,438 +1943,34 @@ async function handleLeaveRoom() {
   }
 }
 
-function renderSocialPanel() {
-  if (!ui.socialPanel || !ui.socialStatus || !ui.socialSearchResult || !ui.socialFriendRequests || !ui.socialFriends || !ui.socialRoomInvites || !ui.socialRoomCard) {
-    return;
-  }
-
-  const signedIn = Boolean(state.authUser);
-  const room = state.socialActiveRoom;
-  const signature = JSON.stringify({
-    signedIn,
-    currentPlayerId: state.currentPlayerId,
-    socialBusy: state.socialBusy,
-    socialStatusMessage: state.socialStatusMessage,
-    socialSearchResult: state.socialSearchResult,
-    socialFriendRequests: state.socialFriendRequests.map((item) => [item.id, item.fromGameId, item.toGameId]),
-    socialFriends: state.socialFriends.map((item) => [item.uid, item.gameId]),
-    socialRoomInvites: state.socialRoomInvites.map((item) => [item.id, item.fromGameId, item.mode]),
-    socialActiveRoom: room
-      ? {
-          id: room.id,
-          mode: room.mode,
-          status: room.status,
-          hostUid: room.hostUid,
-          memberUids: room.memberUids,
-          invitedUids: room.invitedUids,
-          members: (room.members || []).map((member) => [member.uid, member.gameId]),
-        }
-      : null,
-  });
-
-  if (state.renderCache.social === signature) {
-    return;
-  }
-  state.renderCache.social = signature;
-
-  ui.socialPanel.classList.toggle("is-disabled", !signedIn);
-  ui.socialSearchInput.disabled = !signedIn || state.socialBusy;
-  ui.socialSearchButton.disabled = !signedIn || state.socialBusy;
-  ui.socialStatus.textContent = state.socialStatusMessage || (signedIn ? "现在可以搜索好友、处理邀请、创建房间。" : "登录后可以搜索好友并创建房间。");
-
-  ui.socialSearchResult.innerHTML = "";
-  if (state.socialSearchResult?.type === "found") {
-    const result = state.socialSearchResult;
-    const card = document.createElement("article");
-    card.className = "social-item";
-    card.innerHTML = `
-      <div>
-        <strong>${result.gameId}</strong>
-        <p>${result.isSelf ? "这是你自己的 ID" : result.isFriend ? "已经是你的好友" : "可以发送好友申请"}</p>
-      </div>
-    `;
-    const action = document.createElement("button");
-    action.className = "ghost-btn";
-    action.type = "button";
-    action.textContent = result.isSelf ? "本人" : result.isFriend ? "已是好友" : "添加好友";
-    action.disabled = result.isSelf || result.isFriend || state.socialBusy;
-    if (!action.disabled) {
-      action.addEventListener("click", () => handleSendFriendRequest(result.uid, result.gameId));
-    }
-    card.appendChild(action);
-    ui.socialSearchResult.appendChild(card);
-  }
-
-  ui.socialRoomCard.innerHTML = "";
-  if (!signedIn) {
-    ui.socialRoomCard.appendChild(createEmptyState("登录后可以创建好友房间。"));
-  } else if (!room) {
-    const wrap = document.createElement("div");
-    wrap.className = "social-room-inner";
-    wrap.innerHTML = `
-      <div>
-        <strong>还没有等待中的房间</strong>
-        <p>先创建一个 2 / 3 / 4 人房，再邀请好友加入。</p>
-      </div>
-    `;
-    const actions = document.createElement("div");
-    actions.className = "social-inline-actions";
-    ["2", "3", "4"].forEach((mode) => {
-      const button = document.createElement("button");
-      button.className = "ghost-btn";
-      button.type = "button";
-      button.textContent = `创建${mode}人房`;
-      button.disabled = state.socialBusy || !state.currentPlayerId;
-      button.addEventListener("click", () => handleCreateRoom(mode));
-      actions.appendChild(button);
-    });
-    wrap.appendChild(actions);
-    ui.socialRoomCard.appendChild(wrap);
-  } else {
-    const members = Array.isArray(room.members) ? room.members : [];
-    const card = document.createElement("div");
-    card.className = "social-room-inner";
-    const memberText = members.map((member) => member.gameId).join("、");
-    card.innerHTML = `
-      <div>
-        <strong>${room.mode} 人房 · ${room.hostUid === state.authUser.uid ? "你是房主" : "好友房间"}</strong>
-        <p>当前成员：${memberText || "暂无"}</p>
-        <p>已进 ${members.length} / ${room.mode} 人。联机正式出牌下一版接上，这一版先支持进房和等人。</p>
-      </div>
-    `;
-    const button = document.createElement("button");
-    button.className = "ghost-btn";
-    button.type = "button";
-    button.textContent = room.hostUid === state.authUser.uid ? "关闭房间" : "离开房间";
-    button.disabled = state.socialBusy;
-    button.addEventListener("click", handleLeaveRoom);
-    card.appendChild(button);
-    const startButton = room.status === "waiting" && room.hostUid === state.authUser.uid && members.length === Number(room.mode || 2)
-      ? document.createElement("button")
-      : null;
-    if (startButton) {
-      startButton.className = "ghost-btn";
-      startButton.type = "button";
-      startButton.textContent = "开始联机";
-      startButton.disabled = state.socialBusy;
-      startButton.addEventListener("click", handleStartRoomMatch);
-      card.insertBefore(startButton, card.lastChild);
-    }
-    ui.socialRoomCard.appendChild(card);
-  }
-
-  ui.socialFriendRequests.innerHTML = "";
-  if (!state.socialFriendRequests.length) {
-    ui.socialFriendRequests.appendChild(createEmptyState("还没有新的好友申请。"));
-  } else {
-    state.socialFriendRequests.forEach((item) => {
-      const card = document.createElement("article");
-      card.className = "social-item";
-      card.innerHTML = `<div><strong>${item.fromGameId}</strong><p>想加你为好友</p></div>`;
-      const actions = document.createElement("div");
-      actions.className = "social-inline-actions";
-      const accept = document.createElement("button");
-      accept.className = "ghost-btn";
-      accept.type = "button";
-      accept.textContent = "通过";
-      accept.disabled = state.socialBusy;
-      accept.addEventListener("click", () => handleRespondFriendRequest(item.id, true));
-      const reject = document.createElement("button");
-      reject.className = "ghost-btn";
-      reject.type = "button";
-      reject.textContent = "拒绝";
-      reject.disabled = state.socialBusy;
-      reject.addEventListener("click", () => handleRespondFriendRequest(item.id, false));
-      actions.append(accept, reject);
-      card.appendChild(actions);
-      ui.socialFriendRequests.appendChild(card);
-    });
-  }
-
-  ui.socialRoomInvites.innerHTML = "";
-  if (!state.socialRoomInvites.length) {
-    ui.socialRoomInvites.appendChild(createEmptyState("还没有新的房间邀请。"));
-  } else {
-    state.socialRoomInvites.forEach((item) => {
-      const card = document.createElement("article");
-      card.className = "social-item";
-      card.innerHTML = `<div><strong>${item.fromGameId}</strong><p>邀请你进入 ${item.mode} 人房</p></div>`;
-      const actions = document.createElement("div");
-      actions.className = "social-inline-actions";
-      const accept = document.createElement("button");
-      accept.className = "ghost-btn";
-      accept.type = "button";
-      accept.textContent = "加入";
-      accept.disabled = state.socialBusy;
-      accept.addEventListener("click", () => {
-        if (room) {
-          setSocialStatus("你当前已经在一个房间里了，先关闭或离开当前房间，再加入新的房间邀请。");
-          return;
-        }
-        handleRespondRoomInvite(item.id, true);
-      });
-      const reject = document.createElement("button");
-      reject.className = "ghost-btn";
-      reject.type = "button";
-      reject.textContent = "拒绝";
-      reject.disabled = state.socialBusy;
-      reject.addEventListener("click", () => handleRespondRoomInvite(item.id, false));
-      actions.append(accept, reject);
-      card.appendChild(actions);
-      ui.socialRoomInvites.appendChild(card);
-    });
-  }
-
-  ui.socialFriends.innerHTML = "";
-  if (!state.socialFriends.length) {
-    ui.socialFriends.appendChild(createEmptyState("还没有好友，先去搜索一个游戏 ID 吧。"));
-  } else {
-    state.socialFriends.forEach((friend) => {
-      const card = document.createElement("article");
-      card.className = "social-item";
-      card.innerHTML = `<div><strong>${friend.gameId}</strong><p>${room ? `可邀请进入 ${room.mode} 人房` : "先创建房间再邀请"}</p></div>`;
-      const invite = document.createElement("button");
-      invite.className = "ghost-btn";
-      invite.type = "button";
-      invite.textContent = room ? "邀请进房" : "先创建房间";
-      invite.disabled = state.socialBusy || !room || room.hostUid !== state.authUser.uid || (room.memberUids || []).includes(friend.uid) || (room.invitedUids || []).includes(friend.uid) || (room.memberUids || []).length >= Number(room.mode || 2);
-      if (!invite.disabled) {
-        invite.addEventListener("click", () => handleInviteFriend(friend.uid, friend.gameId));
-      }
-      card.appendChild(invite);
-      ui.socialFriends.appendChild(card);
-    });
-  }
-}
-
-function getPlayerRoleLabel(player) {
+function isLocalSeatPlayer(player) {
   if (!player) {
-    return "";
+    return false;
   }
-  if (player.isHuman) {
-    return "你";
+  if (state.multiplayer?.active && player.uid && state.authUser?.uid) {
+    return player.uid === state.authUser.uid;
   }
-  if (player.isRemote) {
-    return "好友";
-  }
-  return "电脑";
-}
-
-function getPlayerDisplayName(player, includeRole = true) {
-  if (!player) {
-    return "玩家";
-  }
-  if (!includeRole) {
-    return player.name || "玩家";
-  }
-  return `${player.name || "玩家"}（${getPlayerRoleLabel(player)}）`;
-}
-
-function getStatusText() {
-  const currentPlayer = getCurrentPlayer();
-
-  if (state.phase === "dice-rolling") {
-    return "摇骰子中";
-  }
-  if (state.phase === "dice-result") {
-    return "摇骰子结果";
-  }
-  if (state.phase === "opening-deal") {
-    return state.openingStage === "reveal-table" ? "正在翻开公共牌" : "正在发手牌";
-  }
-  if (state.phase === "game-over") {
-    const top = getRankedPlayers()[0];
-    if (!top) {
-      return "本局结束";
-    }
-    const topPlayer = state.players.find((player) => player.name === top.name);
-    return `${getPlayerDisplayName(topPlayer || { name: top.name })} 暂列第一，红牌 ${top.score} 分`;
-  }
-  if (isMultiplayerActive()) {
-    if (currentPlayer?.uid === state.authUser?.uid) {
-      return state.pendingDrawCard ? "当前轮到你补枪" : "当前轮到你出牌";
-    }
-    return `当前轮到 ${getPlayerDisplayName(currentPlayer)} 出牌`;
-  }
-  if (state.phase === "ai-turn" || state.phase === "remote-turn") {
-    return `${getPlayerDisplayName(currentPlayer)} 正在行动`;
-  }
-  return "等待你操作";
-}
-
-function getTurnNote(currentPlayer) {
-  if (state.phase === "game-over") {
-    return "本局已经结束，可以查看桌面上的结算卡，或返回模式选择查看上一局结算。";
-  }
-
-  if (state.phase === "dice-rolling") {
-    return "所有玩家都在摇骰子，几秒后会自动显示结果。";
-  }
-
-  if (state.phase === "dice-result") {
-    return `${getPlayerDisplayName(currentPlayer)} 拿到先手，马上开始。`;
-  }
-
-  if (state.phase === "opening-deal") {
-    return state.openingStage === "reveal-table"
-      ? "手牌已经发完，正在逐张翻开桌面公共牌。"
-      : "骰子结束后，正在依次把手牌发给所有玩家。";
-  }
-
-  if (isMultiplayerActive()) {
-    if (currentPlayer?.uid === state.authUser?.uid) {
-      if (state.pendingDrawCard) {
-        return `你摸到了 ${cardLabel(state.pendingDrawCard)}，现在可以继续补枪。`;
-      }
-      return "现在轮到你出牌。先选手牌，再决定钓牌还是弃到台面。";
-    }
-    return `${getPlayerDisplayName(currentPlayer)} 的动作会直接同步到你的桌面。`;
-  }
-
-  if (!currentPlayer?.isHuman) {
-    return `${getPlayerDisplayName(currentPlayer)} 的动作会直接展示在牌桌中央。`;
-  }
-
-  if (state.pendingDrawCard) {
-    return `你摸到了 ${cardLabel(state.pendingDrawCard)}，现在可以继续补枪。`;
-  }
-
-  return "现在由你出牌。先选手牌，再决定钓牌还是弃到台面。";
-}
-
-function renderSeatResults(seats) {
-  if (!ui.seatResultLayer) {
-    return;
-  }
-
-  ui.seatResultLayer.innerHTML = "";
-  if (state.phase !== "game-over" || !state.lastFinishedResult?.length) {
-    return;
-  }
-
-  const resultsByName = new Map(state.lastFinishedResult.map((item) => [item.name, item]));
-  const activePlayers = Object.entries(seats)
-    .filter(([, player]) => Boolean(player))
-    .map(([slot, player]) => ({
-      slot,
-      player,
-      result: resultsByName.get(player.name),
-    }));
-
-  activePlayers.forEach(({ slot, player, result }) => {
-    if (!result) {
-      return;
-    }
-
-    const article = document.createElement("article");
-    article.className = `seat-result seat-result-${slot}${result.rank === 1 ? " top" : ""}`;
-    const redCardsHtml = result.redCards.length
-      ? result.redCards
-        .map((card) => `<span class="seat-result__card">${cardSymbol(card)}${card.rank} ${card.scoreValue}</span>`)
-        .join("")
-      : '<p class="seat-result__empty">本局未赢到红牌</p>';
-
-    article.innerHTML = `
-      <div class="seat-result__header">
-        <span class="seat-result__rank">第 ${result.rank} 名</span>
-        ${result.rank === 1 ? '<span class="seat-result__winner">最高分</span>' : ""}
-      </div>
-      <div>
-        <h3>${getPlayerDisplayName(player)}</h3>
-        <p class="seat-result__score">${result.score} 分</p>
-      </div>
-      <div class="seat-result__meta">
-        <span>红牌 ${result.redCards.length} 张</span>
-        <span>总赢牌 ${result.captured} 张</span>
-      </div>
-      <div class="seat-result__cards">${redCardsHtml}</div>
-    `;
-    ui.seatResultLayer.appendChild(article);
-  });
-}
-
-function renderSeat(container, player) {
-  const key = container.id;
-  const signature = !player
-    ? "empty"
-    : [
-        player.id,
-        player.hand.length,
-        getRedScore(player.captured),
-        player.id === getCurrentPlayer()?.id ? "active" : "idle",
-        player.lastAction?.stamp || 0,
-        player.lastAction?.text || "",
-        player.lastAction?.cards?.map((card) => card.id).join(",") || "",
-        player.isRemote ? "remote" : player.isHuman ? "human" : "bot",
-      ].join("|");
-
-  if (state.renderCache.seats[key] === signature) {
-    return;
-  }
-  state.renderCache.seats[key] = signature;
-
-  container.innerHTML = "";
-  if (!player) {
-    return;
-  }
-
-  const seat = document.createElement("article");
-  seat.className = `seat-card${player.id === getCurrentPlayer()?.id ? " active" : ""}`;
-
-  const backs = Array.from({ length: Math.min(player.hand.length, 6) }, (_, index) => `
-    <div class="card-back" style="--stack-index:${index}"></div>
-  `).join("");
-
-  const lastCards = player.lastAction?.cards?.map((card) => `
-    <div class="seat-mini-card ${isRedCard(card) ? "red" : "black"}">${card.rank}${cardSymbol(card)}</div>
-  `).join("") || "";
-
-  const seatRole = player.isHuman
-    ? "你"
-    : player.isRemote
-      ? "好友"
-      : "电脑";
-
-  seat.innerHTML = `
-    <div>
-      <h3>${player.name}（${seatRole}）</h3>
-      <p class="seat-meta">
-        <span>手牌 ${player.hand.length}</span>
-        <span>红牌 ${getRedScore(player.captured)}</span>
-      </p>
-    </div>
-    <div class="seat-backs">
-      ${backs}
-      <span class="card-back-count">${player.hand.length}</span>
-    </div>
-    <div class="seat-action">
-      <p class="seat-action-copy">${player.lastAction?.text || "暂未出牌"}</p>
-      <div class="seat-action-cards">${lastCards}</div>
-    </div>
-    ${renderDiceWidget(player)}
-  `;
-
-  container.appendChild(seat);
+  return Boolean(player.isHuman);
 }
 
 function isRemoteSeatPlayer(player) {
-  return Boolean(
-    player &&
-    player.uid &&
-    state.multiplayer?.active &&
-    state.authUser?.uid &&
-    player.uid !== state.authUser.uid
-  );
+  if (!player) {
+    return false;
+  }
+  if (state.multiplayer?.active && player.uid && state.authUser?.uid) {
+    return player.uid !== state.authUser.uid;
+  }
+  return Boolean(player.isRemote);
 }
 
 function getPlayerRoleLabel(player) {
   if (!player) {
     return "";
   }
-  if (player.isHuman || player.uid === state.authUser?.uid) {
+  if (isLocalSeatPlayer(player)) {
     return "你";
   }
-  if (isRemoteSeatPlayer(player) || player.isRemote) {
+  if (isRemoteSeatPlayer(player)) {
     return "好友";
   }
   return "电脑";
@@ -1720,279 +1986,49 @@ function getPlayerDisplayName(player, includeRole = true) {
   return `${player.name || "玩家"}（${getPlayerRoleLabel(player)}）`;
 }
 
-function renderSeat(container, player) {
-  const key = container.id;
-  const signature = !player
-    ? "empty"
-    : [
-        player.id,
-        player.name,
-        player.hand.length,
-        getRedScore(player.captured),
-        player.id === getCurrentPlayer()?.id ? "active" : "idle",
-        player.lastAction?.stamp || 0,
-        player.lastAction?.text || "",
-        player.lastAction?.cards?.map((card) => card.id).join(",") || "",
-        getPlayerRoleLabel(player),
-      ].join("|");
-
-  if (state.renderCache.seats[key] === signature) {
-    return;
-  }
-  state.renderCache.seats[key] = signature;
-
-  container.innerHTML = "";
-  if (!player) {
-    return;
-  }
-
-  const seat = document.createElement("article");
-  seat.className = `seat-card${player.id === getCurrentPlayer()?.id ? " active" : ""}`;
-
-  const backs = Array.from({ length: Math.min(player.hand.length, 6) }, (_, index) => `
-    <div class="card-back" style="--stack-index:${index}"></div>
-  `).join("");
-
-  const lastCards = player.lastAction?.cards?.map((card) => `
-    <div class="seat-mini-card ${isRedCard(card) ? "red" : "black"}">${card.rank}${cardSymbol(card)}</div>
-  `).join("") || "";
-
-  seat.innerHTML = `
-    <div>
-      <h3>${getPlayerDisplayName(player)}</h3>
-      <p class="seat-meta">
-        <span>手牌 ${player.hand.length}</span>
-        <span>红牌 ${getRedScore(player.captured)}</span>
-      </p>
-    </div>
-    <div class="seat-backs">
-      ${backs}
-      <span class="card-back-count">${player.hand.length}</span>
-    </div>
-    <div class="seat-action">
-      <p class="seat-action-copy">${player.lastAction?.text || "暂未出牌"}</p>
-      <div class="seat-action-cards">${lastCards}</div>
-    </div>
-    ${renderDiceWidget(player)}
-  `;
-
-  container.appendChild(seat);
-}
-
-function renderSeatResults(seats) {
-  if (!ui.seatResultLayer) {
-    return;
-  }
-
-  const rankedPlayers = state.phase === "game-over" ? getRankedPlayers() : [];
-  const resultByName = new Map(rankedPlayers.map((item, index) => [item.name, { ...item, rank: index + 1 }]));
-  const activePlayers = Object.entries(seats)
-    .filter(([, player]) => Boolean(player))
-    .map(([slot, player]) => ({ slot, player, result: resultByName.get(player.name) || null }));
-
-  const signature = state.phase !== "game-over"
-    ? "hidden"
-    : activePlayers.map(({ slot, player, result }) => {
-      if (!result) {
-        return `${slot}:${player.id}:none`;
-      }
-      return [
-        slot,
-        player.id,
-        getPlayerRoleLabel(player),
-        result.rank,
-        result.score,
-        result.captured,
-        result.redCards.map((card) => card.id).join(","),
-      ].join(":");
-    }).join("|");
-
-  if (state.renderCache.seatResults === signature) {
-    return;
-  }
-  state.renderCache.seatResults = signature;
-
-  ui.seatResultLayer.innerHTML = "";
-  if (state.phase !== "game-over") {
-    return;
-  }
-
-  activePlayers.forEach(({ slot, player, result }) => {
-    if (!result) {
-      return;
-    }
-
-    const article = document.createElement("article");
-    article.className = `seat-result seat-result-${slot}${result.rank === 1 ? " top" : ""}`;
-    const redCardsHtml = result.redCards.length
-      ? result.redCards
-        .map((card) => `<span class="seat-result__card">${cardSymbol(card)}${card.rank} ${card.scoreValue}</span>`)
-        .join("")
-      : '<p class="seat-result__empty">本局未赢到红牌</p>';
-
-    article.innerHTML = `
-      <div class="seat-result__header">
-        <span class="seat-result__rank">第 ${result.rank} 名</span>
-        ${result.rank === 1 ? '<span class="seat-result__winner">最高分</span>' : ""}
-      </div>
-      <div>
-        <h3>${getPlayerDisplayName(player)}</h3>
-        <p class="seat-result__score">${result.score} 分</p>
-      </div>
-      <div class="seat-result__meta">
-        <span>红牌 ${result.redCards.length} 张</span>
-        <span>总赢牌 ${result.captured} 张</span>
-      </div>
-      <div class="seat-result__cards">${redCardsHtml}</div>
-    `;
-    ui.seatResultLayer.appendChild(article);
-  });
-}
-
-function getPlayerRoleLabel(player) {
-  if (!player) {
+function getCardIdentity(card) {
+  if (!card) {
     return "";
   }
-  if (player.isHuman) {
-    return "你";
+  if (card.suit && card.rank) {
+    return [
+      card.suit,
+      card.rank,
+      card.playValue ?? "",
+      card.scoreValue ?? "",
+    ].join("|");
   }
-  if (player.isRemote) {
-    return "好友";
+  if (card.id) {
+    return `id:${card.id}`;
   }
-  return "电脑";
+  return [
+    card.suit || "",
+    card.rank || "",
+    card.playValue ?? "",
+    card.scoreValue ?? "",
+  ].join("|");
 }
 
-function getPlayerDisplayName(player, includeRole = true) {
-  if (!player) {
-    return "玩家";
-  }
-  if (!includeRole) {
-    return player.name || "玩家";
-  }
-  return `${player.name || "玩家"}（${getPlayerRoleLabel(player)}）`;
-}
-
-function getStatusText() {
-  const currentPlayer = getCurrentPlayer();
-
-  if (state.phase === "dice-rolling") {
-    return "摇骰子中";
-  }
-  if (state.phase === "dice-result") {
-    return "摇骰子结果";
-  }
-  if (state.phase === "opening-deal") {
-    return state.openingStage === "reveal-table" ? "正在翻开公共牌" : "正在发手牌";
-  }
-  if (state.phase === "game-over") {
-    const top = getRankedPlayers()[0];
-    if (!top) {
-      return "本局结束";
-    }
-    const topPlayer = state.players.find((player) => player.name === top.name);
-    return `${getPlayerDisplayName(topPlayer || { name: top.name })} 暂列第一，红牌 ${top.score} 分`;
-  }
-  if (isMultiplayerActive()) {
-    if (currentPlayer?.uid === state.authUser?.uid) {
-      return state.pendingDrawCard ? "当前轮到你补枪" : "当前轮到你出牌";
-    }
-    return `当前轮到 ${getPlayerDisplayName(currentPlayer)} 出牌`;
-  }
-  if (state.phase === "ai-turn" || state.phase === "remote-turn") {
-    return `${getPlayerDisplayName(currentPlayer)} 正在行动`;
-  }
-  return "等待你操作";
-}
-
-function getTurnNote(currentPlayer) {
-  if (state.phase === "game-over") {
-    return "本局已经结束，可以查看桌面上的结算卡，或返回模式选择查看上一局结算。";
-  }
-
-  if (state.phase === "dice-rolling") {
-    return "所有玩家都在摇骰子，几秒后会自动显示结果。";
-  }
-
-  if (state.phase === "dice-result") {
-    return `${getPlayerDisplayName(currentPlayer)} 拿到先手，马上开始。`;
-  }
-
-  if (state.phase === "opening-deal") {
-    return state.openingStage === "reveal-table"
-      ? "手牌已经发完，正在逐张翻开桌面公共牌。"
-      : "骰子结束后，正在依次把手牌发给所有玩家。";
-  }
-
-  if (isMultiplayerActive()) {
-    if (currentPlayer?.uid === state.authUser?.uid) {
-      if (state.pendingDrawCard) {
-        return `你摸到了 ${cardLabel(state.pendingDrawCard)}，现在可以继续补枪。`;
-      }
-      return "现在轮到你出牌。先选手牌，再决定钓牌还是弃到台面。";
-    }
-    return `${getPlayerDisplayName(currentPlayer)} 的动作会直接同步到你的桌面。`;
-  }
-
-  if (!currentPlayer?.isHuman) {
-    return `${getPlayerDisplayName(currentPlayer)} 的动作会直接展示在牌桌中央。`;
-  }
-
-  if (state.pendingDrawCard) {
-    return `你摸到了 ${cardLabel(state.pendingDrawCard)}，现在可以继续补枪。`;
-  }
-
-  return "现在由你出牌。先选手牌，再决定钓牌还是弃到台面。";
-}
-
-function renderSeatResults(seats) {
-  if (!ui.seatResultLayer) {
-    return;
-  }
-
-  ui.seatResultLayer.innerHTML = "";
-  if (state.phase !== "game-over" || !state.lastFinishedResult?.length) {
-    return;
-  }
-
-  const resultsByName = new Map(state.lastFinishedResult.map((item) => [item.name, item]));
-  const activePlayers = Object.entries(seats)
-    .filter(([, player]) => Boolean(player))
-    .map(([slot, player]) => ({
-      slot,
-      player,
-      result: resultsByName.get(player.name),
-    }));
-
-  activePlayers.forEach(({ slot, player, result }) => {
-    if (!result) {
+function dedupeCards(cards) {
+  const seen = new Set();
+  const unique = [];
+  (cards || []).forEach((card) => {
+    if (!card) {
       return;
     }
-
-    const article = document.createElement("article");
-    article.className = `seat-result seat-result-${slot}${result.rank === 1 ? " top" : ""}`;
-    const redCardsHtml = result.redCards.length
-      ? result.redCards
-        .map((card) => `<span class="seat-result__card">${cardSymbol(card)}${card.rank} ${card.scoreValue}</span>`)
-        .join("")
-      : '<p class="seat-result__empty">本局未赢到红牌</p>';
-
-    article.innerHTML = `
-      <div class="seat-result__header">
-        <span class="seat-result__rank">第 ${result.rank} 名</span>
-        ${result.rank === 1 ? '<span class="seat-result__winner">最高分</span>' : ""}
-      </div>
-      <div>
-        <h3>${getPlayerDisplayName(player)}</h3>
-        <p class="seat-result__score">${result.score} 分</p>
-      </div>
-      <div class="seat-result__meta">
-        <span>红牌 ${result.redCards.length} 张</span>
-        <span>总赢牌 ${result.captured} 张</span>
-      </div>
-      <div class="seat-result__cards">${redCardsHtml}</div>
-    `;
-    ui.seatResultLayer.appendChild(article);
+    const key = getCardIdentity(card);
+    if (!key || seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+    unique.push(card);
   });
+  return unique;
+}
+
+function appendTableCards(cards) {
+  const nextCards = Array.isArray(cards) ? cards : [cards];
+  state.tableCards = dedupeCards([...state.tableCards, ...nextCards]);
 }
 
 function captureHandCard(player, sourceCard, targets, resolution, fromHuman) {
@@ -2064,261 +2100,6 @@ function discardHandCard(player, sourceCard, fromHuman) {
   startDrawPhase(player);
 }
 
-function getStatusText() {
-  const currentPlayer = getCurrentPlayer();
-  if (state.phase === "dice-rolling") {
-    return "摇骰子中";
-  }
-  if (state.phase === "dice-result") {
-    return "摇骰子结果";
-  }
-  if (state.phase === "opening-deal") {
-    return state.openingStage === "reveal-table" ? "正在翻公共牌" : "正在发手牌";
-  }
-  if (state.phase === "game-over") {
-    const top = getRankedPlayers()[0];
-    return top ? `${top.name} 暂列第一，红牌 ${top.score} 分` : "本局结束";
-  }
-  if (isMultiplayerActive()) {
-    if (currentPlayer?.uid === state.authUser?.uid) {
-      return state.pendingDrawCard ? "当前轮到你补枪" : "当前轮到你出牌";
-    }
-    return `当前轮到 ${currentPlayer?.name || "好友"}（好友）出牌`;
-  }
-  if (state.phase === "ai-turn" || state.phase === "remote-turn") {
-    return `${currentPlayer?.name || "对手"} 正在行动`;
-  }
-  return "等待你操作";
-}
-
-function getTurnNote(currentPlayer) {
-  if (state.phase === "game-over") {
-    return "本局已经结束，可以查看桌面上的结算卡，或返回模式选择查看上一局结算。";
-  }
-
-  if (state.phase === "dice-rolling") {
-    return "所有玩家都在摇骰子，几秒后会自动显示结果。";
-  }
-
-  if (state.phase === "dice-result") {
-    return `${currentPlayer.name}${currentPlayer.isHuman ? "（你）" : ""} 拿到先手，马上开始。`;
-  }
-
-  if (state.phase === "opening-deal") {
-    return state.openingStage === "reveal-table"
-      ? "手牌已经发完，正在逐张翻开桌面公共牌。"
-      : "骰子结束后，正在依次把手牌发给所有玩家。";
-  }
-
-  if (isMultiplayerActive()) {
-    if (currentPlayer?.uid === state.authUser?.uid) {
-      if (state.pendingDrawCard) {
-        return `你摸到了 ${cardLabel(state.pendingDrawCard)}，现在可以继续补枪。`;
-      }
-      return "现在轮到你出牌。先选手牌，再决定钓牌还是弃到台面。";
-    }
-    return `${currentPlayer?.name || "好友"}（好友）的动作会直接同步到你的桌面。`;
-  }
-
-  if (!currentPlayer?.isHuman) {
-    return `${currentPlayer.name} 的动作会直接展示在牌桌中央。`;
-  }
-
-  if (state.pendingDrawCard) {
-    return `你摸到了 ${cardLabel(state.pendingDrawCard)}，现在可以继续补枪。`;
-  }
-
-  return "现在由你出牌。先选手牌，再决定钓牌还是弃到台面。";
-}
-
-async function handleRestartRequest() {
-  const room = state.socialActiveRoom;
-  if (room && (room.status === "playing" || room.status === "waiting")) {
-    if (room.hostUid !== state.authUser?.uid) {
-      setSocialStatus("联机房的下一局需要房主来开始，请等待房主点击“重新开始”。", "info");
-      return;
-    }
-    await launchRoomMatch(room, true);
-    return;
-  }
-
-  await startGame(state.settings.playerCount, state.settings.useDice);
-}
-
-async function launchRoomMatch(room, isRematch = false) {
-  const config = GAME_CONFIG[Number(room.mode || 2)];
-  const deck = shuffle(createDeck());
-  const members = Array.isArray(room.members) ? [...room.members] : [];
-  const orderedMembers = members
-    .slice()
-    .sort((a, b) => Number(a.joinedAt || 0) - Number(b.joinedAt || 0) || String(a.gameId || "").localeCompare(String(b.gameId || ""), "zh-CN"));
-
-  const players = orderedMembers.map((member) => ({
-    uid: member.uid,
-    id: member.uid,
-    name: member.gameId,
-    isHuman: member.uid === state.authUser.uid,
-    hand: deck.splice(0, config.hand),
-    captured: [],
-    lastAction: null,
-    diceTrail: [],
-  }));
-
-  const tableCards = deck.splice(0, config.table);
-  const drawPile = deck.splice(0, config.draw);
-  const gameState = {
-    phase: "human-turn",
-    tableCards,
-    drawPile,
-    pendingDrawCard: null,
-    currentPlayerUid: orderedMembers[0]?.uid || null,
-    playersPublic: players.map((player) => ({
-      uid: player.uid,
-      name: player.name,
-      handCount: player.hand.length,
-      captured: [],
-      lastAction: null,
-    })),
-    log: [
-      {
-        id: `room-start-${Date.now()}`,
-        message: isRematch ? `${room.mode} 人联机房开始下一局。` : `${room.mode} 人联机房开始对局。`,
-      },
-    ],
-    actionDisplay: null,
-    feedback: {
-      message: isRematch
-        ? `${orderedMembers[0]?.gameId || "房主"} 先手，新一局开始。`
-        : `${orderedMembers[0]?.gameId || "房主"} 先手，联机对局开始。`,
-      type: "info",
-    },
-    lastFinishedResult: null,
-    lastFinishedAt: "",
-  };
-
-  const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(room.id);
-  const batch = db.batch();
-  batch.set(roomRef, {
-    status: "playing",
-    invitedUids: [],
-    gameState,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-  }, { merge: true });
-  players.forEach((player) => {
-    batch.set(roomRef.collection("hands").doc(player.uid), {
-      cards: [...player.hand],
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    }, { merge: true });
-  });
-  await batch.commit();
-
-  const localPlayer = players.find((player) => player.uid === state.authUser.uid);
-  applyMultiplayerRoomState({
-    ...room,
-    status: "playing",
-    gameState,
-  }, localPlayer ? localPlayer.hand : []);
-  setSocialStatus(isRematch ? "联机房已重新开始下一局。" : "联机对局已开始。", "success");
-}
-
-async function handleStartRoomMatch() {
-  if (!db || !state.authUser || !state.currentPlayerId) {
-    setSocialStatus("先登录并绑定游戏 ID，再开始联机对局。", "error");
-    return;
-  }
-
-  const room = state.socialActiveRoom;
-  if (!room || room.status !== "waiting") {
-    setSocialStatus("当前没有等待中的房间。", "error");
-    return;
-  }
-  if (room.hostUid !== state.authUser.uid) {
-    setSocialStatus("只有房主可以开始联机对局。", "error");
-    return;
-  }
-
-  const members = Array.isArray(room.members) ? [...room.members] : [];
-  if (members.length !== Number(room.mode || 2)) {
-    setSocialStatus(`人数还没到齐，需要 ${room.mode} 人才能开始。`, "error");
-    return;
-  }
-
-  state.socialBusy = true;
-  renderSocialPanel();
-  try {
-    await launchRoomMatch(room, false);
-  } catch (error) {
-    setSocialStatus(`开始联机失败：${formatAuthError(error)}`, "error");
-  } finally {
-    state.socialBusy = false;
-    await refreshSocialData();
-  }
-}
-
-function renderSeat(container, player) {
-  const key = container.id;
-  const signature = !player
-    ? "empty"
-    : [
-        player.id,
-        player.hand.length,
-        getRedScore(player.captured),
-        player.id === getCurrentPlayer()?.id ? "active" : "idle",
-        player.lastAction?.stamp || 0,
-        player.lastAction?.text || "",
-        player.lastAction?.cards?.map((card) => card.id).join(",") || "",
-        player.isRemote ? "remote" : player.isHuman ? "human" : "bot",
-      ].join("|");
-
-  if (state.renderCache.seats[key] === signature) {
-    return;
-  }
-  state.renderCache.seats[key] = signature;
-
-  container.innerHTML = "";
-  if (!player) {
-    return;
-  }
-
-  const seat = document.createElement("article");
-  seat.className = `seat-card${player.id === getCurrentPlayer()?.id ? " active" : ""}`;
-
-  const backs = Array.from({ length: Math.min(player.hand.length, 6) }, (_, index) => `
-    <div class="card-back" style="--stack-index:${index}"></div>
-  `).join("");
-
-  const lastCards = player.lastAction?.cards?.map((card) => `
-    <div class="seat-mini-card ${isRedCard(card) ? "red" : "black"}">${card.rank}${cardSymbol(card)}</div>
-  `).join("") || "";
-
-  const seatRole = player.isHuman
-    ? "你"
-    : player.isRemote
-      ? "好友"
-      : "电脑";
-
-  seat.innerHTML = `
-    <div>
-      <h3>${player.name}（${seatRole}）</h3>
-      <p class="seat-meta">
-        <span>手牌 ${player.hand.length}</span>
-        <span>红牌 ${getRedScore(player.captured)}</span>
-      </p>
-    </div>
-    <div class="seat-backs">
-      ${backs}
-      <span class="card-back-count">${player.hand.length}</span>
-    </div>
-    <div class="seat-action">
-      <p class="seat-action-copy">${player.lastAction?.text || "暂未出牌"}</p>
-      <div class="seat-action-cards">${lastCards}</div>
-    </div>
-    ${renderDiceWidget(player)}
-  `;
-
-  container.appendChild(seat);
-}
-
 function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand) {
   const gameState = room?.gameState;
   if (!room || !gameState || !Array.isArray(gameState.playersPublic)) {
@@ -2347,7 +2128,7 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
   state.multiplayer.roomId = room.id;
   state.multiplayer.localHand = [...localHand];
   state.players = players;
-  state.tableCards = Array.isArray(gameState.tableCards) ? [...gameState.tableCards] : [];
+  state.tableCards = dedupeCards(gameState.tableCards);
   state.drawPile = Array.isArray(gameState.drawPile) ? [...gameState.drawPile] : [];
   state.pendingDrawCard = gameState.pendingDrawCard || null;
   state.log = Array.isArray(gameState.log) ? [...gameState.log] : [];
@@ -3432,7 +3213,7 @@ function startOpeningSequence() {
 
   state.roundPlan.tableCards.forEach((card) => {
     scheduleOpeningStep(() => {
-      state.tableCards.push(card);
+      appendTableCards(card);
       render();
     }, elapsed);
     elapsed += 130;
@@ -3501,7 +3282,7 @@ function getCurrentPlayer() {
 function isLocalTurnPlayable() {
   const currentPlayer = getCurrentPlayer();
   return Boolean(
-    currentPlayer?.isHuman
+    isLocalSeatPlayer(currentPlayer)
     && (
       state.phase === "human-turn"
       || (isMultiplayerActive() && currentPlayer.uid === state.authUser?.uid)
@@ -3519,7 +3300,7 @@ function beginCurrentTurn() {
     return;
   }
 
-  if (player.isHuman) {
+  if (isLocalSeatPlayer(player)) {
     state.phase = "human-turn";
     setFeedback("轮到你了，先选一张手牌，再决定钓牌还是弃到台面。", "info");
     render();
@@ -3534,7 +3315,7 @@ function beginCurrentTurn() {
 
 function runAiTurn() {
   const player = getCurrentPlayer();
-  if (!player || player.isHuman || state.phase === "game-over") {
+  if (!player || isLocalSeatPlayer(player) || state.phase === "game-over") {
     return;
   }
 
@@ -3720,7 +3501,7 @@ function chooseDiscardCard(cards) {
 
 function handleConfirmAction() {
   const player = getCurrentPlayer();
-  if (!player || !player.isHuman || !isLocalTurnPlayable()) {
+  if (!player || !isLocalSeatPlayer(player) || !isLocalTurnPlayable()) {
     return;
   }
 
@@ -3755,7 +3536,7 @@ function handleConfirmAction() {
 
 function handleDiscardAction() {
   const player = getCurrentPlayer();
-  if (!player || !player.isHuman || !isLocalTurnPlayable()) {
+  if (!player || !isLocalSeatPlayer(player) || !isLocalTurnPlayable()) {
     return;
   }
 
@@ -3822,7 +3603,7 @@ function discardHandCard(player, sourceCard, fromHuman) {
   }
 
   const discardedCard = player.hand.splice(cardIndex, 1)[0];
-  state.tableCards.push(discardedCard);
+  appendTableCards(discardedCard);
   updateLastAction(player, `弃下 ${cardLabel(discardedCard)}`, [discardedCard]);
   setActionDisplay({
     playerId: player.id,
@@ -3868,7 +3649,7 @@ function capturePendingDraw(player, targets, resolution, fromHuman) {
 
 function discardPendingDrawCard(player, fromHuman) {
   const drawCard = state.pendingDrawCard;
-  state.tableCards.push(drawCard);
+  appendTableCards(drawCard);
   state.pendingDrawCard = null;
   updateLastAction(player, `补枪失败，落台 ${cardLabel(drawCard)}`, [drawCard]);
   setActionDisplay({
@@ -4609,26 +4390,6 @@ function renderSetupHistory() {
   });
 }
 
-function getStatusText() {
-  if (state.phase === "dice-rolling") {
-    return "摇骰子中";
-  }
-  if (state.phase === "dice-result") {
-    return "摇骰子结果";
-  }
-  if (state.phase === "opening-deal") {
-    return state.openingStage === "reveal-table" ? "正在翻公共牌" : "正在发手牌";
-  }
-  if (state.phase === "game-over") {
-    const top = getRankedPlayers()[0];
-    return top ? `${top.name} 暂列第一，红牌 ${top.score} 分` : "本局结束";
-  }
-  if (state.phase === "ai-turn" || state.phase === "remote-turn") {
-    return `${getCurrentPlayer()?.name || "对手"} 正在行动`;
-  }
-  return "等待你操作";
-}
-
 function renderPlayerStatsDashboard() {
   const currentProfile = state.currentPlayerId && state.playerStats[state.currentPlayerId]
     ? state.playerStats[state.currentPlayerId]
@@ -4801,17 +4562,27 @@ function render() {
   ui.confirmAction.textContent = state.pendingDrawCard ? "尝试补枪" : "尝试钓牌";
   ui.discardAction.textContent = state.pendingDrawCard ? "摸牌落台" : "弃到台面";
 
-  const humanPlayer = state.players.find((player) => player.isHuman);
-  const humanDiceSignature = state.diceAnimation ? `${state.diceAnimation.stage}:${state.diceAnimation.faces[humanPlayer.id] || 1}` : "no-dice";
-  const humanSummarySignature = `${humanPlayer.hand.length}|${getRedScore(humanPlayer.captured)}|${humanDiceSignature}|${state.currentPlayerId}`;
+  const humanPlayer = state.players.find((player) => isLocalSeatPlayer(player)) || null;
+  const humanDiceSignature = humanPlayer && state.diceAnimation
+    ? `${state.diceAnimation.stage}:${state.diceAnimation.faces[humanPlayer.id] || 1}`
+    : "no-dice";
+  const humanSummarySignature = humanPlayer
+    ? `${humanPlayer.hand.length}|${getRedScore(humanPlayer.captured)}|${humanDiceSignature}|${state.currentPlayerId}`
+    : "missing";
   if (state.renderCache.humanSummary !== humanSummarySignature) {
     state.renderCache.humanSummary = humanSummarySignature;
-    ui.humanSummary.innerHTML = `
-      <p>身份：你${state.currentPlayerId ? ` · ID：${state.currentPlayerId}` : ""}</p>
-      <p>剩余手牌：${humanPlayer.hand.length} 张</p>
-      <p>已赢红牌：${getRedScore(humanPlayer.captured)} 分</p>
-      ${renderDiceWidget(humanPlayer)}
-    `;
+    ui.humanSummary.innerHTML = humanPlayer
+      ? `
+        <p>身份：你${state.currentPlayerId ? ` · ID：${state.currentPlayerId}` : ""}</p>
+        <p>剩余手牌：${humanPlayer.hand.length} 张</p>
+        <p>已赢红牌：${getRedScore(humanPlayer.captured)} 分</p>
+        ${renderDiceWidget(humanPlayer)}
+      `
+      : `
+        <p>身份：你${state.currentPlayerId ? ` · ID：${state.currentPlayerId}` : ""}</p>
+        <p>剩余手牌：0 张</p>
+        <p>已赢红牌：0 分</p>
+      `;
   }
 
   const canUseControls = isLocalTurnPlayable();
@@ -4869,56 +4640,6 @@ function updateGameLayoutScale() {
   if (previousZoom !== ui.playStage.style.zoom) {
     ui.playStage.style.setProperty("--auto-scale", ui.playStage.style.zoom);
   }
-}
-
-function getStatusText() {
-  if (state.phase === "dice-rolling") {
-    return "摇骰子中";
-  }
-  if (state.phase === "dice-result") {
-    return "摇骰子结果";
-  }
-  if (state.phase === "opening-deal") {
-    return state.openingStage === "reveal-table" ? "正在翻公共牌" : "正在发手牌";
-  }
-  if (state.phase === "game-over") {
-    const top = getRankedPlayers()[0];
-    return `${top.name} 暂列第一，红牌 ${top.score} 分`;
-  }
-  if (state.phase === "ai-turn") {
-    return `${getCurrentPlayer().name} 正在行动`;
-  }
-  return "等待你操作";
-}
-
-function getTurnNote(currentPlayer) {
-  if (state.phase === "game-over") {
-    return "本局已经结束，可以查看桌面上的结算卡，或返回模式选择查看上一局结算。";
-  }
-
-  if (state.phase === "dice-rolling") {
-    return "所有玩家都在摇骰子，几秒后会自动显示结果。";
-  }
-
-  if (state.phase === "dice-result") {
-    return `${currentPlayer.name}${currentPlayer.isHuman ? "（你）" : ""} 拿到先手，马上开始。`;
-  }
-
-  if (state.phase === "opening-deal") {
-    return state.openingStage === "reveal-table"
-      ? "手牌已经发完，正在逐张翻开桌面公共牌。"
-      : "骰子结束后，正在依次把手牌发给所有玩家。";
-  }
-
-  if (!currentPlayer?.isHuman) {
-    return `${currentPlayer.name} 的动作会直接展示在牌桌中央。`;
-  }
-
-  if (state.pendingDrawCard) {
-    return `你摸到了 ${cardLabel(state.pendingDrawCard)}，现在可以继续补枪。`;
-  }
-
-  return "现在由你出牌。先选手牌，再决定钓牌还是弃到台面。";
 }
 
 function getSelectionHint() {
@@ -4993,7 +4714,7 @@ function renderActionStage() {
 }
 
 function renderDrawPile() {
-  const signature = `${state.drawPile.length}|${state.pendingDrawCard?.id || "none"}|${getCurrentPlayer()?.isHuman ? "human" : "ai"}`;
+  const signature = `${state.drawPile.length}|${state.pendingDrawCard?.id || "none"}|${isLocalSeatPlayer(getCurrentPlayer()) ? "human" : "ai"}`;
   if (state.renderCache.drawPile === signature) {
     return;
   }
@@ -5004,7 +4725,7 @@ function renderDrawPile() {
 }
 
 function renderDrawPreview() {
-  if (!state.pendingDrawCard || !getCurrentPlayer()?.isHuman) {
+  if (!state.pendingDrawCard || !isLocalSeatPlayer(getCurrentPlayer())) {
     ui.drawPreview.classList.add("hidden");
     ui.drawPreviewText.textContent = "未摸牌";
     ui.drawPreviewCard.innerHTML = "";
@@ -5042,10 +4763,10 @@ function getSeatAssignments() {
     "top-right": null,
     left: null,
     right: null,
-    bottom: state.players.find((player) => player.isHuman) || null,
+    bottom: state.players.find((player) => isLocalSeatPlayer(player)) || null,
   };
 
-  const opponents = state.players.filter((player) => !player.isHuman);
+  const opponents = state.players.filter((player) => !isLocalSeatPlayer(player));
   if (state.players.length === 2) {
     seats.top = opponents[0] || null;
   } else if (state.players.length === 3) {
@@ -5058,133 +4779,6 @@ function getSeatAssignments() {
   }
 
   return seats;
-}
-
-function renderSeat(container, player) {
-  const key = container.id;
-  const signature = !player
-    ? "empty"
-    : [
-        player.id,
-        player.hand.length,
-        getRedScore(player.captured),
-        player.id === getCurrentPlayer()?.id ? "active" : "idle",
-        player.lastAction?.stamp || 0,
-        player.lastAction?.text || "",
-        player.lastAction?.cards?.map((card) => card.id).join(",") || "",
-      ].join("|");
-
-  if (state.renderCache.seats[key] === signature) {
-    return;
-  }
-  state.renderCache.seats[key] = signature;
-
-  container.innerHTML = "";
-  if (!player) {
-    return;
-  }
-
-  const seat = document.createElement("article");
-  seat.className = `seat-card${player.id === getCurrentPlayer()?.id ? " active" : ""}`;
-
-  const backs = Array.from({ length: Math.min(player.hand.length, 6) }, (_, index) => `
-    <div class="card-back" style="--stack-index:${index}"></div>
-  `).join("");
-
-  const lastCards = player.lastAction?.cards?.map((card) => `
-    <div class="seat-mini-card ${isRedCard(card) ? "red" : "black"}">${card.rank}${cardSymbol(card)}</div>
-  `).join("") || "";
-
-  const seatRole = player.isHuman
-    ? "你"
-    : player.isRemote
-      ? "好友"
-      : "电脑";
-
-  seat.innerHTML = `
-    <div>
-      <h3>${player.name}（${seatRole}）</h3>
-      <p class="seat-meta">
-        <span>手牌 ${player.hand.length}</span>
-        <span>红牌 ${getRedScore(player.captured)}</span>
-      </p>
-    </div>
-    <div class="seat-backs">
-      ${backs}
-      <span class="card-back-count">${player.hand.length}</span>
-    </div>
-    <div class="seat-action">
-      <p class="seat-action-copy">${player.lastAction?.text || "暂未出牌"}</p>
-      <div class="seat-action-cards">${lastCards}</div>
-    </div>
-    ${renderDiceWidget(player)}
-  `;
-
-  container.appendChild(seat);
-}
-
-function renderSeat(container, player) {
-  const key = container.id;
-  const signature = !player
-    ? "empty"
-    : [
-        player.id,
-        player.hand.length,
-        getRedScore(player.captured),
-        player.id === getCurrentPlayer()?.id ? "active" : "idle",
-        player.lastAction?.stamp || 0,
-        player.lastAction?.text || "",
-        player.lastAction?.cards?.map((card) => card.id).join(",") || "",
-        player.isRemote ? "remote" : player.isHuman ? "human" : "bot",
-      ].join("|");
-
-  if (state.renderCache.seats[key] === signature) {
-    return;
-  }
-  state.renderCache.seats[key] = signature;
-
-  container.innerHTML = "";
-  if (!player) {
-    return;
-  }
-
-  const seat = document.createElement("article");
-  seat.className = `seat-card${player.id === getCurrentPlayer()?.id ? " active" : ""}`;
-
-  const backs = Array.from({ length: Math.min(player.hand.length, 6) }, (_, index) => `
-    <div class="card-back" style="--stack-index:${index}"></div>
-  `).join("");
-
-  const lastCards = player.lastAction?.cards?.map((card) => `
-    <div class="seat-mini-card ${isRedCard(card) ? "red" : "black"}">${card.rank}${cardSymbol(card)}</div>
-  `).join("") || "";
-
-  const seatRole = player.isHuman
-    ? "你"
-    : player.isRemote
-      ? "好友"
-      : "电脑";
-
-  seat.innerHTML = `
-    <div>
-      <h3>${player.name}（${seatRole}）</h3>
-      <p class="seat-meta">
-        <span>手牌 ${player.hand.length}</span>
-        <span>红牌 ${getRedScore(player.captured)}</span>
-      </p>
-    </div>
-    <div class="seat-backs">
-      ${backs}
-      <span class="card-back-count">${player.hand.length}</span>
-    </div>
-    <div class="seat-action">
-      <p class="seat-action-copy">${player.lastAction?.text || "暂未出牌"}</p>
-      <div class="seat-action-cards">${lastCards}</div>
-    </div>
-    ${renderDiceWidget(player)}
-  `;
-
-  container.appendChild(seat);
 }
 
 function renderDiceWidget(player) {
@@ -5280,7 +4874,7 @@ function renderSeatResults(seats) {
         ${result.rank === 1 ? '<span class="seat-result__winner">最高分</span>' : ""}
       </div>
       <div>
-        <h3>${player.name}${player.isHuman ? "（你）" : player.isRemote ? "（好友）" : "（电脑）"}</h3>
+        <h3>${getPlayerDisplayName(player)}</h3>
         <p class="seat-result__score">${result.score} 分</p>
       </div>
       <div class="seat-result__meta">
@@ -5493,36 +5087,16 @@ function createEmptyState(text) {
   return element;
 }
 
-function getStatusText() {
-  if (state.phase === "dice-rolling") {
-    return "摇骰子中";
-  }
-  if (state.phase === "dice-result") {
-    return "摇骰子结果";
-  }
-  if (state.phase === "opening-deal") {
-    return state.openingStage === "reveal-table" ? "正在翻公共牌" : "正在发手牌";
-  }
-  if (state.phase === "game-over") {
-    const top = getRankedPlayers()[0];
-    return top ? `${top.name} 暂列第一，红牌 ${top.score} 分` : "本局结束";
-  }
-  if (state.phase === "ai-turn" || state.phase === "remote-turn") {
-    return `${getCurrentPlayer()?.name || "对手"} 正在行动`;
-  }
-  return "等待你操作";
-}
-
 init();
 
 function getPlayerRoleLabel(player) {
   if (!player) {
     return "";
   }
-  if (player.isHuman) {
+  if (isLocalSeatPlayer(player)) {
     return "你";
   }
-  if (player.isRemote) {
+  if (isRemoteSeatPlayer(player)) {
     return "好友";
   }
   return "电脑";
@@ -5599,7 +5173,7 @@ function getTurnNote(currentPlayer) {
     return `${getPlayerDisplayName(currentPlayer)} 的动作会直接同步到你的桌面。`;
   }
 
-  if (!currentPlayer?.isHuman) {
+  if (!isLocalSeatPlayer(currentPlayer)) {
     return `${getPlayerDisplayName(currentPlayer)} 的动作会直接展示在牌桌中央。`;
   }
 
@@ -5954,6 +5528,7 @@ async function handleStartRoomMatch() {
 
 function renderSeat(container, player) {
   const key = container.id;
+  const playerRole = getPlayerRoleLabel(player);
   const signature = !player
     ? "empty"
     : [
@@ -5965,7 +5540,7 @@ function renderSeat(container, player) {
         player.lastAction?.stamp || 0,
         player.lastAction?.text || "",
         player.lastAction?.cards?.map((card) => card.id).join(",") || "",
-        player.isRemote ? "remote" : player.isHuman ? "human" : "bot",
+        playerRole,
       ].join("|");
 
   if (state.renderCache.seats[key] === signature) {
@@ -5989,15 +5564,9 @@ function renderSeat(container, player) {
     <div class="seat-mini-card ${isRedCard(card) ? "red" : "black"}">${card.rank}${cardSymbol(card)}</div>
   `).join("") || "";
 
-  const seatRole = player.isHuman
-    ? "你"
-    : player.isRemote
-      ? "好友"
-      : "电脑";
-
   seat.innerHTML = `
     <div>
-      <h3>${player.name}（${seatRole}）</h3>
+      <h3>${getPlayerDisplayName(player)}</h3>
       <p class="seat-meta">
         <span>手牌 ${player.hand.length}</span>
         <span>红牌 ${getRedScore(player.captured)}</span>
