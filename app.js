@@ -1350,20 +1350,20 @@ async function loadCurrentRoomHand(roomId) {
 }
 
 async function syncMultiplayerRoomState() {
+  if (!isMultiplayerActive() || !db || !state.authUser) {
+    return;
+  }
+
+  const roomId = state.multiplayer.roomId || state.socialActiveRoom?.id;
+  if (!roomId) {
+    return;
+  }
+
+  const nextGameState = serializeRoomGameState();
+  const localPlayer = state.players.find((player) => player.uid === state.authUser.uid);
+  const nextLocalHand = localPlayer ? [...localPlayer.hand] : [];
   const syncTask = async () => {
-    if (!isMultiplayerActive() || !db || !state.authUser) {
-      return;
-    }
-
-    const roomId = state.multiplayer.roomId || state.socialActiveRoom?.id;
-    if (!roomId) {
-      return;
-    }
-
     const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(roomId);
-    const nextGameState = serializeRoomGameState();
-    const localPlayer = state.players.find((player) => player.uid === state.authUser.uid);
-    const nextLocalHand = localPlayer ? [...localPlayer.hand] : [];
     const batch = db.batch();
     batch.set(roomRef, {
       status: "playing",
@@ -2077,7 +2077,7 @@ function appendTableCards(cards) {
   state.tableCards = dedupeCards([...state.tableCards, ...nextCards]);
 }
 
-function resolveLocalMultiplayerHand(playerPublic, loadedLocalHand) {
+function resolveLocalMultiplayerHand(playerPublic, loadedLocalHand, currentPlayerUid = "") {
   const expectedCount = Number(playerPublic?.handCount || 0);
   const currentLocalPlayer = state.players.find((player) => player.uid === state.authUser?.uid);
   const candidates = [
@@ -2089,6 +2089,19 @@ function resolveLocalMultiplayerHand(playerPublic, loadedLocalHand) {
   const matchingHand = candidates.find((cards) => Array.isArray(cards) && cards.length === expectedCount);
   if (matchingHand) {
     return [...matchingHand];
+  }
+
+  if (playerPublic?.uid === state.authUser?.uid && currentPlayerUid === state.authUser?.uid) {
+    const optimisticHand = [
+      Array.isArray(currentLocalPlayer?.hand) ? currentLocalPlayer.hand : null,
+      Array.isArray(state.multiplayer?.localHand) ? state.multiplayer.localHand : null,
+    ]
+      .filter((cards) => Array.isArray(cards))
+      .sort((a, b) => a.length - b.length)[0];
+
+    if (optimisticHand && optimisticHand.length < expectedCount) {
+      return [...optimisticHand];
+    }
   }
 
   return Array.isArray(loadedLocalHand) ? [...loadedLocalHand] : [];
@@ -2175,7 +2188,7 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
     const member = members.find((item) => item.uid === playerPublic.uid);
     const isLocal = playerPublic.uid === state.authUser?.uid;
     const resolvedHand = isLocal
-      ? resolveLocalMultiplayerHand(playerPublic, localHand)
+      ? resolveLocalMultiplayerHand(playerPublic, localHand, gameState.currentPlayerUid)
       : createHiddenHand(Number(playerPublic.handCount || 0), playerPublic.uid);
     return {
       id: playerPublic.uid,
@@ -3641,6 +3654,9 @@ function captureHandCard(player, sourceCard, targets, resolution, fromHuman) {
   const playedCard = player.hand.splice(cardIndex, 1)[0];
   removeTableCards(targets);
   player.captured.push(playedCard, ...targets);
+  if (player.uid === state.authUser?.uid) {
+    state.multiplayer.localHand = [...player.hand];
+  }
   updateLastAction(player, resolution.description, [playedCard, ...targets]);
   setActionDisplay({
     playerId: player.id,
@@ -3670,6 +3686,9 @@ function discardHandCard(player, sourceCard, fromHuman) {
 
   const discardedCard = player.hand.splice(cardIndex, 1)[0];
   appendTableCards(discardedCard);
+  if (player.uid === state.authUser?.uid) {
+    state.multiplayer.localHand = [...player.hand];
+  }
   updateLastAction(player, `弃下 ${cardLabel(discardedCard)}`, [discardedCard]);
   setActionDisplay({
     playerId: player.id,
