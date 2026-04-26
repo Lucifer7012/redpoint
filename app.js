@@ -4865,7 +4865,13 @@ function getSeatAssignments() {
     bottom: state.players.find((player) => isLocalSeatPlayer(player)) || null,
   };
 
-  const opponents = state.players.filter((player) => !isLocalSeatPlayer(player));
+  const localIndex = state.players.findIndex((player) => isLocalSeatPlayer(player));
+  const opponents = localIndex === -1
+    ? state.players.filter((player) => !isLocalSeatPlayer(player))
+    : state.players
+        .slice(localIndex + 1)
+        .concat(state.players.slice(0, localIndex))
+        .filter((player) => !isLocalSeatPlayer(player));
   if (state.players.length === 2) {
     seats.top = opponents[0] || null;
   } else if (state.players.length === 3) {
@@ -5498,6 +5504,7 @@ async function handleRestartRequest() {
 
 async function launchRoomMatch(room, isRematch = false) {
   const config = GAME_CONFIG[Number(room.mode || 2)];
+  const useDice = room.useDice ?? state.settings.useDice ?? true;
   const deck = shuffle(createDeck());
   const members = Array.isArray(room.members) ? [...room.members] : [];
   const orderedMembers = members
@@ -5518,6 +5525,16 @@ async function launchRoomMatch(room, isRematch = false) {
     diceTrail: [],
   }));
 
+  let turnOrderedPlayers = players;
+  const setupLog = [];
+  if (useDice) {
+    const diceResult = resolveTurnOrder(players);
+    turnOrderedPlayers = diceResult.order.map((index) => players[index]);
+    setupLog.push(...diceResult.notes);
+  } else {
+    setupLog.push("未启用摇骰子，按当前入房顺序开始。");
+  }
+
   const tableCards = deck.splice(0, config.table);
   const drawPile = deck.splice(0, config.draw);
   const firstUid = orderedMembers[0]?.uid || null;
@@ -5527,8 +5544,8 @@ async function launchRoomMatch(room, isRematch = false) {
     tableCards,
     drawPile,
     pendingDrawCard: null,
-    currentPlayerUid: firstUid,
-    playersPublic: players.map((player) => ({
+    currentPlayerUid: turnOrderedPlayers[0]?.uid || firstUid,
+    playersPublic: turnOrderedPlayers.map((player) => ({
       uid: player.uid,
       name: player.name,
       handCount: player.hand.length,
@@ -5555,6 +5572,7 @@ async function launchRoomMatch(room, isRematch = false) {
   batch.set(roomRef, {
     status: "playing",
     invitedUids: [],
+    useDice: Boolean(useDice),
     memberUids: orderedMembers.map((member) => member.uid),
     members: orderedMembers.map((member) => ({
       uid: member.uid,
@@ -5565,7 +5583,7 @@ async function launchRoomMatch(room, isRematch = false) {
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   }, { merge: true });
 
-  players.forEach((player) => {
+  turnOrderedPlayers.forEach((player) => {
     batch.set(roomRef.collection("hands").doc(player.uid), {
       cards: [...player.hand],
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -5574,10 +5592,11 @@ async function launchRoomMatch(room, isRematch = false) {
 
   await batch.commit();
 
-  const localPlayer = players.find((player) => player.uid === state.authUser?.uid);
+  const localPlayer = turnOrderedPlayers.find((player) => player.uid === state.authUser?.uid);
   const nextRoom = {
     ...room,
     status: "playing",
+    useDice: Boolean(useDice),
     memberUids: orderedMembers.map((member) => member.uid),
     members: orderedMembers.map((member) => ({
       uid: member.uid,
