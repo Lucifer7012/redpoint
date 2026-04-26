@@ -2222,6 +2222,17 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
     return;
   }
 
+  const sameOpeningReplay = Boolean(
+    state.multiplayer.active
+    && state.multiplayer.openingInProgress
+    && gameState.openingToken
+    && gameState.openingToken === state.multiplayer.openingToken
+    && (gameState.phase === "dice-rolling" || gameState.phase === "dice-result" || gameState.phase === "opening-deal")
+  );
+  if (sameOpeningReplay) {
+    return;
+  }
+
   const members = Array.isArray(room.members) ? room.members : [];
   const players = gameState.playersPublic.map((playerPublic) => {
     const member = members.find((item) => item.uid === playerPublic.uid);
