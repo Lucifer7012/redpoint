@@ -187,6 +187,8 @@ const state = {
     roomId: "",
     localHand: [],
     syncQueue: Promise.resolve(),
+    openingToken: "",
+    openingInProgress: false,
   },
   renderCache: {
     humanSummary: "",
@@ -1293,6 +1295,8 @@ function clearMultiplayerState() {
     roomId: "",
     localHand: [],
     syncQueue: Promise.resolve(),
+    openingToken: "",
+    openingInProgress: false,
   };
 }
 
@@ -1329,6 +1333,27 @@ function serializeRoomGameState() {
     pendingDrawCard: state.pendingDrawCard ? { ...state.pendingDrawCard } : null,
     currentPlayerUid: getCurrentPlayer()?.uid || getCurrentPlayer()?.id || null,
     playersPublic: serializeRoomPlayersPublic(),
+    diceSummary: state.diceSummary.map((item) => ({
+      ...item,
+      rolls: [...(item.rolls || [])],
+    })),
+    diceAnimation: state.diceAnimation
+      ? {
+          stage: state.diceAnimation.stage,
+          faces: { ...state.diceAnimation.faces },
+        }
+      : null,
+    roundPlan: state.roundPlan
+      ? {
+          playerHands: Object.fromEntries(
+            Object.entries(state.roundPlan.playerHands || {}).map(([playerId, cards]) => [playerId, [...cards]]),
+          ),
+          tableCards: [...(state.roundPlan.tableCards || [])],
+          drawPile: [...(state.roundPlan.drawPile || [])],
+        }
+      : null,
+    openingStage: state.openingStage || null,
+    openingToken: state.multiplayer.openingToken || "",
     log: [...state.log],
     actionDisplay: state.actionDisplay ? { ...state.actionDisplay, cards: [...(state.actionDisplay.cards || [])] } : null,
     feedback: state.feedback ? { ...state.feedback } : null,
@@ -2220,6 +2245,7 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
   state.multiplayer.active = true;
   state.multiplayer.roomId = room.id;
   state.multiplayer.localHand = [...(players.find((player) => player.uid === state.authUser?.uid)?.hand || [])];
+  state.multiplayer.openingToken = gameState.openingToken || "";
   state.players = players;
   state.tableCards = dedupeCards(gameState.tableCards);
   state.drawPile = Array.isArray(gameState.drawPile) ? [...gameState.drawPile] : [];
@@ -2231,6 +2257,31 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
   state.lastFinishedAt = gameState.lastFinishedAt || "";
   state.currentPlayerIndex = Math.max(0, players.findIndex((player) => player.uid === gameState.currentPlayerUid));
   state.settings.playerCount = Number(room.mode || state.settings.playerCount || 2);
+  state.diceSummary = Array.isArray(gameState.diceSummary)
+    ? gameState.diceSummary.map((item) => ({
+        ...item,
+        rolls: Array.isArray(item.rolls) ? [...item.rolls] : [],
+      }))
+    : [];
+  state.roundPlan = gameState.roundPlan
+    ? {
+        playerHands: Object.fromEntries(
+          Object.entries(gameState.roundPlan.playerHands || {}).map(([playerId, cards]) => [playerId, [...cards]]),
+        ),
+        tableCards: Array.isArray(gameState.roundPlan.tableCards) ? [...gameState.roundPlan.tableCards] : [],
+        drawPile: Array.isArray(gameState.roundPlan.drawPile) ? [...gameState.roundPlan.drawPile] : [],
+      }
+    : null;
+  state.openingStage = gameState.openingStage || null;
+
+  if (gameState.diceAnimation?.faces) {
+    state.diceAnimation = {
+      stage: gameState.diceAnimation.stage || "rolling",
+      faces: { ...gameState.diceAnimation.faces },
+    };
+  } else {
+    state.diceAnimation = null;
+  }
 
   const currentPlayer = players[state.currentPlayerIndex];
   const syncedPhase = gameState.phase || "remote-turn";
@@ -2241,6 +2292,27 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
     state.phase = "human-turn";
   } else {
     state.phase = "remote-turn";
+  }
+
+  const shouldReplayOpening = Boolean(
+    gameState.openingToken
+    && state.multiplayer.openingToken === gameState.openingToken
+    && !state.multiplayer.openingInProgress
+    && (syncedPhase === "dice-result" || syncedPhase === "opening-deal")
+  );
+  if (shouldReplayOpening) {
+    state.multiplayer.openingInProgress = true;
+    if (syncedPhase === "dice-result") {
+      clearDiceTimers();
+      state.diceResultTimeout = setTimeout(() => {
+        state.diceAnimation = null;
+        startOpeningSequence();
+      }, 2200);
+    } else {
+      startOpeningSequence();
+    }
+  } else if (syncedPhase === "human-turn" || syncedPhase === "remote-turn" || syncedPhase === "game-over") {
+    state.multiplayer.openingInProgress = false;
   }
 
   ui.heroSection.classList.add("hidden");
@@ -3316,9 +3388,20 @@ function startOpeningSequence() {
     state.drawPile = [...state.roundPlan.drawPile];
     state.roundPlan = null;
     state.openingStage = null;
+    if (isMultiplayerActive()) {
+      const localPlayer = state.players.find((player) => player.uid === state.authUser?.uid);
+      state.multiplayer.localHand = [...(localPlayer?.hand || [])];
+    }
     setFeedback("发牌完成，准备进入首回合。", "info");
     render();
     beginCurrentTurn();
+    if (isMultiplayerActive()) {
+      state.multiplayer.openingInProgress = false;
+      syncMultiplayerRoomState().catch((error) => {
+        state.authStatusMessage = `鑱旀満鍚屾澶辫触锛?{formatAuthError(error)}`;
+        renderAuthControls();
+      });
+    }
   }, elapsed + 120);
 }
 
@@ -5537,21 +5620,47 @@ async function launchRoomMatch(room, isRematch = false) {
 
   const tableCards = deck.splice(0, config.table);
   const drawPile = deck.splice(0, config.draw);
+  const openingToken = `room-open-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const diceSummary = useDice
+    ? turnOrderedPlayers.map((player, index) => ({
+        id: player.id,
+        name: player.name,
+        order: index + 1,
+        finalRoll: player.diceTrail.at(-1) || 0,
+        rolls: [...player.diceTrail],
+      }))
+    : [];
+  const diceAnimation = useDice
+    ? {
+        stage: "result",
+        faces: Object.fromEntries(diceSummary.map((item) => [item.id, item.finalRoll])),
+      }
+    : null;
+  const roundPlan = {
+    playerHands: Object.fromEntries(turnOrderedPlayers.map((player) => [player.id, [...player.hand]])),
+    tableCards: [...tableCards],
+    drawPile: [...drawPile],
+  };
   const firstUid = orderedMembers[0]?.uid || null;
   const firstName = orderedMembers[0]?.gameId || "房主";
   const gameState = {
-    phase: "human-turn",
-    tableCards,
-    drawPile,
+    phase: useDice ? "dice-result" : "opening-deal",
+    tableCards: [],
+    drawPile: [],
     pendingDrawCard: null,
     currentPlayerUid: turnOrderedPlayers[0]?.uid || firstUid,
     playersPublic: turnOrderedPlayers.map((player) => ({
       uid: player.uid,
       name: player.name,
-      handCount: player.hand.length,
+      handCount: 0,
       captured: [],
       lastAction: null,
     })),
+    diceSummary,
+    diceAnimation,
+    roundPlan,
+    openingStage: useDice ? null : "deal-hands",
+    openingToken,
     log: [
       {
         id: `room-start-${Date.now()}`,
@@ -5585,7 +5694,7 @@ async function launchRoomMatch(room, isRematch = false) {
 
   turnOrderedPlayers.forEach((player) => {
     batch.set(roomRef.collection("hands").doc(player.uid), {
-      cards: [...player.hand],
+      cards: [],
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
   });
@@ -5606,7 +5715,7 @@ async function launchRoomMatch(room, isRematch = false) {
     gameState,
   };
   state.socialActiveRoom = nextRoom;
-  applyMultiplayerRoomState(nextRoom, localPlayer ? localPlayer.hand : []);
+  applyMultiplayerRoomState(nextRoom, []);
   setSocialStatus(isRematch ? "联机房已重新开始下一局。" : "联机对局已开始。", "success");
 }
 
