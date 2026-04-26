@@ -962,6 +962,19 @@ select {
 }
 
 @media (min-width: 1121px) {
+  .seat-card {
+    min-height: 212px;
+  }
+
+  .seat-action {
+    min-height: 78px;
+  }
+
+  .seat-action-cards {
+    min-height: 36px;
+    align-content: flex-start;
+  }
+
   .table-public-area {
     width: min(620px, calc(100% - 500px));
     min-height: 548px;
