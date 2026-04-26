@@ -957,7 +957,20 @@ select {
     radial-gradient(circle at top, rgba(255, 255, 255, 0.12), transparent 28%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.08));
   align-items: flex-start;
+  align-content: flex-start;
   justify-content: flex-start;
+}
+
+@media (min-width: 1121px) {
+  .table-public-area {
+    width: min(620px, calc(100% - 500px));
+    min-height: 404px;
+  }
+
+  .table-public-slot,
+  .table-cards {
+    min-height: 324px;
+  }
 }
 
 .selection-metrics {
