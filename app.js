@@ -3555,7 +3555,7 @@ function updateGameLayoutScale() {
   const layoutWidth = Math.max(ui.playStage.scrollWidth, ui.playStage.offsetWidth, 1);
   const layoutHeight = Math.max(ui.playStage.scrollHeight, ui.playStage.offsetHeight, 1);
   const availableWidth = Math.max(window.innerWidth - 32, 1);
-  const topOffset = ui.gameLayout.getBoundingClientRect().top;
+  const topOffset = Math.max(ui.gameLayout.offsetTop || 0, ui.gameLayout.getBoundingClientRect().top, 0);
   const availableHeight = Math.max(window.innerHeight - topOffset - 12, 1);
   const viewportKey = [
     Math.round(availableWidth),

@@ -964,13 +964,38 @@ select {
 @media (min-width: 1121px) {
   .table-public-area {
     width: min(620px, calc(100% - 500px));
-    min-height: 404px;
+    min-height: 548px;
   }
 
   .table-public-slot,
   .table-cards {
-    min-height: 324px;
+    min-height: 468px;
   }
+
+  .table-cards {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: minmax(108px, auto);
+    gap: 12px;
+  }
+
+  .table-cards .card-btn {
+    width: 100%;
+    min-width: 0;
+    margin-right: 0;
+  }
+}
+
+.center-stage .feedback-banner.hidden {
+  display: block !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.center-stage .draw-preview.hidden {
+  display: flex !important;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .selection-metrics {
