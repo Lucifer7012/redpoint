@@ -1112,11 +1112,24 @@ function appendTableCards(cards) {
   state.tableCards = dedupeCards([...state.tableCards, ...nextCards]);
 }
 
-function resolveLocalMultiplayerHand(playerPublic, loadedLocalHand, currentPlayerUid = "") {
+function resolveLocalMultiplayerHand(playerPublic, loadedLocalHand, currentPlayerUid = "", phase = state.phase) {
   const expectedCount = Number(playerPublic?.handCount || 0);
   const currentLocalPlayer = state.players.find((player) => player.uid === state.authUser?.uid);
   const currentLocalHand = Array.isArray(currentLocalPlayer?.hand) ? currentLocalPlayer.hand : null;
   const cachedLocalHand = Array.isArray(state.multiplayer?.localHand) ? state.multiplayer.localHand : null;
+  const openingPhase = new Set(["dice-rolling", "dice-result", "opening-deal"]);
+
+  if (playerPublic?.uid === state.authUser?.uid && openingPhase.has(phase)) {
+    const animatedHand = [currentLocalHand, cachedLocalHand]
+      .filter((cards) => Array.isArray(cards))
+      .sort((a, b) => b.length - a.length)[0];
+    if (animatedHand?.length) {
+      return [...animatedHand];
+    }
+    if (expectedCount === 0) {
+      return [];
+    }
+  }
 
   if (
     playerPublic?.uid === state.authUser?.uid
@@ -1179,7 +1192,7 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
     const member = members.find((item) => item.uid === playerPublic.uid);
     const isLocal = playerPublic.uid === state.authUser?.uid;
     const resolvedHand = isLocal
-      ? resolveLocalMultiplayerHand(playerPublic, localHand, gameState.currentPlayerUid)
+      ? resolveLocalMultiplayerHand(playerPublic, localHand, gameState.currentPlayerUid, gameState.phase)
       : createHiddenHand(Number(playerPublic.handCount || 0), playerPublic.uid);
     return {
       id: playerPublic.uid,
@@ -4396,7 +4409,7 @@ async function launchRoomMatch(room, isRematch = false) {
 
   turnOrderedPlayers.forEach((player) => {
     batch.set(roomRef.collection("hands").doc(player.uid), {
-      cards: [],
+      cards: [...player.hand],
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
   });
@@ -4417,7 +4430,7 @@ async function launchRoomMatch(room, isRematch = false) {
     gameState,
   };
   state.socialActiveRoom = nextRoom;
-  applyMultiplayerRoomState(nextRoom, []);
+  applyMultiplayerRoomState(nextRoom, localPlayer ? localPlayer.hand : []);
   setSocialStatus(isRematch ? "联机房已重新开始下一局。" : "联机对局已开始。", "success");
 }
 
