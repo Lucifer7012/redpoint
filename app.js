@@ -2274,7 +2274,15 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
     : null;
   state.openingStage = gameState.openingStage || null;
 
-  if (gameState.diceAnimation?.faces) {
+  const preserveLocalDiceReplay = Boolean(
+    state.multiplayer.openingInProgress
+    && state.diceAnimation
+    && state.diceAnimation.stage === "rolling"
+    && (gameState.phase === "dice-result" || gameState.phase === "opening-deal")
+  );
+  if (preserveLocalDiceReplay) {
+    // Keep the local rolling animation until the replay timer advances to the final result.
+  } else if (gameState.diceAnimation?.faces) {
     state.diceAnimation = {
       stage: gameState.diceAnimation.stage || "rolling",
       faces: { ...gameState.diceAnimation.faces },
@@ -2303,11 +2311,7 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
   if (shouldReplayOpening) {
     state.multiplayer.openingInProgress = true;
     if (syncedPhase === "dice-result") {
-      clearDiceTimers();
-      state.diceResultTimeout = setTimeout(() => {
-        state.diceAnimation = null;
-        startOpeningSequence();
-      }, 2200);
+      startRemoteDiceReplay(gameState.diceAnimation?.faces || {});
     } else {
       startOpeningSequence();
     }
@@ -3264,6 +3268,50 @@ function rankByDice(indices, players, notes) {
 
 function randomDice() {
   return Math.floor(Math.random() * 6) + 1;
+}
+
+function startRemoteDiceReplay(finalFaces) {
+  clearDiceTimers();
+
+  const rollingFaces = {};
+  state.players.forEach((player) => {
+    rollingFaces[player.id] = randomDice();
+  });
+
+  state.phase = "dice-rolling";
+  state.diceAnimation = {
+    stage: "rolling",
+    faces: rollingFaces,
+  };
+  render();
+
+  state.diceInterval = setInterval(() => {
+    const nextFaces = {};
+    state.players.forEach((player) => {
+      nextFaces[player.id] = randomDice();
+    });
+    state.diceAnimation = {
+      stage: "rolling",
+      faces: nextFaces,
+    };
+    render();
+  }, 120);
+
+  state.diceTimeout = setTimeout(() => {
+    clearInterval(state.diceInterval);
+    state.diceInterval = null;
+    state.phase = "dice-result";
+    state.diceAnimation = {
+      stage: "result",
+      faces: { ...finalFaces },
+    };
+    render();
+
+    state.diceResultTimeout = setTimeout(() => {
+      state.diceAnimation = null;
+      startOpeningSequence();
+    }, 2200);
+  }, 3200);
 }
 
 function startDiceSequence() {
