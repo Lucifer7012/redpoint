@@ -2306,11 +2306,11 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
     gameState.openingToken
     && state.multiplayer.openingToken === gameState.openingToken
     && !state.multiplayer.openingInProgress
-    && (syncedPhase === "dice-result" || syncedPhase === "opening-deal")
+    && (syncedPhase === "dice-rolling" || syncedPhase === "dice-result" || syncedPhase === "opening-deal")
   );
   if (shouldReplayOpening) {
     state.multiplayer.openingInProgress = true;
-    if (syncedPhase === "dice-result") {
+    if (syncedPhase === "dice-rolling" || syncedPhase === "dice-result") {
       startRemoteDiceReplay(gameState.diceAnimation?.faces || {});
     } else {
       startOpeningSequence();
@@ -3272,6 +3272,11 @@ function randomDice() {
 
 function startRemoteDiceReplay(finalFaces) {
   clearDiceTimers();
+  const resolvedFinalFaces = Object.keys(finalFaces || {}).length
+    ? { ...finalFaces }
+    : Object.fromEntries(
+        state.diceSummary.map((item) => [item.id, item.finalRoll]),
+      );
 
   const rollingFaces = {};
   state.players.forEach((player) => {
@@ -3303,7 +3308,7 @@ function startRemoteDiceReplay(finalFaces) {
     state.phase = "dice-result";
     state.diceAnimation = {
       stage: "result",
-      faces: { ...finalFaces },
+      faces: resolvedFinalFaces,
     };
     render();
 
@@ -5680,8 +5685,8 @@ async function launchRoomMatch(room, isRematch = false) {
     : [];
   const diceAnimation = useDice
     ? {
-        stage: "result",
-        faces: Object.fromEntries(diceSummary.map((item) => [item.id, item.finalRoll])),
+        stage: "rolling",
+        faces: Object.fromEntries(turnOrderedPlayers.map((player) => [player.id, randomDice()])),
       }
     : null;
   const roundPlan = {
@@ -5692,7 +5697,7 @@ async function launchRoomMatch(room, isRematch = false) {
   const firstUid = orderedMembers[0]?.uid || null;
   const firstName = orderedMembers[0]?.gameId || "房主";
   const gameState = {
-    phase: useDice ? "dice-result" : "opening-deal",
+    phase: useDice ? "dice-rolling" : "opening-deal",
     tableCards: [],
     drawPile: [],
     pendingDrawCard: null,
