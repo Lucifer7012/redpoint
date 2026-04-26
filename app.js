@@ -4853,6 +4853,7 @@ function updateGameLayoutScale() {
   }
 
   const previousZoom = ui.playStage.style.zoom;
+  const previousScale = previousZoom ? Number(previousZoom) : 1;
   ui.playStage.style.zoom = "1";
 
   const layoutWidth = Math.max(ui.playStage.scrollWidth, ui.playStage.offsetWidth, 1);
@@ -4864,13 +4865,26 @@ function updateGameLayoutScale() {
   const widthScale = availableWidth / layoutWidth;
   const heightScale = availableHeight / layoutHeight;
   const scale = Math.max(0.62, Math.min(1, widthScale, heightScale));
+  const nextScale = Number.isFinite(scale) ? scale : 1;
+  const scaleDelta = Math.abs(previousScale - nextScale);
 
-  if (!Number.isFinite(scale) || scale >= 0.995) {
+  if (!Number.isFinite(nextScale)) {
+    ui.playStage.style.zoom = previousZoom;
+    return;
+  }
+
+  // Ignore tiny reflows caused by status text / action panel updates so the whole table doesn't "breathe".
+  if (scaleDelta < 0.025) {
+    ui.playStage.style.zoom = previousZoom;
+    return;
+  }
+
+  if (nextScale >= 0.995) {
     ui.playStage.style.zoom = "";
     return;
   }
 
-  ui.playStage.style.zoom = scale.toFixed(3);
+  ui.playStage.style.zoom = nextScale.toFixed(3);
 
   if (previousZoom !== ui.playStage.style.zoom) {
     ui.playStage.style.setProperty("--auto-scale", ui.playStage.style.zoom);
