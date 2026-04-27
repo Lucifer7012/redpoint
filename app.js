@@ -194,6 +194,7 @@ const state = {
     stableWidth: 0,
     stableHeight: 0,
     viewportKey: "",
+    phaseBucket: "",
   },
   renderCache: {
     humanSummary: "",
@@ -1849,6 +1850,55 @@ function handleBackToSetup() {
     setTimeout(() => {
       ui.historyPanel.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 0);
+  }
+}
+
+async function handleReturnToActiveRoom() {
+  if (!db || !state.authUser) {
+    setSocialStatus("请先登录账号，再返回联机对局。", "error");
+    return;
+  }
+
+  let room = state.socialActiveRoom;
+  if (!room?.id) {
+    room = await getRestartTargetRoom();
+  }
+
+  if (!room?.id) {
+    setSocialStatus("当前没有可返回的联机房间。", "info");
+    return;
+  }
+
+  state.socialBusy = true;
+  renderSocialPanel();
+  try {
+    const snapshot = await db.collection(FIRESTORE_COLLECTIONS.rooms).doc(room.id).get();
+    if (!snapshot.exists) {
+      setSocialStatus("这个联机房间已经不存在了。", "error");
+      return;
+    }
+
+    const liveRoom = {
+      id: snapshot.id,
+      ...snapshot.data(),
+    };
+
+    if (liveRoom.status !== "playing" || !liveRoom.gameState) {
+      state.socialActiveRoom = liveRoom;
+      setSocialStatus("当前房间还没有进行中的对局。", "info");
+      await refreshSocialData();
+      return;
+    }
+
+    const localHand = await loadCurrentRoomHand(liveRoom.id);
+    state.socialActiveRoom = liveRoom;
+    applyMultiplayerRoomState(liveRoom, localHand);
+    setSocialStatus("已返回当前联机对局。", "success");
+  } catch (error) {
+    setSocialStatus(`返回联机对局失败：${formatAuthError(error)}`, "error");
+  } finally {
+    state.socialBusy = false;
+    renderSocialPanel();
   }
 }
 
@@ -3536,6 +3586,7 @@ function updateGameLayoutScale() {
     state.layoutMetrics.stableWidth = 0;
     state.layoutMetrics.stableHeight = 0;
     state.layoutMetrics.viewportKey = "";
+    state.layoutMetrics.phaseBucket = "";
     ui.playStage.style.zoom = "";
     return;
   }
@@ -3544,6 +3595,7 @@ function updateGameLayoutScale() {
     state.layoutMetrics.stableWidth = 0;
     state.layoutMetrics.stableHeight = 0;
     state.layoutMetrics.viewportKey = "";
+    state.layoutMetrics.phaseBucket = "";
     ui.playStage.style.zoom = "";
     return;
   }
@@ -3557,23 +3609,33 @@ function updateGameLayoutScale() {
   const availableWidth = Math.max(window.innerWidth - 32, 1);
   const topOffset = Math.max(ui.gameLayout.offsetTop || 0, ui.gameLayout.getBoundingClientRect().top, 0);
   const availableHeight = Math.max(window.innerHeight - topOffset - 12, 1);
+  const phaseBucket = state.phase === "opening-deal" ? "opening" : "active";
   const viewportKey = [
     Math.round(availableWidth),
     Math.round(availableHeight),
-    state.phase === "opening-deal" ? "opening" : "active",
+    phaseBucket,
   ].join("|");
+  const viewportChanged = state.layoutMetrics.viewportKey !== viewportKey;
+  const phaseChanged = state.layoutMetrics.phaseBucket !== phaseBucket;
 
-  if (state.layoutMetrics.viewportKey !== viewportKey || state.phase === "opening-deal") {
+  if (viewportChanged || phaseChanged) {
     state.layoutMetrics.stableWidth = layoutWidth;
     state.layoutMetrics.stableHeight = layoutHeight;
     state.layoutMetrics.viewportKey = viewportKey;
-  } else {
+    state.layoutMetrics.phaseBucket = phaseBucket;
+  } else if (phaseBucket === "opening") {
     state.layoutMetrics.stableWidth = Math.max(state.layoutMetrics.stableWidth || 0, layoutWidth);
     state.layoutMetrics.stableHeight = Math.max(state.layoutMetrics.stableHeight || 0, layoutHeight);
+  } else {
+    state.layoutMetrics.stableWidth = Math.max(state.layoutMetrics.stableWidth || 0, layoutWidth);
   }
 
   const measuredWidth = Math.max(layoutWidth, state.layoutMetrics.stableWidth || 0, 1);
-  const measuredHeight = Math.max(layoutHeight, state.layoutMetrics.stableHeight || 0, 1);
+  const measuredHeight = Math.max(
+    phaseBucket === "opening" ? layoutHeight : 0,
+    state.layoutMetrics.stableHeight || 0,
+    1,
+  );
 
   const widthScale = availableWidth / measuredWidth;
   const heightScale = availableHeight / measuredHeight;
@@ -4638,13 +4700,26 @@ function renderSocialPanel() {
         <p>当前成员：${memberText || "暂无"}</p>
       </div>
     `;
+    const actions = document.createElement("div");
+    actions.className = "social-inline-actions";
+
+    if (room.status === "playing") {
+      const resumeButton = document.createElement("button");
+      resumeButton.className = "ghost-btn";
+      resumeButton.type = "button";
+      resumeButton.textContent = "返回对局";
+      resumeButton.disabled = state.socialBusy;
+      resumeButton.addEventListener("click", handleReturnToActiveRoom);
+      actions.appendChild(resumeButton);
+    }
+
     const button = document.createElement("button");
     button.className = "ghost-btn";
     button.type = "button";
     button.textContent = room.hostUid === state.authUser.uid ? "关闭房间" : "离开房间";
     button.disabled = state.socialBusy;
     button.addEventListener("click", handleLeaveRoom);
-    card.appendChild(button);
+    actions.appendChild(button);
     const startButton = room.status === "waiting" && room.hostUid === state.authUser.uid && members.length === targetCount
       ? document.createElement("button")
       : null;
@@ -4654,8 +4729,9 @@ function renderSocialPanel() {
       startButton.textContent = "开始联机";
       startButton.disabled = state.socialBusy;
       startButton.addEventListener("click", handleStartRoomMatch);
-      card.insertBefore(startButton, card.lastChild);
+      actions.prepend(startButton);
     }
+    card.appendChild(actions);
     ui.socialRoomCard.appendChild(card);
   }
 
