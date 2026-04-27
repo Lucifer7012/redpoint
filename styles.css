@@ -1231,6 +1231,25 @@ select {
   gap: 10px;
 }
 
+.leaderboard-pagination {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+}
+
+.leaderboard-page-btn {
+  min-height: 36px;
+  min-width: 88px;
+}
+
+.leaderboard-page-info {
+  color: var(--muted);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
 .leaderboard-item {
   padding: 14px 16px;
   display: grid;

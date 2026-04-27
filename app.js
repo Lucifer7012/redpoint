@@ -114,6 +114,9 @@ const ui = {
   leaderboardMode3: null,
   leaderboardMode4: null,
   refreshLeaderboard: null,
+  leaderboardPrev: null,
+  leaderboardNext: null,
+  leaderboardPageInfo: null,
   socialPanel: null,
   socialStatus: null,
   socialSearchInput: null,
@@ -171,6 +174,7 @@ const state = {
   playerIdHintMessage: "",
   leaderboardLoaded: false,
   leaderboardMode: "2",
+  leaderboardPage: 1,
   leaderboardRefreshing: false,
   hasBoundGameId: false,
   gameIdEditable: true,
@@ -301,16 +305,32 @@ function ensureLeaderboardControls() {
     block.insertBefore(toolbar, ui.leaderboardList);
   }
 
+  if (!document.getElementById("leaderboard-pagination")) {
+    const pagination = document.createElement("div");
+    pagination.className = "leaderboard-pagination";
+    pagination.id = "leaderboard-pagination";
+    pagination.innerHTML = `
+      <button id="leaderboard-prev" class="ghost-btn leaderboard-page-btn" type="button">上一页</button>
+      <span id="leaderboard-page-info" class="leaderboard-page-info">第 1 / 1 页</span>
+      <button id="leaderboard-next" class="ghost-btn leaderboard-page-btn" type="button">下一页</button>
+    `;
+    ui.leaderboardList.insertAdjacentElement("afterend", pagination);
+  }
+
   ui.leaderboardMode2 = document.getElementById("leaderboard-mode-2");
   ui.leaderboardMode3 = document.getElementById("leaderboard-mode-3");
   ui.leaderboardMode4 = document.getElementById("leaderboard-mode-4");
   ui.refreshLeaderboard = document.getElementById("refresh-leaderboard");
+  ui.leaderboardPrev = document.getElementById("leaderboard-prev");
+  ui.leaderboardNext = document.getElementById("leaderboard-next");
+  ui.leaderboardPageInfo = document.getElementById("leaderboard-page-info");
 
   [ui.leaderboardMode2, ui.leaderboardMode3, ui.leaderboardMode4].forEach((button) => {
     if (button && !button.dataset.bound) {
       button.dataset.bound = "1";
       button.addEventListener("click", () => {
         state.leaderboardMode = button.dataset.mode || "2";
+        state.leaderboardPage = 1;
         renderPlayerStatsDashboard();
       });
     }
@@ -319,6 +339,22 @@ function ensureLeaderboardControls() {
   if (ui.refreshLeaderboard && !ui.refreshLeaderboard.dataset.bound) {
     ui.refreshLeaderboard.dataset.bound = "1";
     ui.refreshLeaderboard.addEventListener("click", refreshLeaderboardNow);
+  }
+
+  if (ui.leaderboardPrev && !ui.leaderboardPrev.dataset.bound) {
+    ui.leaderboardPrev.dataset.bound = "1";
+    ui.leaderboardPrev.addEventListener("click", () => {
+      state.leaderboardPage = Math.max(1, state.leaderboardPage - 1);
+      renderPlayerStatsDashboard();
+    });
+  }
+
+  if (ui.leaderboardNext && !ui.leaderboardNext.dataset.bound) {
+    ui.leaderboardNext.dataset.bound = "1";
+    ui.leaderboardNext.addEventListener("click", () => {
+      state.leaderboardPage += 1;
+      renderPlayerStatsDashboard();
+    });
   }
 }
 
@@ -3446,6 +3482,11 @@ function renderPlayerStatsDashboard() {
     : null;
   const currentModeStats = currentProfile ? getModeStats(currentProfile, mode) : createEmptyModeStats();
   const sorted = getSortedPlayerStats(mode);
+  const pageSize = 5;
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
+  state.leaderboardPage = Math.min(Math.max(1, state.leaderboardPage || 1), totalPages);
+  const pageStart = (state.leaderboardPage - 1) * pageSize;
+  const pagedItems = sorted.slice(pageStart, pageStart + pageSize);
 
   [ui.leaderboardMode2, ui.leaderboardMode3, ui.leaderboardMode4].forEach((button) => {
     if (button) {
@@ -3455,6 +3496,16 @@ function renderPlayerStatsDashboard() {
   if (ui.refreshLeaderboard) {
     ui.refreshLeaderboard.disabled = state.leaderboardRefreshing;
     ui.refreshLeaderboard.textContent = state.leaderboardRefreshing ? "刷新中..." : "刷新排行";
+  }
+
+  if (ui.leaderboardPrev) {
+    ui.leaderboardPrev.disabled = state.leaderboardRefreshing || state.leaderboardPage <= 1;
+  }
+  if (ui.leaderboardNext) {
+    ui.leaderboardNext.disabled = state.leaderboardRefreshing || state.leaderboardPage >= totalPages;
+  }
+  if (ui.leaderboardPageInfo) {
+    ui.leaderboardPageInfo.textContent = `第 ${state.leaderboardPage} / ${totalPages} 页`;
   }
 
   const playerSignature = currentProfile
@@ -3478,8 +3529,10 @@ function renderPlayerStatsDashboard() {
 
   const leaderboardSignature = [
     mode,
+    state.leaderboardPage,
+    totalPages,
     state.leaderboardRefreshing ? "refreshing" : "idle",
-    ...sorted.map((item) => {
+    ...pagedItems.map((item) => {
       const stats = getModeStats(item, mode);
       return `${item.id}:${stats.bestScore}:${stats.totalScore}:${stats.wins}:${stats.rounds}`;
     }),
@@ -3495,12 +3548,13 @@ function renderPlayerStatsDashboard() {
     return;
   }
 
-  sorted.forEach((item, index) => {
+  pagedItems.forEach((item, index) => {
     const stats = getModeStats(item, mode);
+    const absoluteRank = pageStart + index + 1;
     const article = document.createElement("article");
     article.className = `leaderboard-item${item.id === state.currentPlayerId ? " active" : ""}`;
     article.innerHTML = `
-      <div class="leaderboard-rank">#${index + 1}</div>
+      <div class="leaderboard-rank">#${absoluteRank}</div>
       <div class="leaderboard-main">
         <h3>${item.id}</h3>
         <p>${mode} 人模式 · 单局最高 ${stats.bestScore} · 胜场 ${stats.wins} · 局数 ${stats.rounds}</p>
