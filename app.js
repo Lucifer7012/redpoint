@@ -75,6 +75,7 @@ const ui = {
   restartGame: document.getElementById("restart-game"),
   restartRound: document.getElementById("restart-round"),
   backToSetup: document.getElementById("back-to-setup"),
+  returnToRoom: document.getElementById("return-to-room"),
   statusText: document.getElementById("status-text"),
   drawCount: document.getElementById("draw-count"),
   tableCount: document.getElementById("table-count"),
@@ -240,6 +241,7 @@ function init() {
   ui.restartGame.addEventListener("click", handleRestartRequest);
   ui.restartRound.addEventListener("click", handleRestartRequest);
   ui.backToSetup.addEventListener("click", handleBackToSetup);
+  ui.returnToRoom?.addEventListener("click", handleReturnToActiveRoom);
   ui.overlayButton.addEventListener("click", handleOverlayButton);
   ui.confirmAction.addEventListener("click", handleConfirmAction);
   ui.discardAction.addEventListener("click", handleDiscardAction);
@@ -1909,6 +1911,21 @@ function handleViewLastResult() {
   ui.historyPanel.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function updateReturnToRoomButton() {
+  if (!ui.returnToRoom) {
+    return;
+  }
+
+  const showButton = Boolean(
+    state.authUser
+    && state.socialActiveRoom?.id
+    && state.socialActiveRoom?.status === "playing",
+  );
+
+  ui.returnToRoom.classList.toggle("hidden", !showButton);
+  ui.returnToRoom.disabled = !showButton || state.socialBusy;
+}
+
 function returnToSetup() {
   clearAllRoundTimers();
   state.phase = "setup";
@@ -3499,6 +3516,7 @@ function renderPlayerStatsDashboard() {
 
 function render() {
   renderAuthControls();
+  updateReturnToRoomButton();
   renderRulesModal();
   renderSetupHistory();
   renderPlayerStatsDashboard();
