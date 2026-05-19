@@ -820,6 +820,43 @@ async function refreshFriendsList() {
   state.socialFriends = nextFriends;
 }
 
+function isRoomOpenForInvite(room, currentUid) {
+  if (!room || room.status !== "waiting") {
+    return false;
+  }
+
+  const memberUids = Array.isArray(room.memberUids) ? room.memberUids : [];
+  if (memberUids.includes(currentUid)) {
+    return false;
+  }
+
+  const targetCount = Number(room.mode || 2);
+  return memberUids.length < targetCount;
+}
+
+async function filterOpenRoomInvites(invites, currentUid) {
+  if (!db || !Array.isArray(invites) || !invites.length) {
+    return [];
+  }
+
+  const roomIds = [...new Set(invites.map((invite) => invite.roomId).filter(Boolean))];
+  if (!roomIds.length) {
+    return [];
+  }
+
+  const roomEntries = await Promise.all(roomIds.map(async (roomId) => {
+    try {
+      const roomSnap = await db.collection(FIRESTORE_COLLECTIONS.rooms).doc(roomId).get();
+      return [roomId, roomSnap.exists ? { id: roomSnap.id, ...roomSnap.data() } : null];
+    } catch (error) {
+      return [roomId, null];
+    }
+  }));
+  const roomsById = new Map(roomEntries);
+
+  return invites.filter((invite) => isRoomOpenForInvite(roomsById.get(invite.roomId), currentUid));
+}
+
 async function refreshSocialData() {
   if (!db || !state.authUser) {
     resetSocialState();
@@ -847,9 +884,10 @@ async function refreshSocialData() {
   ]);
 
   state.socialFriendRequests = friendRequestsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  state.socialRoomInvites = roomInvitesSnap.docs
+  const pendingRoomInvites = roomInvitesSnap.docs
     .map((doc) => ({ id: doc.id, ...doc.data() }))
     .sort((a, b) => getInviteCreatedTime(b) - getInviteCreatedTime(a));
+  state.socialRoomInvites = await filterOpenRoomInvites(pendingRoomInvites, currentUid);
   state.socialOutgoingRoomInvites = outgoingRoomInvitesSnap.docs
     .map((doc) => ({ id: doc.id, ...doc.data() }))
     .sort((a, b) => getInviteCreatedTime(b) - getInviteCreatedTime(a));
