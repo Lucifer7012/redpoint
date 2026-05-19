@@ -465,11 +465,11 @@ function ensureSocialPanel() {
         <div class="social-inbox-row">
           <div class="social-column">
             <h3>好友申请</h3>
-            <div id="social-friend-requests" class="social-card-list"></div>
+            <div id="social-friend-requests" class="social-card-list social-scroll-list social-request-list"></div>
           </div>
           <div class="social-column">
             <h3>房间邀请</h3>
-            <div id="social-room-invites" class="social-card-list"></div>
+            <div id="social-room-invites" class="social-card-list social-scroll-list social-room-invite-list"></div>
           </div>
         </div>
         <div id="social-room-card" class="social-room-card"></div>
@@ -5916,15 +5916,15 @@ function renderSocialPanel() {
     const roomPot = Number(room.pot || room.beansRound?.pot || roomTicket * targetCount);
     const outgoingFeedbackHtml = getOutgoingRoomInviteFeedbackHtml(room);
     const card = document.createElement("div");
-    card.className = "social-room-inner";
+    card.className = "social-room-inner social-room-active";
     card.innerHTML = `
-      <div>
+      <div class="social-room-details">
         <strong>${room.mode} 人房 · ${room.hostUid === state.authUser.uid ? "你是房主" : "好友房间"}</strong>
         <p>房间状态：${roomStatusText}</p>
         <p>门票：${formatBeans(roomTicket)} · 奖池：${formatBeans(roomPot)}</p>
         <p>当前成员：${memberText || "暂无"}</p>
-        ${outgoingFeedbackHtml}
       </div>
+      <div class="social-room-feedback-slot">${outgoingFeedbackHtml}</div>
     `;
     const actions = document.createElement("div");
     actions.className = "social-inline-actions";
