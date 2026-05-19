@@ -749,6 +749,24 @@ function isFriendWithUid(uid) {
   return state.socialFriends.some((friend) => friend.uid === uid);
 }
 
+function getFirestoreTimeMillis(value) {
+  if (!value) {
+    return 0;
+  }
+  if (typeof value.toMillis === "function") {
+    return value.toMillis();
+  }
+  if (typeof value.seconds === "number") {
+    return value.seconds * 1000 + Math.floor(Number(value.nanoseconds || 0) / 1000000);
+  }
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function getInviteCreatedTime(invite) {
+  return Number(invite?.createdAtMs || 0) || getFirestoreTimeMillis(invite?.createdAt);
+}
+
 async function refreshFriendsList() {
   if (!db || !state.authUser) {
     state.socialFriends = [];
@@ -789,6 +807,7 @@ async function refreshSocialData() {
   if (!db || !state.authUser) {
     resetSocialState();
     renderSocialPanel();
+    renderRoomInviteModal();
     return;
   }
 
@@ -808,7 +827,9 @@ async function refreshSocialData() {
   ]);
 
   state.socialFriendRequests = friendRequestsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  state.socialRoomInvites = roomInvitesSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  state.socialRoomInvites = roomInvitesSnap.docs
+    .map((doc) => ({ id: doc.id, ...doc.data() }))
+    .sort((a, b) => getInviteCreatedTime(b) - getInviteCreatedTime(a));
 
   const memberRooms = roomsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   let refundedClosedRoomTicket = 0;
@@ -853,6 +874,7 @@ async function refreshSocialData() {
   if (normalizedActiveRoom?.status === "playing" && normalizedActiveRoom.gameState) {
     if (!(await ensureBeansPaidForRoom(normalizedActiveRoom))) {
       renderSocialPanel();
+      renderRoomInviteModal();
       return;
     }
     const localHand = await loadCurrentRoomHand(normalizedActiveRoom.id);
@@ -861,6 +883,7 @@ async function refreshSocialData() {
     clearMultiplayerState();
   }
   renderSocialPanel();
+  renderRoomInviteModal();
 }
 
 function startSocialSync() {
@@ -1133,6 +1156,7 @@ async function handleInviteFriend(friendUid, friendGameId) {
       toUid: friendUid,
       toGameId: friendGameId,
       status: "pending",
+      createdAtMs: Date.now(),
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     await db.collection(FIRESTORE_COLLECTIONS.rooms).doc(room.id).set({
@@ -5907,14 +5931,14 @@ function renderSocialPanel() {
       const accept = document.createElement("button");
       accept.className = "ghost-btn";
       accept.type = "button";
-      accept.textContent = room ? "先离开当前房间" : "加入";
+      accept.textContent = room ? "先离开当前房间" : "查看邀请";
       accept.disabled = state.socialBusy || (!room && state.currentBeans < inviteTicket);
       accept.addEventListener("click", () => {
         if (room) {
           setSocialStatus("你当前还在一个房间里，先点上面的“关闭房间”或“离开房间”，再来加入这个邀请。", "error");
           return;
         }
-        handleRespondRoomInvite(item.id, true);
+        openRoomInviteModalForInvite(item.id, false);
       });
       const reject = document.createElement("button");
       reject.className = "ghost-btn";
