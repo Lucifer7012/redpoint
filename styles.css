@@ -1177,7 +1177,7 @@ select {
 }
 
 .social-room-card {
-  margin: 10px 0 14px;
+  margin: 0;
 }
 
 .social-room-inner,
@@ -1204,9 +1204,75 @@ select {
   line-height: 1.6;
 }
 
-.social-columns {
+.social-room-create {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.social-room-create .social-inline-actions {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.room-invite-feedback {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(51, 77, 72, 0.12);
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.room-invite-feedback p,
+.room-invite-feedback ul {
+  margin: 0;
+}
+
+.room-invite-feedback > p {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.room-invite-feedback ul {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.room-invite-feedback li {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.room-invite-feedback li.is-rejected span {
+  color: #9a3c24;
+}
+
+.room-invite-feedback li.is-accepted span {
+  color: #226247;
+}
+
+.social-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+  gap: 20px;
+  align-items: start;
+  margin-top: 12px;
+}
+
+.social-left-stack {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.social-inbox-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -1219,8 +1285,23 @@ select {
   font-size: 16px;
 }
 
-.social-column-wide {
-  grid-column: span 1;
+.social-friends-column {
+  align-self: start;
+}
+
+.social-player-stats-slot .player-stats-card {
+  margin-top: 0;
+}
+
+.social-friends-list {
+  max-height: 370px;
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
+}
+
+.social-friends-list .social-item {
+  min-height: 66px;
 }
 
 .social-inline-actions {
@@ -2358,7 +2439,8 @@ select {
   }
 
   .social-search-row,
-  .social-columns {
+  .social-layout,
+  .social-inbox-row {
     grid-template-columns: 1fr;
   }
 

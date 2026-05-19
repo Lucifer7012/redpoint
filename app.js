@@ -230,6 +230,7 @@ const state = {
   socialFriendRequests: [],
   socialFriends: [],
   socialRoomInvites: [],
+  socialOutgoingRoomInvites: [],
   ignoredRoomInviteIds: new Set(),
   activeRoomInviteId: "",
   roomInviteRejectPanelOpen: false,
@@ -436,6 +437,7 @@ async function refreshLeaderboardNow() {
 function ensureSocialPanel() {
   if (document.getElementById("social-panel")) {
     bindSocialPanelRefs();
+    placePlayerStatsCardInSocialPanel();
     return;
   }
 
@@ -458,25 +460,31 @@ function ensureSocialPanel() {
     </div>
     <p id="social-status" class="social-status">登录后可以搜索好友并创建房间。</p>
     <div id="social-search-result" class="social-card-list"></div>
-    <div id="social-room-card" class="social-room-card"></div>
-    <div class="social-columns">
-      <div class="social-column">
-        <h3>好友申请</h3>
-        <div id="social-friend-requests" class="social-card-list"></div>
+    <div class="social-layout">
+      <div class="social-left-stack">
+        <div class="social-inbox-row">
+          <div class="social-column">
+            <h3>好友申请</h3>
+            <div id="social-friend-requests" class="social-card-list"></div>
+          </div>
+          <div class="social-column">
+            <h3>房间邀请</h3>
+            <div id="social-room-invites" class="social-card-list"></div>
+          </div>
+        </div>
+        <div id="social-room-card" class="social-room-card"></div>
+        <div id="social-player-stats-slot" class="social-player-stats-slot"></div>
       </div>
-      <div class="social-column">
-        <h3>房间邀请</h3>
-        <div id="social-room-invites" class="social-card-list"></div>
-      </div>
-      <div class="social-column social-column-wide">
+      <div class="social-column social-friends-column">
         <h3>好友列表</h3>
-        <div id="social-friends" class="social-card-list"></div>
+        <div id="social-friends" class="social-card-list social-friends-list"></div>
       </div>
     </div>
   `;
 
   anchor.insertBefore(panel, ui.playerStatsCard);
   bindSocialPanelRefs();
+  placePlayerStatsCardInSocialPanel();
 }
 
 function bindSocialPanelRefs() {
@@ -503,6 +511,14 @@ function bindSocialPanelRefs() {
       }
     });
   }
+}
+
+function placePlayerStatsCardInSocialPanel() {
+  const statsSlot = document.getElementById("social-player-stats-slot");
+  if (!statsSlot || !ui.playerStatsCard || ui.playerStatsCard.parentElement === statsSlot) {
+    return;
+  }
+  statsSlot.appendChild(ui.playerStatsCard);
 }
 
 function setSocialStatus(message, tone = "info") {
@@ -590,6 +606,7 @@ function resetSocialState() {
   state.socialFriendRequests = [];
   state.socialFriends = [];
   state.socialRoomInvites = [];
+  state.socialOutgoingRoomInvites = [];
   state.ignoredRoomInviteIds = new Set();
   state.activeRoomInviteId = "";
   state.roomInviteRejectPanelOpen = false;
@@ -812,7 +829,7 @@ async function refreshSocialData() {
   }
 
   const currentUid = state.authUser.uid;
-  const [friendRequestsSnap, roomInvitesSnap, roomsSnap] = await Promise.all([
+  const [friendRequestsSnap, roomInvitesSnap, outgoingRoomInvitesSnap, roomsSnap] = await Promise.all([
     db.collection(FIRESTORE_COLLECTIONS.friendRequests)
       .where("toUid", "==", currentUid)
       .where("status", "==", "pending")
@@ -821,6 +838,9 @@ async function refreshSocialData() {
       .where("toUid", "==", currentUid)
       .where("status", "==", "pending")
       .get(),
+    db.collection(FIRESTORE_COLLECTIONS.roomInvites)
+      .where("fromUid", "==", currentUid)
+      .get(),
     db.collection(FIRESTORE_COLLECTIONS.rooms)
       .where("memberUids", "array-contains", currentUid)
       .get(),
@@ -828,6 +848,9 @@ async function refreshSocialData() {
 
   state.socialFriendRequests = friendRequestsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   state.socialRoomInvites = roomInvitesSnap.docs
+    .map((doc) => ({ id: doc.id, ...doc.data() }))
+    .sort((a, b) => getInviteCreatedTime(b) - getInviteCreatedTime(a));
+  state.socialOutgoingRoomInvites = outgoingRoomInvitesSnap.docs
     .map((doc) => ({ id: doc.id, ...doc.data() }))
     .sort((a, b) => getInviteCreatedTime(b) - getInviteCreatedTime(a));
 
@@ -853,13 +876,10 @@ async function refreshSocialData() {
   let normalizedActiveRoom = activeRoom;
   if (activeRoom) {
     try {
-      const outgoingInvitesSnap = await db.collection(FIRESTORE_COLLECTIONS.roomInvites)
-        .where("roomId", "==", activeRoom.id)
-        .where("fromUid", "==", currentUid)
-        .where("status", "==", "pending")
-        .get();
-
-      const pendingInviteUids = outgoingInvitesSnap.docs.map((doc) => doc.data()?.toUid).filter(Boolean);
+      const pendingInviteUids = state.socialOutgoingRoomInvites
+        .filter((invite) => invite.roomId === activeRoom.id && invite.status === "pending")
+        .map((invite) => invite.toUid)
+        .filter(Boolean);
       normalizedActiveRoom = {
         ...activeRoom,
         invitedUids: pendingInviteUids,
@@ -900,6 +920,8 @@ function startSocialSync() {
     db.collection(FIRESTORE_COLLECTIONS.roomInvites)
       .where("toUid", "==", currentUid)
       .where("status", "==", "pending"),
+    db.collection(FIRESTORE_COLLECTIONS.roomInvites)
+      .where("fromUid", "==", currentUid),
     db.collection(FIRESTORE_COLLECTIONS.rooms)
       .where("memberUids", "array-contains", currentUid),
   ];
@@ -5035,6 +5057,47 @@ function normalizeRejectReason(value) {
   return String(value || "").trim().slice(0, 60);
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function getOutgoingRoomInviteFeedbackHtml(room) {
+  if (!room?.id || room.hostUid !== state.authUser?.uid) {
+    return "";
+  }
+
+  const items = state.socialOutgoingRoomInvites
+    .filter((invite) => invite.roomId === room.id && ["pending", "accepted", "rejected"].includes(invite.status))
+    .sort((a, b) => getInviteCreatedTime(b) - getInviteCreatedTime(a));
+  if (!items.length) {
+    return "";
+  }
+
+  const itemHtml = items.map((invite) => {
+    const name = escapeHtml(invite.toGameId || "好友");
+    if (invite.status === "rejected") {
+      const reason = escapeHtml(normalizeRejectReason(invite.rejectReason || ""));
+      return `<li class="is-rejected"><strong>${name}</strong><span>已拒绝${reason ? `：${reason}` : ""}</span></li>`;
+    }
+    if (invite.status === "accepted") {
+      return `<li class="is-accepted"><strong>${name}</strong><span>已加入房间</span></li>`;
+    }
+    return `<li><strong>${name}</strong><span>等待回复</span></li>`;
+  }).join("");
+
+  return `
+    <div class="room-invite-feedback">
+      <p>邀请反馈</p>
+      <ul>${itemHtml}</ul>
+    </div>
+  `;
+}
+
 function renderRulesModal() {
   ui.rulesModal.classList.toggle("hidden", !state.rulesOpen);
   ui.rulesModal.setAttribute("aria-hidden", String(!state.rulesOpen));
@@ -5748,6 +5811,13 @@ function renderSocialPanel() {
     socialFriendRequests: state.socialFriendRequests.map((item) => [item.id, item.fromGameId, item.toGameId]),
     socialFriends: state.socialFriends.map((item) => [item.uid, item.gameId]),
     socialRoomInvites: state.socialRoomInvites.map((item) => [item.id, item.fromGameId, item.mode]),
+    socialOutgoingRoomInvites: state.socialOutgoingRoomInvites.map((item) => [
+      item.id,
+      item.roomId,
+      item.toGameId,
+      item.status,
+      item.rejectReason,
+    ]),
     socialActiveRoom: room
       ? {
           id: room.id,
@@ -5812,7 +5882,7 @@ function renderSocialPanel() {
     ui.socialRoomCard.appendChild(createEmptyState("登录后可以创建好友房间。"));
   } else if (!room) {
     const wrap = document.createElement("div");
-    wrap.className = "social-room-inner";
+    wrap.className = "social-room-inner social-room-create";
     wrap.innerHTML = `
       <div>
         <strong>还没有等待中的房间</strong>
@@ -5844,6 +5914,7 @@ function renderSocialPanel() {
         : "人数已满，可以开始联机";
     const roomTicket = Number(room.ticket || room.beansRound?.ticket || getTicketCost(room.mode));
     const roomPot = Number(room.pot || room.beansRound?.pot || roomTicket * targetCount);
+    const outgoingFeedbackHtml = getOutgoingRoomInviteFeedbackHtml(room);
     const card = document.createElement("div");
     card.className = "social-room-inner";
     card.innerHTML = `
@@ -5852,6 +5923,7 @@ function renderSocialPanel() {
         <p>房间状态：${roomStatusText}</p>
         <p>门票：${formatBeans(roomTicket)} · 奖池：${formatBeans(roomPot)}</p>
         <p>当前成员：${memberText || "暂无"}</p>
+        ${outgoingFeedbackHtml}
       </div>
     `;
     const actions = document.createElement("div");
