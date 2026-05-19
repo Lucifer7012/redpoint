@@ -298,6 +298,28 @@
       </div>
     </div>
 
+    <div class="room-invite-modal hidden" id="room-invite-modal" aria-hidden="true">
+      <div class="room-invite-backdrop" id="room-invite-backdrop"></div>
+      <div class="room-invite-card" role="dialog" aria-modal="true" aria-labelledby="room-invite-title">
+        <button id="room-invite-close" class="room-invite-close" type="button" aria-label="暂时忽略邀请">×</button>
+        <p class="room-invite-kicker">排位邀请</p>
+        <h2 id="room-invite-title">好友邀请你组队</h2>
+        <p id="room-invite-copy" class="room-invite-copy">进入联机房，准备开始一局钓红点。</p>
+        <div id="room-invite-meta" class="room-invite-meta"></div>
+        <div class="room-invite-actions">
+          <button id="room-invite-ignore" class="ghost-btn" type="button">忽略</button>
+          <button id="room-invite-reject-toggle" class="ghost-btn danger" type="button">拒绝</button>
+          <button id="room-invite-accept" class="primary-btn" type="button">同意加入</button>
+        </div>
+        <div id="room-invite-reject-panel" class="room-invite-reject-panel hidden">
+          <p>选择或输入拒绝原因</p>
+          <div id="room-invite-reject-reasons" class="room-invite-reasons"></div>
+          <textarea id="room-invite-reject-text" maxlength="60" rows="2" placeholder="也可以自己输入原因"></textarea>
+          <button id="room-invite-reject-confirm" class="ghost-btn danger" type="button">发送拒绝</button>
+        </div>
+      </div>
+    </div>
+
     <div class="rules-modal" id="rules-modal" aria-hidden="true">
       <div class="rules-modal__backdrop" id="rules-backdrop"></div>
       <div class="rules-modal__card" role="dialog" aria-modal="true" aria-labelledby="rules-title">

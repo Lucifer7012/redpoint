@@ -332,6 +332,12 @@ select {
   border: 1px solid var(--line);
 }
 
+.ghost-btn.danger {
+  color: #9a3c24;
+  border-color: rgba(180, 76, 43, 0.28);
+  background: rgba(255, 241, 235, 0.86);
+}
+
 .primary-btn:hover,
 .ghost-btn:hover,
 .card-btn:hover {
@@ -1721,6 +1727,147 @@ select {
   line-height: 1.6;
 }
 
+.room-invite-modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 48;
+}
+
+.room-invite-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(246, 205, 122, 0.18), transparent 34%),
+    rgba(8, 15, 18, 0.68);
+  backdrop-filter: blur(12px);
+}
+
+.room-invite-card {
+  position: relative;
+  width: min(560px, calc(100vw - 32px));
+  padding: 30px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 236, 184, 0.34);
+  background:
+    linear-gradient(180deg, rgba(31, 46, 58, 0.98), rgba(15, 24, 32, 0.98)),
+    radial-gradient(circle at top, rgba(236, 190, 94, 0.22), transparent 34%);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.42);
+  color: #fff8e8;
+  text-align: center;
+  animation: modal-in 0.24s ease both;
+}
+
+.room-invite-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff8e8;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.room-invite-kicker,
+.room-invite-copy {
+  margin: 0;
+}
+
+.room-invite-kicker {
+  color: #f0c66f;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.room-invite-card h2 {
+  margin: 10px 0 8px;
+  font-size: clamp(24px, 4vw, 34px);
+}
+
+.room-invite-copy {
+  color: rgba(255, 248, 232, 0.76);
+  line-height: 1.7;
+}
+
+.room-invite-meta {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 18px 0 20px;
+}
+
+.room-invite-meta span {
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 198, 111, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffe7a5;
+  font-weight: 700;
+}
+
+.room-invite-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.room-invite-reject-panel {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  text-align: left;
+}
+
+.room-invite-reject-panel p {
+  margin: 0 0 10px;
+  color: rgba(255, 248, 232, 0.8);
+}
+
+.room-invite-reasons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.room-invite-reason {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 198, 111, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff8e8;
+  cursor: pointer;
+}
+
+.room-invite-reason.active {
+  background: rgba(240, 198, 111, 0.24);
+  border-color: rgba(240, 198, 111, 0.58);
+}
+
+.room-invite-reject-panel textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 74px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text);
+  font: inherit;
+}
+
 .rules-block {
   padding: 18px;
   border-radius: 18px;
@@ -2652,8 +2799,13 @@ select {
   }
 
   .beans-modal__card,
+  .room-invite-card,
   .rules-modal__card {
     padding: 20px;
     border-radius: 22px;
+  }
+
+  .room-invite-actions {
+    grid-template-columns: 1fr;
   }
 }

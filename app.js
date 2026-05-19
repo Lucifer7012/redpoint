@@ -55,6 +55,12 @@ const BEANS_BENEFITS = {
   adAmount: 80,
   adDailyLimit: 5,
 };
+const ROOM_INVITE_REJECT_REASONS = [
+  "我现在没空",
+  "欢乐豆不够",
+  "等下一局",
+  "先不玩了",
+];
 
 let firebaseApp = null;
 let auth = null;
@@ -90,6 +96,19 @@ const ui = {
   beansAdClaim: document.getElementById("beans-ad-claim"),
   beansRechargeStatus: document.getElementById("beans-recharge-status"),
   beansRechargePay: document.getElementById("beans-recharge-pay"),
+  roomInviteModal: document.getElementById("room-invite-modal"),
+  roomInviteBackdrop: document.getElementById("room-invite-backdrop"),
+  roomInviteClose: document.getElementById("room-invite-close"),
+  roomInviteTitle: document.getElementById("room-invite-title"),
+  roomInviteCopy: document.getElementById("room-invite-copy"),
+  roomInviteMeta: document.getElementById("room-invite-meta"),
+  roomInviteAccept: document.getElementById("room-invite-accept"),
+  roomInviteIgnore: document.getElementById("room-invite-ignore"),
+  roomInviteRejectToggle: document.getElementById("room-invite-reject-toggle"),
+  roomInviteRejectPanel: document.getElementById("room-invite-reject-panel"),
+  roomInviteRejectReasons: document.getElementById("room-invite-reject-reasons"),
+  roomInviteRejectText: document.getElementById("room-invite-reject-text"),
+  roomInviteRejectConfirm: document.getElementById("room-invite-reject-confirm"),
   playerId: document.getElementById("player-id"),
   playerIdHint: document.getElementById("player-id-hint"),
   playerIdSelect: document.getElementById("player-id-select"),
@@ -211,6 +230,9 @@ const state = {
   socialFriendRequests: [],
   socialFriends: [],
   socialRoomInvites: [],
+  ignoredRoomInviteIds: new Set(),
+  activeRoomInviteId: "",
+  roomInviteRejectPanelOpen: false,
   socialActiveRoom: null,
   socialUnsubs: [],
   multiplayer: {
@@ -271,6 +293,12 @@ function init() {
   ui.beansClose?.addEventListener("click", closeBeansModal);
   ui.beansDailyClaim?.addEventListener("click", () => handleClaimBeansBenefit("daily"));
   ui.beansAdClaim?.addEventListener("click", () => handleClaimBeansBenefit("ad"));
+  ui.roomInviteBackdrop?.addEventListener("click", handleIgnoreActiveRoomInvite);
+  ui.roomInviteClose?.addEventListener("click", handleIgnoreActiveRoomInvite);
+  ui.roomInviteIgnore?.addEventListener("click", handleIgnoreActiveRoomInvite);
+  ui.roomInviteAccept?.addEventListener("click", handleAcceptActiveRoomInvite);
+  ui.roomInviteRejectToggle?.addEventListener("click", toggleRoomInviteRejectPanel);
+  ui.roomInviteRejectConfirm?.addEventListener("click", handleRejectActiveRoomInvite);
   ui.playerId.addEventListener("input", handlePlayerIdInput);
   ui.playerCount.addEventListener("change", renderAuthControls);
   ui.startGame.addEventListener("click", async () => {
@@ -562,6 +590,9 @@ function resetSocialState() {
   state.socialFriendRequests = [];
   state.socialFriends = [];
   state.socialRoomInvites = [];
+  state.ignoredRoomInviteIds = new Set();
+  state.activeRoomInviteId = "";
+  state.roomInviteRejectPanelOpen = false;
   state.socialActiveRoom = null;
   state.socialBusy = false;
   state.socialStatusTone = "info";
@@ -2042,6 +2073,9 @@ async function initFirebase() {
         state.currentBeans = 0;
         state.currentBeansBenefits = null;
         state.beansBenefitBusy = false;
+        state.ignoredRoomInviteIds = new Set();
+        state.activeRoomInviteId = "";
+        state.roomInviteRejectPanelOpen = false;
         state.beansRound = null;
         state.hasBoundGameId = false;
         state.gameIdEditable = true;
@@ -4347,6 +4381,7 @@ function render() {
   renderSetupHistory();
   renderPlayerStatsDashboard();
   renderSocialPanel();
+  renderRoomInviteModal();
 
   if (state.phase === "setup") {
     updateGameLayoutScale();
@@ -4833,6 +4868,149 @@ function renderResults() {
   });
 }
 
+function getVisibleRoomInvite() {
+  if (!state.authUser || !Array.isArray(state.socialRoomInvites) || !state.socialRoomInvites.length) {
+    return null;
+  }
+
+  const activeInvite = state.activeRoomInviteId
+    ? state.socialRoomInvites.find((item) => item.id === state.activeRoomInviteId)
+    : null;
+  if (activeInvite && !state.ignoredRoomInviteIds.has(activeInvite.id)) {
+    return activeInvite;
+  }
+
+  return state.socialRoomInvites.find((item) => !state.ignoredRoomInviteIds.has(item.id)) || null;
+}
+
+function setRoomInviteRejectText(reason) {
+  if (!ui.roomInviteRejectText) {
+    return;
+  }
+  ui.roomInviteRejectText.value = reason;
+  if (ui.roomInviteRejectReasons) {
+    [...ui.roomInviteRejectReasons.querySelectorAll("button")].forEach((button) => {
+      button.classList.toggle("active", button.dataset.reason === reason);
+    });
+  }
+}
+
+function renderRoomInviteRejectReasons() {
+  if (!ui.roomInviteRejectReasons) {
+    return;
+  }
+
+  ui.roomInviteRejectReasons.innerHTML = "";
+  ROOM_INVITE_REJECT_REASONS.forEach((reason) => {
+    const button = document.createElement("button");
+    button.className = "room-invite-reason";
+    button.type = "button";
+    button.dataset.reason = reason;
+    button.textContent = reason;
+    button.addEventListener("click", () => setRoomInviteRejectText(reason));
+    ui.roomInviteRejectReasons.appendChild(button);
+  });
+}
+
+function renderRoomInviteModal() {
+  if (!ui.roomInviteModal) {
+    return;
+  }
+
+  const invite = getVisibleRoomInvite();
+  if (!invite) {
+    state.activeRoomInviteId = "";
+    state.roomInviteRejectPanelOpen = false;
+    ui.roomInviteModal.classList.add("hidden");
+    ui.roomInviteModal.setAttribute("aria-hidden", "true");
+    return;
+  }
+
+  const activeChanged = state.activeRoomInviteId !== invite.id;
+  state.activeRoomInviteId = invite.id;
+  if (activeChanged) {
+    state.roomInviteRejectPanelOpen = false;
+    if (ui.roomInviteRejectText) {
+      ui.roomInviteRejectText.value = "";
+    }
+  }
+
+  const ticket = Number(invite.ticket || getTicketCost(invite.mode));
+  ui.roomInviteTitle.textContent = `${invite.fromGameId || "好友"} 邀请你组队`;
+  ui.roomInviteCopy.textContent = `进入 ${invite.mode || 2} 人联机房，准备开始一局钓红点。`;
+  ui.roomInviteMeta.innerHTML = `
+    <span>${invite.mode || 2} 人房</span>
+    <span>门票 ${formatBeans(ticket)}</span>
+    <span>邀请人 ${invite.fromGameId || "好友"}</span>
+  `;
+  const blockedByRoom = Boolean(state.socialActiveRoom?.id);
+  ui.roomInviteAccept.disabled = state.socialBusy || blockedByRoom || state.currentBeans < ticket;
+  ui.roomInviteAccept.textContent = blockedByRoom
+    ? "先离开当前房间"
+    : state.currentBeans < ticket
+      ? "欢乐豆不足"
+      : "同意加入";
+  ui.roomInviteIgnore.disabled = state.socialBusy;
+  ui.roomInviteRejectToggle.disabled = state.socialBusy;
+  ui.roomInviteRejectConfirm.disabled = state.socialBusy;
+  ui.roomInviteRejectPanel.classList.toggle("hidden", !state.roomInviteRejectPanelOpen);
+  if (activeChanged || !ui.roomInviteRejectReasons.children.length) {
+    renderRoomInviteRejectReasons();
+  }
+
+  ui.roomInviteModal.classList.remove("hidden");
+  ui.roomInviteModal.setAttribute("aria-hidden", "false");
+}
+
+function openRoomInviteModalForInvite(inviteId, showReject = false) {
+  if (!inviteId) {
+    return;
+  }
+  state.ignoredRoomInviteIds.delete(inviteId);
+  state.activeRoomInviteId = inviteId;
+  state.roomInviteRejectPanelOpen = Boolean(showReject);
+  renderRoomInviteModal();
+}
+
+function toggleRoomInviteRejectPanel() {
+  state.roomInviteRejectPanelOpen = !state.roomInviteRejectPanelOpen;
+  renderRoomInviteModal();
+  if (state.roomInviteRejectPanelOpen && ui.roomInviteRejectText) {
+    ui.roomInviteRejectText.focus();
+  }
+}
+
+function handleIgnoreActiveRoomInvite() {
+  const invite = getVisibleRoomInvite();
+  if (invite?.id) {
+    state.ignoredRoomInviteIds.add(invite.id);
+  }
+  state.activeRoomInviteId = "";
+  state.roomInviteRejectPanelOpen = false;
+  renderRoomInviteModal();
+}
+
+async function handleAcceptActiveRoomInvite() {
+  const invite = getVisibleRoomInvite();
+  if (!invite?.id) {
+    return;
+  }
+  await handleRespondRoomInvite(invite.id, true);
+}
+
+async function handleRejectActiveRoomInvite() {
+  const invite = getVisibleRoomInvite();
+  if (!invite?.id) {
+    return;
+  }
+  const reason = normalizeRejectReason(ui.roomInviteRejectText?.value || "");
+  await handleRespondRoomInvite(invite.id, false, reason);
+}
+
+function normalizeRejectReason(value) {
+  return String(value || "").trim().slice(0, 60);
+}
+
 function renderRulesModal() {
   ui.rulesModal.classList.toggle("hidden", !state.rulesOpen);
   ui.rulesModal.setAttribute("aria-hidden", String(!state.rulesOpen));
@@ -5085,15 +5263,25 @@ function formatAuthError(error) {
   return error?.message || "出现了一点问题，请稍后再试。";
 }
 
-async function handleRespondRoomInvite(inviteId, accept) {
-  if (!db || !state.authUser || !state.currentPlayerId) {
+async function handleRespondRoomInvite(inviteId, accept, rejectReason = "") {
+  if (!db || !state.authUser) {
+    return;
+  }
+  if (accept && !state.currentPlayerId) {
+    setSocialStatus("先绑定游戏 ID，再加入好友房间。", "error");
+    return;
+  }
+  if (accept && state.socialActiveRoom?.id) {
+    setSocialStatus("你当前还在一个房间里，先离开当前房间，再来加入这个邀请。", "error");
     return;
   }
 
   state.socialBusy = true;
+  renderRoomInviteModal();
   renderSocialPanel();
   try {
     const inviteRef = db.collection(FIRESTORE_COLLECTIONS.roomInvites).doc(inviteId);
+    const cleanRejectReason = normalizeRejectReason(rejectReason);
     await db.runTransaction(async (transaction) => {
       const inviteSnap = await transaction.get(inviteRef);
       if (!inviteSnap.exists) {
@@ -5103,6 +5291,10 @@ async function handleRespondRoomInvite(inviteId, accept) {
       if (!accept) {
         transaction.set(inviteRef, {
           status: "rejected",
+          rejectReason: cleanRejectReason,
+          rejectReasonQuick: ROOM_INVITE_REJECT_REASONS.includes(cleanRejectReason) ? cleanRejectReason : "",
+          rejectedByUid: state.authUser.uid,
+          rejectedByGameId: state.currentPlayerId || invite.toGameId || "",
           respondedAt: firebase.firestore.FieldValue.serverTimestamp(),
         }, { merge: true });
         return;
@@ -5171,7 +5363,17 @@ async function handleRespondRoomInvite(inviteId, accept) {
       }, { merge: true });
     });
 
-    setSocialStatus(accept ? "已加入好友房间。" : "已拒绝房间邀请。", "success");
+    state.ignoredRoomInviteIds.delete(inviteId);
+    state.activeRoomInviteId = "";
+    state.roomInviteRejectPanelOpen = false;
+    setSocialStatus(
+      accept
+        ? "已加入好友房间。"
+        : cleanRejectReason
+          ? `已拒绝房间邀请，并回复：${cleanRejectReason}`
+          : "已拒绝房间邀请。",
+      "success",
+    );
     if (accept) {
       await loadCurrentUserProfile();
     }
@@ -5192,6 +5394,7 @@ async function handleRespondRoomInvite(inviteId, accept) {
   } finally {
     state.socialBusy = false;
     await refreshSocialData();
+    renderRoomInviteModal();
   }
 }
 
@@ -5716,9 +5919,9 @@ function renderSocialPanel() {
       const reject = document.createElement("button");
       reject.className = "ghost-btn";
       reject.type = "button";
-      reject.textContent = "拒绝";
+      reject.textContent = "拒绝并回复";
       reject.disabled = state.socialBusy;
-      reject.addEventListener("click", () => handleRespondRoomInvite(item.id, false));
+      reject.addEventListener("click", () => openRoomInviteModalForInvite(item.id, true));
       actions.append(accept, reject);
       card.appendChild(actions);
       ui.socialRoomInvites.appendChild(card);
