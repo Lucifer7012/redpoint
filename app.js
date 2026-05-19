@@ -44,6 +44,17 @@ const FIRESTORE_COLLECTIONS = {
   rooms: "rooms",
 };
 const LEADERBOARD_MODES = ["2", "3", "4"];
+const INITIAL_BEANS = 2000;
+const ROOM_TICKETS = {
+  2: 100,
+  3: 200,
+  4: 300,
+};
+const BEANS_BENEFITS = {
+  dailyAmount: 300,
+  adAmount: 80,
+  adDailyLimit: 5,
+};
 
 let firebaseApp = null;
 let auth = null;
@@ -67,6 +78,18 @@ const ui = {
   authRegister: document.getElementById("auth-register"),
   authLogout: document.getElementById("auth-logout"),
   authStatus: document.getElementById("auth-status"),
+  currentBeansBalance: document.getElementById("current-beans-balance"),
+  rechargeBeans: document.getElementById("recharge-beans"),
+  beansModal: document.getElementById("beans-modal"),
+  beansBackdrop: document.getElementById("beans-backdrop"),
+  beansClose: document.getElementById("beans-close"),
+  beansModalBalance: document.getElementById("beans-modal-balance"),
+  beansDailyStatus: document.getElementById("beans-daily-status"),
+  beansDailyClaim: document.getElementById("beans-daily-claim"),
+  beansAdStatus: document.getElementById("beans-ad-status"),
+  beansAdClaim: document.getElementById("beans-ad-claim"),
+  beansRechargeStatus: document.getElementById("beans-recharge-status"),
+  beansRechargePay: document.getElementById("beans-recharge-pay"),
   playerId: document.getElementById("player-id"),
   playerIdHint: document.getElementById("player-id-hint"),
   playerIdSelect: document.getElementById("player-id-select"),
@@ -167,6 +190,9 @@ const state = {
   lastFinishedAt: "",
   playerStats: {},
   currentPlayerId: "",
+  currentBeans: 0,
+  currentBeansBenefits: null,
+  beansBenefitBusy: false,
   authUser: null,
   authBusy: false,
   authReady: false,
@@ -201,6 +227,9 @@ const state = {
     viewportKey: "",
     phaseBucket: "",
   },
+  beansRound: null,
+  pendingBeansAward: null,
+  overlayAction: "",
   renderCache: {
     humanSummary: "",
     humanHand: "",
@@ -237,7 +266,13 @@ function init() {
   ui.authLogin.addEventListener("click", handleAuthLogin);
   ui.authRegister.addEventListener("click", handleAuthRegister);
   ui.authLogout.addEventListener("click", handleAuthLogout);
+  ui.rechargeBeans?.addEventListener("click", handleRechargeBeans);
+  ui.beansBackdrop?.addEventListener("click", closeBeansModal);
+  ui.beansClose?.addEventListener("click", closeBeansModal);
+  ui.beansDailyClaim?.addEventListener("click", () => handleClaimBeansBenefit("daily"));
+  ui.beansAdClaim?.addEventListener("click", () => handleClaimBeansBenefit("ad"));
   ui.playerId.addEventListener("input", handlePlayerIdInput);
+  ui.playerCount.addEventListener("change", renderAuthControls);
   ui.startGame.addEventListener("click", async () => {
     await startGame(Number(ui.playerCount.value), ui.useDice.checked);
   });
@@ -448,6 +483,80 @@ function setSocialStatus(message, tone = "info") {
   renderSocialPanel();
 }
 
+async function refundCurrentUserClosedRoomTicket(room) {
+  if (!db || !state.authUser || !room?.id || room.status !== "closed") {
+    return 0;
+  }
+
+  const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(room.id);
+  const profileRef = db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid);
+  let refundedAmount = 0;
+  let nextBeans = state.currentBeans;
+
+  await db.runTransaction(async (transaction) => {
+    const roomSnap = await transaction.get(roomRef);
+    if (!roomSnap.exists) {
+      return;
+    }
+    const data = roomSnap.data();
+    if (data.status !== "closed") {
+      return;
+    }
+
+    const beansRound = data.beansRound || data.gameState?.beansRound || null;
+    const paidUids = Array.isArray(beansRound?.paidUids) ? [...beansRound.paidUids] : [];
+    const refundedUids = Array.isArray(beansRound?.refundedUids) ? [...beansRound.refundedUids] : [];
+    if (!paidUids.includes(state.authUser.uid) || refundedUids.includes(state.authUser.uid)) {
+      return;
+    }
+
+    const ticket = Number(beansRound.ticket || data.ticket || getTicketCost(data.mode));
+    if (!ticket) {
+      return;
+    }
+
+    const profileSnap = await transaction.get(profileRef);
+    const profileData = profileSnap.exists ? profileSnap.data() : {};
+    const currentBeans = normalizeBeans(profileData.beans, INITIAL_BEANS);
+    const hasStoredBeans = Number.isFinite(Number(profileData.beans));
+    nextBeans = currentBeans + ticket;
+    refundedAmount = ticket;
+
+    const nextRound = {
+      ...beansRound,
+      ticket,
+      paidUids: paidUids.filter((uid) => uid !== state.authUser.uid),
+      refundedUids: [...refundedUids, state.authUser.uid],
+    };
+    const memberUids = (data.memberUids || []).filter((uid) => uid !== state.authUser.uid);
+    const members = (data.members || []).filter((member) => member.uid !== state.authUser.uid);
+    const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+
+    transaction.set(profileRef, {
+      uid: state.authUser.uid,
+      beans: hasStoredBeans ? firebase.firestore.FieldValue.increment(ticket) : nextBeans,
+      lastBeansAwardReason: "closed-room-ticket-refund",
+      updatedAt: timestamp,
+      ...(profileSnap.exists ? {} : { createdAt: timestamp }),
+    }, { merge: true });
+    const roomPatch = {
+      memberUids,
+      members,
+      beansRound: nextRound,
+      updatedAt: timestamp,
+    };
+    if (data.gameState) {
+      roomPatch.gameState = { ...data.gameState, beansRound: nextRound };
+    }
+    transaction.set(roomRef, roomPatch, { merge: true });
+  });
+
+  if (refundedAmount > 0) {
+    state.currentBeans = nextBeans;
+  }
+  return refundedAmount;
+}
+
 function resetSocialState() {
   state.socialSearchResult = null;
   state.socialFriendRequests = [];
@@ -539,6 +648,7 @@ function serializeRoomGameState() {
     log: [...state.log],
     actionDisplay: state.actionDisplay ? { ...state.actionDisplay, cards: [...(state.actionDisplay.cards || [])] } : null,
     feedback: state.feedback ? { ...state.feedback } : null,
+    beansRound: state.beansRound ? { ...state.beansRound } : null,
     lastFinishedResult: state.lastFinishedResult
       ? state.lastFinishedResult.map((item) => ({ ...item, redCards: [...item.redCards] }))
       : null,
@@ -669,8 +779,18 @@ async function refreshSocialData() {
   state.socialFriendRequests = friendRequestsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   state.socialRoomInvites = roomInvitesSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-  const activeRoom = roomsSnap.docs
-    .map((doc) => ({ id: doc.id, ...doc.data() }))
+  const memberRooms = roomsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  let refundedClosedRoomTicket = 0;
+  for (const room of memberRooms.filter((item) => item.status === "closed")) {
+    refundedClosedRoomTicket += await refundCurrentUserClosedRoomTicket(room);
+  }
+  if (refundedClosedRoomTicket > 0) {
+    await loadCurrentUserProfile();
+    state.socialStatusMessage = `已退回关闭房间门票 ${formatBeans(refundedClosedRoomTicket)}。`;
+    state.socialStatusTone = "success";
+  }
+
+  const activeRoom = memberRooms
     .filter((room) => room.status === "waiting" || room.status === "playing")
     .sort((a, b) => {
       const aTime = a.updatedAt?.toMillis ? a.updatedAt.toMillis() : 0;
@@ -700,6 +820,10 @@ async function refreshSocialData() {
   state.socialActiveRoom = normalizedActiveRoom;
   await refreshFriendsList();
   if (normalizedActiveRoom?.status === "playing" && normalizedActiveRoom.gameState) {
+    if (!(await ensureBeansPaidForRoom(normalizedActiveRoom))) {
+      renderSocialPanel();
+      return;
+    }
     const localHand = await loadCurrentRoomHand(normalizedActiveRoom.id);
     applyMultiplayerRoomState(normalizedActiveRoom, localHand);
   } else if (!normalizedActiveRoom && state.multiplayer.active) {
@@ -893,11 +1017,26 @@ async function handleCreateRoom(mode) {
     return;
   }
 
+  if (!(await prepareCurrentPlayerProfile())) {
+    return;
+  }
+  const beansRound = await debitBeansForTicket(mode, Number(mode), "");
+  if (!beansRound) {
+    render();
+    return;
+  }
+
   state.socialBusy = true;
   renderSocialPanel();
   try {
     await db.collection(FIRESTORE_COLLECTIONS.rooms).add({
       mode: Number(mode),
+      ticket: beansRound.ticket,
+      pot: beansRound.pot,
+      beansRound: {
+        ...beansRound,
+        paidUids: [state.authUser.uid],
+      },
       status: "waiting",
       hostUid: state.authUser.uid,
       hostGameId: state.currentPlayerId,
@@ -913,8 +1052,9 @@ async function handleCreateRoom(mode) {
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
-    setSocialStatus(`已创建 ${mode} 人房，去邀请好友吧。`);
+    setSocialStatus(`已创建 ${mode} 人房，已扣门票 ${formatBeans(beansRound.ticket)}。`);
   } catch (error) {
+    await awardBeansToCurrentUser(beansRound.ticket, "room-create-rollback");
     setSocialStatus(`创建房间失败：${formatAuthError(error)}`);
   } finally {
     state.socialBusy = false;
@@ -956,6 +1096,7 @@ async function handleInviteFriend(friendUid, friendGameId) {
     await db.collection(FIRESTORE_COLLECTIONS.roomInvites).add({
       roomId: room.id,
       mode: Number(room.mode || 2),
+      ticket: Number(room.ticket || getTicketCost(room.mode)),
       fromUid: state.authUser.uid,
       fromGameId: state.currentPlayerId,
       toUid: friendUid,
@@ -982,11 +1123,14 @@ async function handleLeaveRoom() {
   }
 
   const room = state.socialActiveRoom;
+  let refundedAmount = 0;
+  let nextBeans = state.currentBeans;
   state.socialBusy = true;
   renderSocialPanel();
   try {
     await db.runTransaction(async (transaction) => {
       const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(room.id);
+      const profileRef = db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid);
       const roomSnap = await transaction.get(roomRef);
       if (!roomSnap.exists) {
         return;
@@ -994,24 +1138,68 @@ async function handleLeaveRoom() {
       const data = roomSnap.data();
       const memberUids = (data.memberUids || []).filter((uid) => uid !== state.authUser.uid);
       const members = (data.members || []).filter((member) => member.uid !== state.authUser.uid);
+      const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+      const beansRound = data.beansRound || data.gameState?.beansRound || null;
+      const paidUids = Array.isArray(beansRound?.paidUids) ? [...beansRound.paidUids] : [];
+      const refundedUids = Array.isArray(beansRound?.refundedUids) ? [...beansRound.refundedUids] : [];
+      const shouldRefund = data.status === "waiting"
+        && paidUids.includes(state.authUser.uid)
+        && !refundedUids.includes(state.authUser.uid);
+      let nextRound = beansRound;
+
+      if (shouldRefund) {
+        const ticket = Number(beansRound.ticket || data.ticket || getTicketCost(data.mode));
+        if (ticket > 0) {
+          const profileSnap = await transaction.get(profileRef);
+          const profileData = profileSnap.exists ? profileSnap.data() : {};
+          const currentBeans = normalizeBeans(profileData.beans, INITIAL_BEANS);
+          const hasStoredBeans = Number.isFinite(Number(profileData.beans));
+          nextBeans = currentBeans + ticket;
+          refundedAmount = ticket;
+          nextRound = {
+            ...beansRound,
+            ticket,
+            paidUids: paidUids.filter((uid) => uid !== state.authUser.uid),
+            refundedUids: [...refundedUids, state.authUser.uid],
+          };
+          transaction.set(profileRef, {
+            uid: state.authUser.uid,
+            beans: hasStoredBeans ? firebase.firestore.FieldValue.increment(ticket) : nextBeans,
+            lastBeansAwardReason: data.hostUid === state.authUser.uid ? "room-close-ticket-refund" : "room-leave-ticket-refund",
+            updatedAt: timestamp,
+            ...(profileSnap.exists ? {} : { createdAt: timestamp }),
+          }, { merge: true });
+        }
+      }
+
+      const roomPatch = {
+        memberUids,
+        members,
+        updatedAt: timestamp,
+      };
+      if (nextRound && nextRound !== beansRound) {
+        roomPatch.beansRound = nextRound;
+        if (data.gameState) {
+          roomPatch.gameState = { ...data.gameState, beansRound: nextRound };
+        }
+      }
 
       if (!memberUids.length || data.hostUid === state.authUser.uid) {
         transaction.set(roomRef, {
+          ...roomPatch,
           status: "closed",
-          memberUids,
-          members,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         }, { merge: true });
         return;
       }
 
-      transaction.set(roomRef, {
-        memberUids,
-        members,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      }, { merge: true });
+      transaction.set(roomRef, roomPatch, { merge: true });
     });
-    setSocialStatus(room.hostUid === state.authUser.uid ? "已关闭房间。" : "已离开房间。");
+    if (refundedAmount > 0) {
+      state.currentBeans = nextBeans;
+      await loadCurrentUserProfile();
+    }
+    const refundText = refundedAmount > 0 ? `，已退回门票 ${formatBeans(refundedAmount)}` : "";
+    setSocialStatus(room.hostUid === state.authUser.uid ? `已关闭房间${refundText}。` : `已离开房间${refundText}。`);
   } catch (error) {
     setSocialStatus(`离开房间失败：${formatAuthError(error)}`);
   } finally {
@@ -1259,6 +1447,12 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
   state.log = Array.isArray(gameState.log) ? [...gameState.log] : [];
   state.actionDisplay = gameState.actionDisplay || null;
   state.feedback = gameState.feedback || null;
+    state.beansRound = gameState.beansRound
+    ? { ...gameState.beansRound }
+    : (room.beansRound ? { ...room.beansRound } : null);
+  if (state.beansRound?.awarded && state.pendingBeansAward?.roundId === state.beansRound.id) {
+    state.pendingBeansAward = null;
+  }
   state.lastFinishedResult = Array.isArray(gameState.lastFinishedResult) ? [...gameState.lastFinishedResult] : null;
   state.lastFinishedAt = gameState.lastFinishedAt || "";
   state.currentPlayerIndex = Math.max(0, players.findIndex((player) => player.uid === gameState.currentPlayerUid));
@@ -1323,6 +1517,10 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
     }
   } else if (syncedPhase === "human-turn" || syncedPhase === "remote-turn" || syncedPhase === "game-over") {
     state.multiplayer.openingInProgress = false;
+  }
+
+  if (state.phase === "game-over" && Array.isArray(state.lastFinishedResult)) {
+    maybePromptBeansAward(state.lastFinishedResult);
   }
 
   ui.heroSection.classList.add("hidden");
@@ -1390,6 +1588,122 @@ function getTotalRoundsFromProfile(profile) {
   return LEADERBOARD_MODES.reduce((sum, mode) => sum + Number(getModeStats(profile, mode).rounds || 0), 0);
 }
 
+function normalizeBeans(value, fallback = INITIAL_BEANS) {
+  const beans = Number(value);
+  return Number.isFinite(beans) ? Math.max(0, Math.floor(beans)) : fallback;
+}
+
+function getTicketCost(mode = state.settings.playerCount || 2) {
+  return ROOM_TICKETS[Number(mode)] || ROOM_TICKETS[2];
+}
+
+function formatBeans(value) {
+  return `${normalizeBeans(value, 0).toLocaleString("zh-CN")} 欢乐豆`;
+}
+
+function getProfileBeans(profile) {
+  return normalizeBeans(profile?.beans, INITIAL_BEANS);
+}
+
+function getLocalDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function normalizeBeansBenefits(data = {}) {
+  return {
+    dailyClaimDate: typeof data.dailyClaimDate === "string" ? data.dailyClaimDate : "",
+    adClaimDate: typeof data.adClaimDate === "string" ? data.adClaimDate : "",
+    adsWatchedToday: Math.max(0, Math.floor(Number(data.adsWatchedToday || 0))),
+    totalDailyClaims: Math.max(0, Math.floor(Number(data.totalDailyClaims || 0))),
+    totalAdsWatched: Math.max(0, Math.floor(Number(data.totalAdsWatched || 0))),
+  };
+}
+
+function getCurrentBeansBenefits() {
+  return normalizeBeansBenefits(state.currentBeansBenefits || {});
+}
+
+function getTodayAdClaimCount(benefits = getCurrentBeansBenefits()) {
+  return benefits.adClaimDate === getLocalDateKey()
+    ? Math.max(0, Number(benefits.adsWatchedToday || 0))
+    : 0;
+}
+
+function createBeansRound(mode, playerCount, roomId = "", roundId = "") {
+  const ticket = getTicketCost(mode);
+  return {
+    id: roundId || `${roomId || "local"}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    roomId,
+    mode: Number(mode || 2),
+    ticket,
+    playerCount: Number(playerCount || mode || 2),
+    pot: ticket * Number(playerCount || mode || 2),
+    paid: true,
+    awarded: false,
+  };
+}
+
+function getLocalPlayerName() {
+  return state.players.find((player) => player.uid === state.authUser?.uid)?.name
+    || state.currentPlayerId
+    || "玩家 1";
+}
+
+function getSingleWinner(result) {
+  if (!Array.isArray(result) || !result.length) {
+    return null;
+  }
+  const bestScore = result[0].score;
+  const winners = result.filter((item) => item.score === bestScore);
+  return winners.length === 1 ? winners[0] : null;
+}
+
+function getPendingBeansAward(result) {
+  const round = state.beansRound;
+  if (!round || round.awarded || !round.pot) {
+    return null;
+  }
+
+  const winner = getSingleWinner(result);
+  if (!winner || winner.name !== getLocalPlayerName()) {
+    return null;
+  }
+
+  return {
+    roundId: round.id,
+    amount: Number(round.pot || 0),
+    winnerName: winner.name,
+  };
+}
+
+function maybePromptBeansAward(result) {
+  const award = getPendingBeansAward(result);
+  if (!award) {
+    return false;
+  }
+
+  if (state.pendingBeansAward?.roundId === award.roundId) {
+    return true;
+  }
+
+  state.pendingBeansAward = award;
+  showOverlay(
+    "领取奖励",
+    "你赢得本局奖池",
+    `确认领取 ${formatBeans(award.amount)}，领取后会写入你的欢乐豆余额。`,
+    "领取奖励",
+    `<div class="reward-confirm">
+      <strong>${formatBeans(award.amount)}</strong>
+      <span>本局奖池</span>
+    </div>`,
+    "claim-beans",
+  );
+  return true;
+}
+
 function getSortedPlayerStats(mode = state.leaderboardMode) {
   return Object.values(state.playerStats)
     .sort((a, b) => {
@@ -1452,6 +1766,8 @@ function getPlayerProfileDefaults(playerId = "", uid = "") {
   return {
     id: playerId,
     uid,
+    beans: INITIAL_BEANS,
+    beansBenefits: normalizeBeansBenefits(),
     statsByMode: {
       "2": createEmptyModeStats(),
       "3": createEmptyModeStats(),
@@ -1463,6 +1779,8 @@ function getPlayerProfileDefaults(playerId = "", uid = "") {
 function profileFromData(uid, data = {}) {
   return {
     ...getPlayerProfileDefaults(data.gameId || "", uid),
+    beans: normalizeBeans(data.beans, INITIAL_BEANS),
+    beansBenefits: normalizeBeansBenefits(data.beansBenefits),
     statsByMode: buildStatsByMode(data),
   };
 }
@@ -1470,6 +1788,11 @@ function profileFromData(uid, data = {}) {
 function upsertPlayerProfile(profile) {
   if (!profile?.id) {
     return;
+  }
+
+  if (profile.uid && profile.uid === state.authUser?.uid) {
+    state.currentBeans = getProfileBeans(profile);
+    state.currentBeansBenefits = normalizeBeansBenefits(profile.beansBenefits);
   }
 
   state.playerStats = {
@@ -1506,17 +1829,183 @@ function getDefaultPlayerIdHint() {
 function renderAuthControls() {
   const signedIn = Boolean(state.authUser);
   const lockedId = signedIn && state.hasBoundGameId && !state.gameIdEditable;
+  const shownBeans = signedIn ? state.currentBeans : 0;
 
   ui.authEmail.disabled = state.authBusy || signedIn;
   ui.authPassword.disabled = state.authBusy || signedIn;
   ui.authLogin.disabled = state.authBusy || signedIn || !auth;
   ui.authRegister.disabled = state.authBusy || signedIn || !auth;
   ui.authLogout.disabled = state.authBusy || !signedIn;
+  if (ui.currentBeansBalance) {
+    ui.currentBeansBalance.textContent = signedIn ? formatBeans(shownBeans) : "登录后显示";
+  }
+  if (ui.rechargeBeans) {
+    ui.rechargeBeans.disabled = state.authBusy || state.beansBenefitBusy || !signedIn;
+    ui.rechargeBeans.title = signedIn ? "打开欢乐豆中心" : "登录后打开欢乐豆中心";
+  }
+  ui.startGame.textContent = "开始游戏";
   ui.startGame.disabled = state.authBusy || !signedIn || !state.authReady;
   ui.playerId.disabled = state.authBusy || !signedIn || lockedId;
   ui.authStatus.textContent = state.authStatusMessage;
   ui.playerId.value = state.currentPlayerId || ui.playerId.value;
   ui.playerIdHint.textContent = state.playerIdHintMessage || getDefaultPlayerIdHint();
+  renderBeansCenter();
+}
+
+function handleRechargeBeans() {
+  if (!state.authUser) {
+    state.authStatusMessage = "请先登录账号，再充值欢乐豆。";
+    renderAuthControls();
+    return;
+  }
+
+  openBeansModal();
+}
+
+function openBeansModal() {
+  if (!ui.beansModal) {
+    state.authStatusMessage = "欢乐豆中心暂时无法打开，请刷新页面后再试。";
+    renderAuthControls();
+    return;
+  }
+
+  ui.beansModal.classList.remove("hidden");
+  ui.beansModal.setAttribute("aria-hidden", "false");
+  renderBeansCenter();
+}
+
+function closeBeansModal() {
+  if (!ui.beansModal) {
+    return;
+  }
+
+  ui.beansModal.classList.add("hidden");
+  ui.beansModal.setAttribute("aria-hidden", "true");
+}
+
+function renderBeansCenter() {
+  if (!ui.beansModalBalance) {
+    return;
+  }
+
+  const signedIn = Boolean(state.authUser);
+  const todayKey = getLocalDateKey();
+  const benefits = getCurrentBeansBenefits();
+  const dailyClaimed = benefits.dailyClaimDate === todayKey;
+  const adCount = getTodayAdClaimCount(benefits);
+  const adLeft = Math.max(0, BEANS_BENEFITS.adDailyLimit - adCount);
+  const busy = state.authBusy || state.beansBenefitBusy;
+
+  ui.beansModalBalance.textContent = signedIn ? formatBeans(state.currentBeans) : "登录后显示";
+  if (ui.beansDailyStatus) {
+    ui.beansDailyStatus.textContent = signedIn
+      ? dailyClaimed
+        ? "今日福利已领取，明天可以再来。"
+        : `今日可领取 ${formatBeans(BEANS_BENEFITS.dailyAmount)}。`
+      : "登录后可以领取每日福利。";
+  }
+  if (ui.beansDailyClaim) {
+    ui.beansDailyClaim.disabled = busy || !signedIn || dailyClaimed;
+    ui.beansDailyClaim.textContent = dailyClaimed ? "今日已领" : `领取 ${formatBeans(BEANS_BENEFITS.dailyAmount)}`;
+  }
+  if (ui.beansAdStatus) {
+    ui.beansAdStatus.textContent = signedIn
+      ? adLeft > 0
+        ? `今日还可看 ${adLeft} 次，每次奖励 ${formatBeans(BEANS_BENEFITS.adAmount)}。`
+        : "今日广告奖励次数已用完。"
+      : "登录后可以观看广告领取奖励。";
+  }
+  if (ui.beansAdClaim) {
+    ui.beansAdClaim.disabled = busy || !signedIn || adLeft <= 0;
+    ui.beansAdClaim.textContent = adLeft > 0 ? "模拟观看广告" : "今日已达上限";
+  }
+  if (ui.beansRechargeStatus) {
+    ui.beansRechargeStatus.textContent = "真实充值需要支付回调和服务端校验，当前版本先保留入口，不从客户端直接入账。";
+  }
+  if (ui.beansRechargePay) {
+    ui.beansRechargePay.disabled = true;
+    ui.beansRechargePay.textContent = "支付待接入";
+  }
+}
+
+async function handleClaimBeansBenefit(kind) {
+  if (!db || !state.authUser) {
+    state.authStatusMessage = "请先登录账号，再领取欢乐豆。";
+    renderAuthControls();
+    return;
+  }
+
+  const todayKey = getLocalDateKey();
+  const isDaily = kind === "daily";
+  const amount = isDaily ? BEANS_BENEFITS.dailyAmount : BEANS_BENEFITS.adAmount;
+  const profileRef = db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid);
+  let nextBeans = state.currentBeans;
+  let nextBenefits = getCurrentBeansBenefits();
+
+  state.beansBenefitBusy = true;
+  renderBeansCenter();
+
+  try {
+    await db.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(profileRef);
+      const data = snapshot.exists ? snapshot.data() : {};
+      const currentBenefits = normalizeBeansBenefits(data.beansBenefits);
+      const currentBeans = normalizeBeans(data.beans, INITIAL_BEANS);
+      const hasStoredBeans = Number.isFinite(Number(data.beans));
+      const updatedBenefits = { ...currentBenefits };
+
+      if (isDaily) {
+        if (updatedBenefits.dailyClaimDate === todayKey) {
+          throw new Error("DAILY_ALREADY_CLAIMED");
+        }
+        updatedBenefits.dailyClaimDate = todayKey;
+        updatedBenefits.totalDailyClaims = Number(updatedBenefits.totalDailyClaims || 0) + 1;
+      } else {
+        const watchedToday = updatedBenefits.adClaimDate === todayKey
+          ? Number(updatedBenefits.adsWatchedToday || 0)
+          : 0;
+        if (watchedToday >= BEANS_BENEFITS.adDailyLimit) {
+          throw new Error("AD_LIMIT_REACHED");
+        }
+        updatedBenefits.adClaimDate = todayKey;
+        updatedBenefits.adsWatchedToday = watchedToday + 1;
+        updatedBenefits.totalAdsWatched = Number(updatedBenefits.totalAdsWatched || 0) + 1;
+      }
+
+      nextBeans = currentBeans + amount;
+      nextBenefits = updatedBenefits;
+      const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+      transaction.set(profileRef, {
+        uid: state.authUser.uid,
+        beans: hasStoredBeans ? firebase.firestore.FieldValue.increment(amount) : nextBeans,
+        beansBenefits: updatedBenefits,
+        lastBeansAwardReason: isDaily ? "daily-benefit" : "ad-benefit",
+        updatedAt: timestamp,
+        ...(snapshot.exists ? {} : { createdAt: timestamp }),
+      }, { merge: true });
+    });
+
+    state.currentBeans = nextBeans;
+    state.currentBeansBenefits = nextBenefits;
+    state.authStatusMessage = isDaily
+      ? `每日福利已到账：+${formatBeans(amount)}。`
+      : `广告奖励已到账：+${formatBeans(amount)}。`;
+    await loadCurrentUserProfile();
+    await loadLeaderboard();
+  } catch (error) {
+    if (error?.message === "DAILY_ALREADY_CLAIMED") {
+      state.authStatusMessage = "今日每日福利已经领取过了。";
+    } else if (error?.message === "AD_LIMIT_REACHED") {
+      state.authStatusMessage = "今日广告奖励次数已经用完。";
+    } else {
+      state.authStatusMessage = `欢乐豆领取失败：${formatAuthError(error)}`;
+    }
+  } finally {
+    state.beansBenefitBusy = false;
+    renderAuthControls();
+    render();
+    renderBeansCenter();
+  }
 }
 
 async function initFirebase() {
@@ -1550,6 +2039,10 @@ async function initFirebase() {
         clearSocialListeners();
         resetSocialState();
         state.currentPlayerId = "";
+        state.currentBeans = 0;
+        state.currentBeansBenefits = null;
+        state.beansBenefitBusy = false;
+        state.beansRound = null;
         state.hasBoundGameId = false;
         state.gameIdEditable = true;
         state.playerIdHintMessage = "先登录或注册账号，再创建全局唯一的游戏 ID。";
@@ -1664,7 +2157,12 @@ async function loadLeaderboard() {
   }
 
   try {
-    const snapshot = await db.collection(FIRESTORE_COLLECTIONS.profiles).get();
+    let snapshot;
+    try {
+      snapshot = await db.collection(FIRESTORE_COLLECTIONS.profiles).get({ source: "server" });
+    } catch (error) {
+      snapshot = await db.collection(FIRESTORE_COLLECTIONS.profiles).get();
+    }
     const nextStats = {};
     snapshot.forEach((doc) => {
       const profile = profileFromData(doc.id, doc.data());
@@ -1685,18 +2183,26 @@ async function loadCurrentUserProfile() {
   }
 
   try {
-    const snapshot = await db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid).get();
+    let snapshot;
+    try {
+      snapshot = await db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid).get({ source: "server" });
+    } catch (error) {
+      snapshot = await db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid).get();
+    }
     if (!snapshot.exists) {
       state.currentPlayerId = normalizePlayerId(ui.playerId.value || "");
+      state.currentBeans = INITIAL_BEANS;
+      state.currentBeansBenefits = normalizeBeansBenefits();
       state.hasBoundGameId = false;
       state.gameIdEditable = true;
       state.playerIdHintMessage = getDefaultPlayerIdHint();
       return null;
     }
 
-    const profile = profileFromData(snapshot.id, snapshot.data());
-    state.currentPlayerId = profile.id;
-    state.hasBoundGameId = Boolean(profile.id);
+      const profile = profileFromData(snapshot.id, snapshot.data());
+      state.currentPlayerId = profile.id;
+      state.currentBeans = getProfileBeans(profile);
+      state.hasBoundGameId = Boolean(profile.id);
     state.gameIdEditable = getTotalRoundsFromProfile(profile) === 0;
     ui.playerId.value = profile.id;
     state.playerIdHintMessage = getDefaultPlayerIdHint();
@@ -1798,6 +2304,8 @@ async function prepareCurrentPlayerProfile() {
         uid: state.authUser.uid,
         gameId: playerId,
         gameIdNormalized: normalizedId,
+        beans: normalizeBeans(existingData?.beans, INITIAL_BEANS),
+        beansBenefits: normalizeBeansBenefits(existingData?.beansBenefits),
         statsByMode: {
           "2": createEmptyModeStats(),
           "3": createEmptyModeStats(),
@@ -1818,6 +2326,7 @@ async function prepareCurrentPlayerProfile() {
 
     if (createdProfile) {
       state.currentPlayerId = createdProfile.id;
+      state.currentBeans = getProfileBeans(createdProfile);
       state.hasBoundGameId = Boolean(createdProfile.id);
       state.gameIdEditable = getTotalRoundsFromProfile(createdProfile) === 0;
       ui.playerId.value = createdProfile.id;
@@ -1838,6 +2347,237 @@ async function prepareCurrentPlayerProfile() {
     state.authBusy = false;
     renderAuthControls();
     render();
+  }
+}
+
+async function debitBeansForTicket(mode, playerCount, roomId = "", roundId = "") {
+  if (!db || !state.authUser) {
+    state.authStatusMessage = "请先登录账号，再进入需要门票的对局。";
+    renderAuthControls();
+    return null;
+  }
+
+  const ticket = getTicketCost(mode);
+  const pot = ticket * Number(playerCount || mode || 2);
+  const targetRoundId = roundId || `${roomId || "local"}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const profileRef = db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid);
+  let nextBeans = state.currentBeans;
+  let alreadyPaid = false;
+
+  try {
+    await db.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(profileRef);
+      const currentData = snapshot.exists ? snapshot.data() : {};
+      const currentBeans = normalizeBeans(currentData.beans, INITIAL_BEANS);
+      if (currentData.lastBeanRoundPaid === targetRoundId) {
+        alreadyPaid = true;
+        nextBeans = currentBeans;
+        return;
+      }
+      if (currentBeans < ticket) {
+        throw new Error("NOT_ENOUGH_BEANS");
+      }
+      nextBeans = currentBeans - ticket;
+      transaction.set(profileRef, {
+        beans: nextBeans,
+        lastBeanRoundPaid: targetRoundId,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    });
+
+    state.currentBeans = nextBeans;
+    return {
+      ...createBeansRound(mode, playerCount, roomId, targetRoundId),
+      ticket,
+      pot,
+      paid: true,
+      alreadyPaid,
+    };
+  } catch (error) {
+    const message = error?.message === "NOT_ENOUGH_BEANS"
+      ? `欢乐豆不足，${Number(mode)} 人模式需要 ${formatBeans(ticket)} 门票。`
+      : `扣除门票失败：${formatAuthError(error)}`;
+    if (roomId) {
+      setSocialStatus(message, "error");
+    } else {
+      state.authStatusMessage = message;
+      renderAuthControls();
+    }
+    return null;
+  }
+}
+
+async function awardBeansToCurrentUser(amount, reason = "win", roundId = "") {
+  if (!db || !state.authUser || amount <= 0) {
+    return "failed";
+  }
+
+  const profileRef = db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid);
+  let nextBeans = state.currentBeans;
+  let alreadyAwarded = false;
+  try {
+    await db.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(profileRef);
+      const currentData = snapshot.exists ? snapshot.data() : {};
+      const currentBeans = normalizeBeans(currentData.beans, INITIAL_BEANS);
+      if (roundId && currentData.lastBeanRoundAwarded === roundId) {
+        alreadyAwarded = true;
+        nextBeans = currentBeans;
+        return;
+      }
+      nextBeans = currentBeans + amount;
+      transaction.set(profileRef, {
+        beans: firebase.firestore.FieldValue.increment(amount),
+        lastBeanRoundAwarded: roundId || currentData.lastBeanRoundAwarded || "",
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastBeansAwardReason: reason,
+      }, { merge: true });
+    });
+    state.currentBeans = nextBeans;
+    return alreadyAwarded ? "already" : "awarded";
+  } catch (error) {
+    state.authStatusMessage = `欢乐豆派奖失败：${formatAuthError(error)}`;
+    renderAuthControls();
+    return "failed";
+  }
+}
+
+async function settleBeansForFinishedRound(result) {
+  const round = state.beansRound;
+  if (!round || round.awarded) {
+    return;
+  }
+
+  const winner = getSingleWinner(result);
+  if (!winner) {
+    round.awarded = true;
+    pushLog("本局并列第一，欢乐豆奖池暂不派奖。");
+    return;
+  }
+
+  const isLocalWinner = winner.name === getLocalPlayerName();
+  if (!isLocalWinner) {
+    pushLog(`${winner.name} 赢得本局奖池 ${formatBeans(round.pot)}。`);
+    return;
+  }
+
+  const awardResult = await awardBeansToCurrentUser(round.pot, "round-win", round.id);
+  if (awardResult === "failed") {
+    return false;
+  }
+
+  round.awarded = true;
+  round.awardedUid = state.authUser.uid;
+  if (awardResult === "awarded") {
+    pushLog(`你赢得本局奖池 ${formatBeans(round.pot)}。`);
+  } else {
+    pushLog(`本局奖池 ${formatBeans(round.pot)} 已领取过。`);
+  }
+
+  if (isMultiplayerActive() && state.socialActiveRoom?.id) {
+    const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(state.socialActiveRoom.id);
+    const awardedRound = {
+      ...round,
+      awarded: true,
+      awardedUid: state.authUser.uid,
+      awardedGameId: state.currentPlayerId,
+    };
+    await roomRef.set({
+      beansRound: awardedRound,
+      gameState: {
+        beansRound: awardedRound,
+      },
+      beansAward: {
+        winnerUid: state.authUser.uid,
+        winnerGameId: state.currentPlayerId,
+        amount: round.pot,
+        awardedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      },
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true }).catch(() => {});
+  }
+
+  return true;
+}
+
+async function ensureBeansPaidForRoom(room) {
+  if (!db || !state.authUser || !room?.id) {
+    return true;
+  }
+
+  const beansRound = room.gameState?.beansRound || room.beansRound;
+  if (!beansRound?.id) {
+    return true;
+  }
+
+  const paidUids = Array.isArray(beansRound.paidUids) ? beansRound.paidUids : [];
+  if (paidUids.includes(state.authUser.uid)) {
+    state.beansRound = { ...beansRound };
+    return true;
+  }
+
+  const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(room.id);
+  const profileRef = db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid);
+  const ticket = Number(beansRound.ticket || room.ticket || getTicketCost(room.mode));
+  let nextBeans = state.currentBeans;
+
+  try {
+    await db.runTransaction(async (transaction) => {
+      const roomSnap = await transaction.get(roomRef);
+      const profileSnap = await transaction.get(profileRef);
+      if (!roomSnap.exists) {
+        throw new Error("ROOM_MISSING");
+      }
+      const liveRoom = roomSnap.data();
+      const liveRound = liveRoom.gameState?.beansRound || liveRoom.beansRound || beansRound;
+      const livePaidUids = Array.isArray(liveRound.paidUids) ? [...liveRound.paidUids] : [];
+      if (livePaidUids.includes(state.authUser.uid)) {
+        nextBeans = normalizeBeans(profileSnap.exists ? profileSnap.data()?.beans : undefined, INITIAL_BEANS);
+        return;
+      }
+
+      const profileData = profileSnap.exists ? profileSnap.data() : {};
+      const currentBeans = normalizeBeans(profileData.beans, INITIAL_BEANS);
+      if (profileData.lastBeanRoundPaid !== liveRound.id) {
+        if (currentBeans < ticket) {
+          throw new Error("NOT_ENOUGH_BEANS");
+        }
+        nextBeans = currentBeans - ticket;
+        transaction.set(profileRef, {
+          beans: nextBeans,
+          lastBeanRoundPaid: liveRound.id,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      } else {
+        nextBeans = currentBeans;
+      }
+
+      livePaidUids.push(state.authUser.uid);
+      const nextRound = {
+        ...liveRound,
+        ticket,
+        pot: Number(liveRound.pot || ticket * Number(liveRoom.mode || 2)),
+        paidUids: livePaidUids,
+      };
+      transaction.set(roomRef, {
+        beansRound: nextRound,
+        gameState: {
+          ...(liveRoom.gameState || {}),
+          beansRound: nextRound,
+        },
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      state.beansRound = nextRound;
+    });
+
+    state.currentBeans = nextBeans;
+    return true;
+  } catch (error) {
+    const message = error?.message === "NOT_ENOUGH_BEANS"
+      ? `欢乐豆不足，当前联机房需要 ${formatBeans(ticket)} 门票。`
+      : `联机门票扣除失败：${formatAuthError(error)}`;
+    setSocialStatus(message, "error");
+    return false;
   }
 }
 
@@ -1928,6 +2668,9 @@ async function handleReturnToActiveRoom() {
       return;
     }
 
+    if (!(await ensureBeansPaidForRoom(liveRoom))) {
+      return;
+    }
     const localHand = await loadCurrentRoomHand(liveRoom.id);
     state.socialActiveRoom = liveRoom;
     applyMultiplayerRoomState(liveRoom, localHand);
@@ -2076,6 +2819,9 @@ function startGameRound(playerCount, useDice) {
     },
   };
   state.settings = { playerCount, useDice };
+  if (state.beansRound) {
+    pushLog(`本局门票 ${formatBeans(state.beansRound.ticket)}，奖池 ${formatBeans(state.beansRound.pot)}。`);
+  }
 
   roundPlan.players.forEach((player, index) => {
     pushLog(`${index + 1} 号位：${player.name}${player.isHuman ? "（你）" : player.isRemote ? "（好友）" : "（电脑）"}`);
@@ -2107,6 +2853,7 @@ async function startGame(playerCount, useDice) {
     render();
     return;
   }
+  state.beansRound = null;
   startGameRound(playerCount, useDice);
   return;
   clearAiTimer();
@@ -2498,14 +3245,36 @@ function startOpeningSequence() {
   }, elapsed + 120);
 }
 
-function handleOverlayButton() {
+async function handleOverlayButton() {
+  if (state.overlayAction === "claim-beans") {
+    const award = state.pendingBeansAward;
+    ui.overlayButton.disabled = true;
+    ui.overlayButton.textContent = "领取中...";
+    const settled = await settleBeansForFinishedRound(state.lastFinishedResult);
+    ui.overlayButton.disabled = false;
+
+    if (settled) {
+      const amountText = formatBeans(award?.amount || state.beansRound?.pot || 0);
+      state.pendingBeansAward = null;
+      await loadCurrentUserProfile();
+      await loadLeaderboard();
+      renderAuthControls();
+      render();
+      showOverlay("奖励已领取", "奖励已到账", `已领取 ${amountText}。点击按钮查看完整结算榜单。`, "查看结果");
+    } else {
+      showOverlay("领取失败", "奖励暂未到账", state.authStatusMessage || "请稍后再试。", "重试领取", "", "claim-beans");
+    }
+    return;
+  }
+
   if (state.phase === "game-over") {
     hideOverlay();
     return;
   }
 }
 
-function showOverlay(tag, title, copy, buttonText = "继续", detailsHtml = "") {
+function showOverlay(tag, title, copy, buttonText = "继续", detailsHtml = "", action = "") {
+  state.overlayAction = action;
   ui.overlayTag.textContent = tag;
   ui.overlayTitle.textContent = title;
   ui.overlayCopy.textContent = copy;
@@ -3102,7 +3871,7 @@ async function syncRoundResultToCloud(humanResult, isWin) {
   }
 }
 
-function finishGame() {
+async function finishGame() {
   clearAiTimer();
   state.phase = "game-over";
   const result = getRankedPlayers();
@@ -3124,7 +3893,9 @@ function finishGame() {
 
   setFeedback(`结算完成，${winnerText}。`, "info");
   pushLog(`游戏结束，${winnerText}。`);
-  showOverlay("本局结束", "本局结束", `${winnerText}。点击按钮查看完整结算榜单。`, "查看结果");
+  if (!maybePromptBeansAward(result)) {
+    showOverlay("本局结束", "本局结束", `${winnerText}。点击按钮查看完整结算榜单。`, "查看结果");
+  }
   if (localResult && state.authUser && state.currentPlayerId) {
     syncRoundResultToCloud(localResult, isHumanWin);
   }
@@ -3509,8 +4280,8 @@ function renderPlayerStatsDashboard() {
   }
 
   const playerSignature = currentProfile
-    ? `${currentProfile.id}:${mode}:${currentModeStats.rounds}:${currentModeStats.wins}:${currentModeStats.totalScore}:${currentModeStats.bestScore}:${currentModeStats.lastScore}:${ui.playerIdHint.textContent}:${state.leaderboardRefreshing}`
-    : `empty:${mode}:${ui.playerIdHint.textContent}:${state.leaderboardRefreshing}`;
+    ? `${currentProfile.id}:${mode}:${currentProfile.beans}:${currentModeStats.rounds}:${currentModeStats.wins}:${currentModeStats.totalScore}:${currentModeStats.bestScore}:${currentModeStats.lastScore}:${ui.playerIdHint.textContent}:${state.leaderboardRefreshing}`
+    : `empty:${mode}:${state.currentBeans}:${ui.playerIdHint.textContent}:${state.leaderboardRefreshing}`;
   if (state.renderCache.playerStats !== playerSignature) {
     state.renderCache.playerStats = playerSignature;
     if (!currentProfile) {
@@ -3521,6 +4292,7 @@ function renderPlayerStatsDashboard() {
     } else {
       ui.playerStatsCard.innerHTML = `
         <p>当前 ID：${currentProfile.id}</p>
+        <p>联机门票：2 人 ${formatBeans(ROOM_TICKETS[2])} · 3 人 ${formatBeans(ROOM_TICKETS[3])} · 4 人 ${formatBeans(ROOM_TICKETS[4])}</p>
         <p>${mode} 人模式 · 累计积分：${currentModeStats.totalScore} 分 · 局数：${currentModeStats.rounds} 局</p>
         <p>胜场：${currentModeStats.wins} 局 · 单局最高：${currentModeStats.bestScore} 分 · 上一局：${currentModeStats.lastScore} 分</p>
       `;
@@ -3534,7 +4306,7 @@ function renderPlayerStatsDashboard() {
     state.leaderboardRefreshing ? "refreshing" : "idle",
     ...pagedItems.map((item) => {
       const stats = getModeStats(item, mode);
-      return `${item.id}:${stats.bestScore}:${stats.totalScore}:${stats.wins}:${stats.rounds}`;
+      return `${item.id}:${item.beans}:${stats.bestScore}:${stats.totalScore}:${stats.wins}:${stats.rounds}`;
     }),
   ].join("|");
   if (state.renderCache.leaderboard === leaderboardSignature) {
@@ -4347,9 +5119,30 @@ async function handleRespondRoomInvite(inviteId, accept) {
       if (room.status !== "waiting") {
         throw new Error("ROOM_CLOSED");
       }
+      const ticket = Number(room.ticket || getTicketCost(room.mode));
+      const beansRound = room.beansRound || createBeansRound(room.mode, room.mode, invite.roomId);
+      const roundId = beansRound.id || invite.roomId;
+      const paidUids = Array.isArray(beansRound.paidUids) ? [...beansRound.paidUids] : [];
       if (!memberUids.includes(state.authUser.uid)) {
         if (memberUids.length >= Number(room.mode || 2)) {
           throw new Error("ROOM_FULL");
+        }
+        const profileRef = db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid);
+        const profileSnap = await transaction.get(profileRef);
+        const profileData = profileSnap.exists ? profileSnap.data() : {};
+        const currentBeans = normalizeBeans(profileData.beans, INITIAL_BEANS);
+        if (profileData.lastBeanRoundPaid !== roundId) {
+          if (currentBeans < ticket) {
+            throw new Error("NOT_ENOUGH_BEANS");
+          }
+          transaction.set(profileRef, {
+            beans: currentBeans - ticket,
+            lastBeanRoundPaid: roundId,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+        }
+        if (!paidUids.includes(state.authUser.uid)) {
+          paidUids.push(state.authUser.uid);
         }
         memberUids.push(state.authUser.uid);
         members.push({
@@ -4362,6 +5155,14 @@ async function handleRespondRoomInvite(inviteId, accept) {
       transaction.set(roomRef, {
         memberUids,
         members,
+        ticket,
+        pot: Number(beansRound.pot || ticket * Number(room.mode || 2)),
+        beansRound: {
+          ...beansRound,
+          ticket,
+          pot: Number(beansRound.pot || ticket * Number(room.mode || 2)),
+          paidUids,
+        },
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       }, { merge: true });
       transaction.set(inviteRef, {
@@ -4371,6 +5172,9 @@ async function handleRespondRoomInvite(inviteId, accept) {
     });
 
     setSocialStatus(accept ? "已加入好友房间。" : "已拒绝房间邀请。", "success");
+    if (accept) {
+      await loadCurrentUserProfile();
+    }
   } catch (error) {
     const permissionBlocked = error?.code === "permission-denied";
     const message = error?.message === "ROOM_FULL"
@@ -4379,9 +5183,11 @@ async function handleRespondRoomInvite(inviteId, accept) {
         ? "这个房间已经不是等待状态了，不能再加入。"
         : error?.message === "ROOM_MISSING"
           ? "这个房间已经不存在了。"
-          : permissionBlocked
-            ? "加入失败：不是你还在别的房间里，而是 Firebase 规则还没允许被邀请的人把自己加入房间，所以数据库把这一步拦住了。"
-            : `处理房间邀请失败：${formatAuthError(error)}`;
+          : error?.message === "NOT_ENOUGH_BEANS"
+            ? `欢乐豆不足，加入 ${state.socialRoomInvites.find((item) => item.id === inviteId)?.mode || ""} 人房需要门票。`
+            : permissionBlocked
+              ? "加入失败：不是你还在别的房间里，而是 Firebase 规则还没允许被邀请的人把自己加入房间，所以数据库把这一步拦住了。"
+              : `处理房间邀请失败：${formatAuthError(error)}`;
     setSocialStatus(message, "error");
   } finally {
     state.socialBusy = false;
@@ -4445,6 +5251,33 @@ async function launchRoomMatch(room, isRematch = false) {
       Number(a.joinedAt?.seconds || a.joinedAt || 0) - Number(b.joinedAt?.seconds || b.joinedAt || 0)
       || String(a.gameId || "").localeCompare(String(b.gameId || ""), "zh-CN")
     );
+  let beansRound = room.beansRound || null;
+  if (isRematch || !beansRound?.id) {
+    beansRound = await debitBeansForTicket(room.mode, orderedMembers.length || room.mode, room.id);
+    if (!beansRound) {
+      return;
+    }
+    beansRound = {
+      ...beansRound,
+      paidUids: [state.authUser.uid],
+    };
+  } else {
+    const paymentReady = await ensureBeansPaidForRoom({
+      id: room.id,
+      ...room,
+      beansRound,
+    });
+    if (!paymentReady) {
+      return;
+    }
+    beansRound = state.beansRound || beansRound;
+    beansRound = {
+      ...beansRound,
+      ticket: Number(beansRound.ticket || room.ticket || getTicketCost(room.mode)),
+      pot: Number(beansRound.pot || getTicketCost(room.mode) * Number(room.mode || 2)),
+      paidUids: Array.isArray(beansRound.paidUids) ? [...beansRound.paidUids] : [],
+    };
+  }
 
   const players = orderedMembers.map((member) => ({
     uid: member.uid,
@@ -4521,6 +5354,7 @@ async function launchRoomMatch(room, isRematch = false) {
       message: isRematch ? `${firstName} 先手，新一局开始。` : `${firstName} 先手，联机对局开始。`,
       type: "info",
     },
+    beansRound,
     lastFinishedResult: null,
     lastFinishedAt: "",
   };
@@ -4531,6 +5365,9 @@ async function launchRoomMatch(room, isRematch = false) {
     status: "playing",
     invitedUids: [],
     useDice: Boolean(useDice),
+    ticket: beansRound.ticket,
+    pot: beansRound.pot,
+    beansRound,
     memberUids: orderedMembers.map((member) => member.uid),
     members: orderedMembers.map((member) => ({
       uid: member.uid,
@@ -4555,6 +5392,9 @@ async function launchRoomMatch(room, isRematch = false) {
     ...room,
     status: "playing",
     useDice: Boolean(useDice),
+    ticket: beansRound.ticket,
+    pot: beansRound.pot,
+    beansRound,
     memberUids: orderedMembers.map((member) => member.uid),
     members: orderedMembers.map((member) => ({
       uid: member.uid,
@@ -4564,6 +5404,7 @@ async function launchRoomMatch(room, isRematch = false) {
     gameState,
   };
   state.socialActiveRoom = nextRoom;
+  state.beansRound = beansRound;
   applyMultiplayerRoomState(nextRoom, localPlayer ? localPlayer.hand : []);
   setSocialStatus(isRematch ? "联机房已重新开始下一局。" : "联机对局已开始。", "success");
 }
@@ -4672,6 +5513,7 @@ function renderSocialPanel() {
   const signature = JSON.stringify({
     signedIn,
     currentPlayerId: state.currentPlayerId,
+    currentBeans: state.currentBeans,
     socialBusy: state.socialBusy,
     socialStatusMessage: state.socialStatusMessage,
     socialStatusTone: state.socialStatusTone,
@@ -4684,6 +5526,16 @@ function renderSocialPanel() {
           id: room.id,
           mode: room.mode,
           status: room.status,
+          ticket: room.ticket,
+          pot: room.pot,
+          beansRound: room.beansRound
+            ? {
+                id: room.beansRound.id,
+                ticket: room.beansRound.ticket,
+                pot: room.beansRound.pot,
+                paidUids: room.beansRound.paidUids,
+              }
+            : null,
           hostUid: room.hostUid,
           memberUids: room.memberUids,
           invitedUids: room.invitedUids,
@@ -4737,7 +5589,7 @@ function renderSocialPanel() {
     wrap.innerHTML = `
       <div>
         <strong>还没有等待中的房间</strong>
-        <p>先创建一个 2 / 3 / 4 人房，再邀请好友加入。</p>
+        <p>先创建一个 2 / 3 / 4 人房，再邀请好友加入。创建时会扣除对应门票。</p>
       </div>
     `;
     const actions = document.createElement("div");
@@ -4746,8 +5598,8 @@ function renderSocialPanel() {
       const button = document.createElement("button");
       button.className = "ghost-btn";
       button.type = "button";
-      button.textContent = `创建${mode}人房`;
-      button.disabled = state.socialBusy || !state.currentPlayerId;
+      button.textContent = `创建${mode}人房 · ${formatBeans(getTicketCost(mode))}`;
+      button.disabled = state.socialBusy || !state.currentPlayerId || state.currentBeans < getTicketCost(mode);
       button.addEventListener("click", () => handleCreateRoom(mode));
       actions.appendChild(button);
     });
@@ -4763,12 +5615,15 @@ function renderSocialPanel() {
       : slotsLeft > 0
         ? `等待中，还差 ${slotsLeft} 人`
         : "人数已满，可以开始联机";
+    const roomTicket = Number(room.ticket || room.beansRound?.ticket || getTicketCost(room.mode));
+    const roomPot = Number(room.pot || room.beansRound?.pot || roomTicket * targetCount);
     const card = document.createElement("div");
     card.className = "social-room-inner";
     card.innerHTML = `
       <div>
         <strong>${room.mode} 人房 · ${room.hostUid === state.authUser.uid ? "你是房主" : "好友房间"}</strong>
         <p>房间状态：${roomStatusText}</p>
+        <p>门票：${formatBeans(roomTicket)} · 奖池：${formatBeans(roomPot)}</p>
         <p>当前成员：${memberText || "暂无"}</p>
       </div>
     `;
@@ -4840,16 +5695,17 @@ function renderSocialPanel() {
     ui.socialRoomInvites.appendChild(createEmptyState("还没有新的房间邀请。"));
   } else {
     state.socialRoomInvites.forEach((item) => {
+      const inviteTicket = Number(item.ticket || getTicketCost(item.mode));
       const card = document.createElement("article");
       card.className = "social-item";
-      card.innerHTML = `<div><strong>${item.fromGameId}</strong><p>邀请你进入 ${item.mode} 人房</p></div>`;
+      card.innerHTML = `<div><strong>${item.fromGameId}</strong><p>邀请你进入 ${item.mode} 人房 · 门票 ${formatBeans(inviteTicket)}</p></div>`;
       const actions = document.createElement("div");
       actions.className = "social-inline-actions";
       const accept = document.createElement("button");
       accept.className = "ghost-btn";
       accept.type = "button";
       accept.textContent = room ? "先离开当前房间" : "加入";
-      accept.disabled = state.socialBusy;
+      accept.disabled = state.socialBusy || (!room && state.currentBeans < inviteTicket);
       accept.addEventListener("click", () => {
         if (room) {
           setSocialStatus("你当前还在一个房间里，先点上面的“关闭房间”或“离开房间”，再来加入这个邀请。", "error");

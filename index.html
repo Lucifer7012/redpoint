@@ -33,14 +33,20 @@
         <p>先选人数，再决定是否启用摇骰子决定先手。</p>
       </div>
       <div class="setup-grid">
-        <label>
+        <label class="auth-card">
           <span>邮箱账号</span>
           <input id="auth-email" type="email" autocomplete="username" placeholder="输入你的邮箱">
-        </label>
-        <label>
           <span>登录密码</span>
           <input id="auth-password" type="password" autocomplete="current-password" placeholder="输入密码">
         </label>
+        <div class="bean-balance-card" id="bean-balance-card">
+          <div class="bean-balance-head">
+            <span>欢乐豆余额</span>
+            <button id="recharge-beans" class="bean-recharge-btn" type="button" aria-label="打开欢乐豆中心">+</button>
+          </div>
+          <strong id="current-beans-balance">0 欢乐豆</strong>
+          <small>联机房门票会从这里扣除。</small>
+        </div>
         <label>
           <span>玩家人数</span>
           <select id="player-count">
@@ -249,6 +255,48 @@
         </div>
       </div>
     </section>
+
+    <div class="beans-modal hidden" id="beans-modal" aria-hidden="true">
+      <div class="beans-modal__backdrop" id="beans-backdrop"></div>
+      <div class="beans-modal__card" role="dialog" aria-modal="true" aria-labelledby="beans-title">
+        <div class="beans-modal__head">
+          <div>
+            <p class="eyebrow">Beans Center</p>
+            <h2 id="beans-title">欢乐豆中心</h2>
+          </div>
+          <button id="beans-close" class="ghost-btn" type="button">关闭</button>
+        </div>
+        <div class="beans-modal__body">
+          <section class="beans-summary">
+            <span>当前余额</span>
+            <strong id="beans-modal-balance">登录后显示</strong>
+          </section>
+          <section class="beans-benefit-grid">
+            <article class="beans-benefit-card">
+              <div>
+                <h3>每日福利</h3>
+                <p id="beans-daily-status">登录后可以领取每日福利。</p>
+              </div>
+              <button id="beans-daily-claim" class="primary-btn" type="button">领取福利</button>
+            </article>
+            <article class="beans-benefit-card">
+              <div>
+                <h3>广告奖励</h3>
+                <p id="beans-ad-status">登录后可以观看广告领取奖励。</p>
+              </div>
+              <button id="beans-ad-claim" class="ghost-btn" type="button">模拟观看广告</button>
+            </article>
+            <article class="beans-benefit-card">
+              <div>
+                <h3>充值套餐</h3>
+                <p id="beans-recharge-status">真实充值需要支付回调和服务端校验，当前先保留入口。</p>
+              </div>
+              <button id="beans-recharge-pay" class="ghost-btn" type="button" disabled>支付待接入</button>
+            </article>
+          </section>
+        </div>
+      </div>
+    </div>
 
     <div class="rules-modal" id="rules-modal" aria-hidden="true">
       <div class="rules-modal__backdrop" id="rules-backdrop"></div>
