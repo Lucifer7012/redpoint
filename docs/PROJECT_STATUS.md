@@ -64,6 +64,8 @@ http://127.0.0.1:4173/
 - `docs/CHANGELOG.md`
 - `docs/PROJECT_STATUS.md`
 
+GitHub 仓库根目录不应放置 `CHANGELOG.md` 或 `PROJECT_STATUS.md` 的副本；这两个文件应位于 `docs/` 目录内。
+
 桌面总工作记录 `C:\Users\OgCloud\Desktop\Codex-Worklog\WORKLOG.md` 不属于项目发布文件，不放入 `_github_upload`。
 
 ## 已知限制

@@ -11,6 +11,15 @@
 
 ## 2026-05-20
 
+### GitHub 文档路径修正
+
+- 修正手动上传时把 `CHANGELOG.md`、`PROJECT_STATUS.md` 放到仓库根目录的问题。
+- GitHub 仓库应保留根目录 `FEATURE_LOG.md`，并把项目摘要文档放到 `docs/CHANGELOG.md`、`docs/PROJECT_STATUS.md`。
+
+验证：
+
+- 将通过临时 git 克隆推送远端结构修正。
+
 ### 排行榜默认折叠
 
 - 云端排行榜默认收起，只显示标题说明和“查看排行”按钮。
