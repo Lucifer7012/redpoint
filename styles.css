@@ -1356,6 +1356,21 @@ select {
   margin-top: 18px;
 }
 
+.leaderboard-block.is-collapsed {
+  margin-bottom: 0;
+}
+
+.leaderboard-block .compact-head {
+  align-items: center;
+}
+
+.leaderboard-toggle {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 18px;
+  margin-left: auto;
+}
+
 .leaderboard-toolbar {
   margin: 14px 0 12px;
   display: flex;
@@ -2469,7 +2484,8 @@ select {
   }
 
   .leaderboard-tabs,
-  .leaderboard-refresh {
+  .leaderboard-refresh,
+  .leaderboard-toggle {
     width: 100%;
   }
 

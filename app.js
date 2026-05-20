@@ -159,6 +159,7 @@ const ui = {
   leaderboardPrev: null,
   leaderboardNext: null,
   leaderboardPageInfo: null,
+  leaderboardToggle: null,
   socialPanel: null,
   socialStatus: null,
   socialSearchInput: null,
@@ -221,6 +222,7 @@ const state = {
   leaderboardMode: "2",
   leaderboardPage: 1,
   leaderboardRefreshing: false,
+  leaderboardOpen: false,
   hasBoundGameId: false,
   gameIdEditable: true,
   socialBusy: false,
@@ -353,6 +355,16 @@ function ensureLeaderboardControls() {
   if (leaderboardCopy) {
     leaderboardCopy.textContent = "2 / 3 / 4 人模式分开排行，按该模式下的单局最高分排序。";
   }
+  const leaderboardHead = document.querySelector(".leaderboard-block .compact-head");
+  if (leaderboardHead && !document.getElementById("leaderboard-toggle")) {
+    const toggle = document.createElement("button");
+    toggle.id = "leaderboard-toggle";
+    toggle.className = "ghost-btn leaderboard-toggle";
+    toggle.type = "button";
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.textContent = "查看排行";
+    leaderboardHead.appendChild(toggle);
+  }
 
   if (!document.getElementById("leaderboard-toolbar")) {
     const toolbar = document.createElement("div");
@@ -388,6 +400,7 @@ function ensureLeaderboardControls() {
   ui.leaderboardPrev = document.getElementById("leaderboard-prev");
   ui.leaderboardNext = document.getElementById("leaderboard-next");
   ui.leaderboardPageInfo = document.getElementById("leaderboard-page-info");
+  ui.leaderboardToggle = document.getElementById("leaderboard-toggle");
 
   [ui.leaderboardMode2, ui.leaderboardMode3, ui.leaderboardMode4].forEach((button) => {
     if (button && !button.dataset.bound) {
@@ -403,6 +416,15 @@ function ensureLeaderboardControls() {
   if (ui.refreshLeaderboard && !ui.refreshLeaderboard.dataset.bound) {
     ui.refreshLeaderboard.dataset.bound = "1";
     ui.refreshLeaderboard.addEventListener("click", refreshLeaderboardNow);
+  }
+
+  if (ui.leaderboardToggle && !ui.leaderboardToggle.dataset.bound) {
+    ui.leaderboardToggle.dataset.bound = "1";
+    ui.leaderboardToggle.addEventListener("click", () => {
+      state.leaderboardOpen = !state.leaderboardOpen;
+      state.renderCache.leaderboard = "";
+      renderPlayerStatsDashboard();
+    });
   }
 
   if (ui.leaderboardPrev && !ui.leaderboardPrev.dataset.bound) {
@@ -4366,6 +4388,7 @@ function renderSetupHistory() {
 
 function renderPlayerStatsDashboard() {
   const mode = String(state.leaderboardMode || "2");
+  const leaderboardOpen = Boolean(state.leaderboardOpen);
   const currentProfile = state.currentPlayerId && state.playerStats[state.currentPlayerId]
     ? state.playerStats[state.currentPlayerId]
     : null;
@@ -4396,6 +4419,18 @@ function renderPlayerStatsDashboard() {
   if (ui.leaderboardPageInfo) {
     ui.leaderboardPageInfo.textContent = `第 ${state.leaderboardPage} / ${totalPages} 页`;
   }
+  if (ui.leaderboardToggle) {
+    ui.leaderboardToggle.textContent = leaderboardOpen ? "收起排行" : "查看排行";
+    ui.leaderboardToggle.setAttribute("aria-expanded", String(leaderboardOpen));
+  }
+
+  const leaderboardBlock = document.querySelector(".leaderboard-block");
+  const leaderboardToolbar = document.getElementById("leaderboard-toolbar");
+  const leaderboardPagination = document.getElementById("leaderboard-pagination");
+  leaderboardBlock?.classList.toggle("is-collapsed", !leaderboardOpen);
+  leaderboardToolbar?.classList.toggle("hidden", !leaderboardOpen);
+  ui.leaderboardList?.classList.toggle("hidden", !leaderboardOpen);
+  leaderboardPagination?.classList.toggle("hidden", !leaderboardOpen);
 
   const playerSignature = currentProfile
     ? `${currentProfile.id}:${mode}:${currentProfile.beans}:${currentModeStats.rounds}:${currentModeStats.wins}:${currentModeStats.totalScore}:${currentModeStats.bestScore}:${currentModeStats.lastScore}:${ui.playerIdHint.textContent}:${state.leaderboardRefreshing}`
@@ -4417,7 +4452,13 @@ function renderPlayerStatsDashboard() {
     }
   }
 
+  if (!leaderboardOpen) {
+    state.renderCache.leaderboard = "collapsed";
+    return;
+  }
+
   const leaderboardSignature = [
+    leaderboardOpen ? "open" : "closed",
     mode,
     state.leaderboardPage,
     totalPages,
