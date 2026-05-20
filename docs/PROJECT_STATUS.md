@@ -6,6 +6,10 @@
 
 本地路径：`C:\Users\OgCloud\Desktop\redpoint`
 
+GitHub：`https://github.com/Lucifer7012/redpoint`
+
+最近同步提交：`e88d8d5`
+
 ## 当前状态
 
 - 项目是静态前端游戏，核心文件为 `index.html`、`app.js`、`styles.css`、`favicon.png`。
