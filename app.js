@@ -68,6 +68,7 @@ let db = null;
 
 const ui = {
   heroSection: document.getElementById("hero-section"),
+  heroToggle: document.getElementById("hero-toggle"),
   setupPanel: document.getElementById("setup-panel"),
   gameLayout: document.getElementById("game-layout"),
   playStage: document.getElementById("play-stage"),
@@ -277,6 +278,7 @@ const state = {
     },
   },
   rulesOpen: true,
+  heroIntroOpen: false,
   settings: {
     playerCount: 2,
     useDice: true,
@@ -284,6 +286,7 @@ const state = {
 };
 
 function init() {
+  ui.heroToggle?.addEventListener("click", toggleHeroIntro);
   ui.rulesTriggers.forEach((button) => button.addEventListener("click", openRulesModal));
   ui.rulesBackdrop.addEventListener("click", closeRulesModal);
   ui.rulesClose.addEventListener("click", closeRulesModal);
@@ -336,6 +339,7 @@ function init() {
 
   state.playerIdHintMessage = "先登录或注册账号，再创建全局唯一的游戏 ID。";
   ensureLeaderboardControls();
+  renderHeroIntro();
   renderAuthControls();
   render();
   initFirebase();
@@ -1670,6 +1674,20 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
 function handleKeyDown(event) {
   if (event.key === "Escape" && state.rulesOpen) {
     closeRulesModal();
+  }
+}
+
+function toggleHeroIntro() {
+  state.heroIntroOpen = !state.heroIntroOpen;
+  renderHeroIntro();
+}
+
+function renderHeroIntro() {
+  const isOpen = Boolean(state.heroIntroOpen);
+  ui.heroSection?.classList.toggle("is-open", isOpen);
+  if (ui.heroToggle) {
+    ui.heroToggle.textContent = isOpen ? "收起简介" : "玩法简介";
+    ui.heroToggle.setAttribute("aria-expanded", String(isOpen));
   }
 }
 

@@ -10,19 +10,21 @@
 <body>
   <main class="app-shell">
     <section class="hero" id="hero-section">
-      <div>
-        <p class="eyebrow">HTML5 + JavaScript</p>
-        <h1>钓红点</h1>
-        <p class="hero-copy">
-          参考斗地主式桌面观感的《钓红点》牌桌原型。你固定操作自己的手牌，其他玩家会在桌上实际出牌、钓牌和补枪。
-        </p>
+      <div class="hero-main">
+        <div>
+          <p class="eyebrow">好友房测试版</p>
+          <h1>钓红点</h1>
+          <p class="hero-copy">2 / 3 / 4 人 · 好友房 · 欢乐豆测试版</p>
+        </div>
+        <button id="hero-toggle" class="ghost-btn hero-toggle" type="button" aria-expanded="false">玩法简介</button>
       </div>
-      <div class="rule-card">
-        <h2>当前版本特点</h2>
+      <div class="rule-card hero-details" id="hero-details">
+        <h2>当前版本</h2>
         <ul>
-          <li>支持 2 / 3 / 4 人牌桌布局，玩家固定在下方，其他人为电脑。</li>
-          <li>只显示你的手牌和公共台面，其他玩家只显示背牌数量与刚打出的牌。</li>
-          <li>AI 回合会分阶段展示动作，不再只是滚文字日志。</li>
+          <li>支持 2 / 3 / 4 人单机和好友房。</li>
+          <li>好友房会扣除联机门票，等待房关闭或离开会退回门票。</li>
+          <li>可搜索好友、发送房间邀请、拒绝并回复原因。</li>
+          <li>欢乐豆充值暂未接入，目前可用每日福利和模拟广告奖励测试。</li>
         </ul>
       </div>
     </section>
