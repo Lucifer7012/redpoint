@@ -179,6 +179,9 @@ const ui = {
   socialLeaderboardPane: null,
   socialLeaderboardCompact: null,
   socialLeaderboardRefresh: null,
+  socialLeaderboardMode2: null,
+  socialLeaderboardMode3: null,
+  socialLeaderboardMode4: null,
   passOverlay: document.getElementById("pass-overlay"),
   overlayTag: document.getElementById("overlay-tag"),
   overlayTitle: document.getElementById("overlay-title"),
@@ -494,12 +497,12 @@ function ensureSocialPanel() {
   panel.className = "social-panel";
   panel.id = "social-panel";
   panel.innerHTML = `
+    <div class="panel-head compact-head social-panel-head">
+      <h2>好友与邀请</h2>
+      <p>搜索游戏 ID、添加好友，并邀请好友进入 2 / 3 / 4 人等待房间。</p>
+    </div>
     <div class="social-layout">
       <div class="social-left-stack">
-        <div class="panel-head compact-head social-panel-head">
-          <h2>好友与邀请</h2>
-          <p>搜索游戏 ID、添加好友，并邀请好友进入 2 / 3 / 4 人等待房间。</p>
-        </div>
         <div class="social-search-area">
           <div class="social-search-row">
             <input id="social-search-id" type="text" maxlength="20" placeholder="搜索游戏 ID">
@@ -530,7 +533,11 @@ function ensureSocialPanel() {
         </div>
         <div id="social-leaderboard-pane" class="social-side-pane hidden">
           <div class="social-leaderboard-head">
-            <strong>云端排行榜</strong>
+            <div class="leaderboard-tabs social-leaderboard-tabs" role="tablist" aria-label="排行榜模式">
+              <button id="social-leaderboard-mode-2" class="leaderboard-tab active" type="button" data-mode="2">2人榜</button>
+              <button id="social-leaderboard-mode-3" class="leaderboard-tab" type="button" data-mode="3">3人榜</button>
+              <button id="social-leaderboard-mode-4" class="leaderboard-tab" type="button" data-mode="4">4人榜</button>
+            </div>
             <button id="social-leaderboard-refresh" class="ghost-btn leaderboard-refresh" type="button">刷新</button>
           </div>
           <div id="social-leaderboard-compact" class="social-leaderboard-compact"></div>
@@ -560,6 +567,9 @@ function bindSocialPanelRefs() {
   ui.socialLeaderboardPane = document.getElementById("social-leaderboard-pane");
   ui.socialLeaderboardCompact = document.getElementById("social-leaderboard-compact");
   ui.socialLeaderboardRefresh = document.getElementById("social-leaderboard-refresh");
+  ui.socialLeaderboardMode2 = document.getElementById("social-leaderboard-mode-2");
+  ui.socialLeaderboardMode3 = document.getElementById("social-leaderboard-mode-3");
+  ui.socialLeaderboardMode4 = document.getElementById("social-leaderboard-mode-4");
 
   if (ui.socialSearchButton && !ui.socialSearchButton.dataset.bound) {
     ui.socialSearchButton.dataset.bound = "1";
@@ -594,6 +604,18 @@ function bindSocialPanelRefs() {
     ui.socialLeaderboardRefresh.dataset.bound = "1";
     ui.socialLeaderboardRefresh.addEventListener("click", refreshLeaderboardNow);
   }
+  [ui.socialLeaderboardMode2, ui.socialLeaderboardMode3, ui.socialLeaderboardMode4].forEach((button) => {
+    if (button && !button.dataset.bound) {
+      button.dataset.bound = "1";
+      button.addEventListener("click", () => {
+        state.leaderboardMode = button.dataset.mode || "2";
+        state.leaderboardPage = 1;
+        state.renderCache.social = "";
+        renderPlayerStatsDashboard();
+        renderSocialPanel();
+      });
+    }
+  });
 }
 
 function placePlayerStatsCardInSocialPanel() {
@@ -6112,13 +6134,12 @@ function renderSeat(container, player) {
 }
 
 function getCompactLeaderboardSignature() {
-  return LEADERBOARD_MODES.map((mode) => {
-    const sorted = getSortedPlayerStats(mode);
-    return `${mode}:${sorted.map((item) => {
-      const stats = getModeStats(item, mode);
-      return `${item.id}:${stats.bestScore}:${stats.wins}:${stats.rounds}`;
-    }).join(",")}`;
-  }).join("|");
+  const mode = String(state.leaderboardMode || "2");
+  const sorted = getSortedPlayerStats(mode);
+  return `${mode}:${sorted.map((item) => {
+    const stats = getModeStats(item, mode);
+    return `${item.id}:${stats.bestScore}:${stats.wins}:${stats.rounds}`;
+  }).join(",")}`;
 }
 
 function renderSocialLeaderboardCompact() {
@@ -6126,44 +6147,43 @@ function renderSocialLeaderboardCompact() {
     return;
   }
 
-  ui.socialLeaderboardCompact.innerHTML = "";
-  LEADERBOARD_MODES.forEach((mode) => {
-    const sorted = getSortedPlayerStats(mode);
-    const section = document.createElement("section");
-    section.className = "social-mini-board";
-    section.innerHTML = `
-      <div class="social-mini-board__head">
-        <strong>${mode} 人榜</strong>
-        <span>单局最高</span>
-      </div>
-    `;
+  const mode = String(state.leaderboardMode || "2");
+  const sorted = getSortedPlayerStats(mode);
+  const section = document.createElement("section");
+  section.className = "social-mini-board";
+  section.innerHTML = `
+    <div class="social-mini-board__head">
+      <strong>${mode} 人榜</strong>
+      <span>单局最高</span>
+    </div>
+  `;
 
-    const list = document.createElement("div");
-    list.className = "social-mini-board__list";
-    if (!sorted.length) {
-      list.appendChild(createEmptyState("还没有完成对局。"));
-    } else {
-      sorted.forEach((item, index) => {
-        const stats = getModeStats(item, mode);
-        const row = document.createElement("article");
-        row.className = `social-rank-item${item.id === state.currentPlayerId ? " active" : ""}`;
-        row.innerHTML = `
-          <div class="social-rank-index">#${index + 1}</div>
-          <div class="social-rank-main">
-            <strong>${escapeHtml(item.id)}</strong>
-            <p>胜场 ${stats.wins} · 局数 ${stats.rounds}</p>
-          </div>
-          <div class="social-rank-score">
-            <strong>${stats.bestScore}</strong>
-            <span>最高</span>
-          </div>
-        `;
-        list.appendChild(row);
-      });
-    }
-    section.appendChild(list);
-    ui.socialLeaderboardCompact.appendChild(section);
-  });
+  const list = document.createElement("div");
+  list.className = "social-mini-board__list";
+  ui.socialLeaderboardCompact.innerHTML = "";
+  if (!sorted.length) {
+    list.appendChild(createEmptyState("还没有完成对局。"));
+  } else {
+    sorted.forEach((item, index) => {
+      const stats = getModeStats(item, mode);
+      const row = document.createElement("article");
+      row.className = `social-rank-item${item.id === state.currentPlayerId ? " active" : ""}`;
+      row.innerHTML = `
+        <div class="social-rank-index">#${index + 1}</div>
+        <div class="social-rank-main">
+          <strong>${escapeHtml(item.id)}</strong>
+          <p>胜场 ${stats.wins} · 局数 ${stats.rounds}</p>
+        </div>
+        <div class="social-rank-score">
+          <strong>${stats.bestScore}</strong>
+          <span>最高</span>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+  }
+  section.appendChild(list);
+  ui.socialLeaderboardCompact.appendChild(section);
 }
 
 function renderSocialPanel() {
@@ -6232,6 +6252,11 @@ function renderSocialPanel() {
   ui.socialSideLeaderboardTab.setAttribute("aria-selected", String(sideView === "leaderboard"));
   ui.socialFriendsPane.classList.toggle("hidden", sideView !== "friends");
   ui.socialLeaderboardPane.classList.toggle("hidden", sideView !== "leaderboard");
+  [ui.socialLeaderboardMode2, ui.socialLeaderboardMode3, ui.socialLeaderboardMode4].forEach((button) => {
+    if (button) {
+      button.classList.toggle("active", button.dataset.mode === String(state.leaderboardMode || "2"));
+    }
+  });
   if (ui.socialLeaderboardRefresh) {
     ui.socialLeaderboardRefresh.disabled = state.leaderboardRefreshing;
     ui.socialLeaderboardRefresh.textContent = state.leaderboardRefreshing ? "刷新中" : "刷新";
