@@ -1575,8 +1575,15 @@ select {
 
 .social-side-column {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 10px;
   align-self: start;
+  height: 552px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.5);
+  overflow: hidden;
 }
 
 .social-side-tabs {
@@ -1607,10 +1614,14 @@ select {
 
 .social-side-pane {
   min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .social-friends-list {
-  max-height: 352px;
+  height: 100%;
+  max-height: none;
   overflow-y: auto;
   padding-right: 6px;
   scrollbar-width: thin;
@@ -1623,8 +1634,8 @@ select {
 
 .social-leaderboard-pane {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 10px;
-  max-width: 420px;
 }
 
 .social-leaderboard-head {
@@ -1649,14 +1660,13 @@ select {
 
 .social-leaderboard-compact {
   display: block;
+  min-height: 0;
+  height: 100%;
 }
 
 .social-mini-board {
   min-width: 0;
-  padding: 8px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.58);
+  height: 100%;
 }
 
 .social-mini-board__head {
@@ -1675,7 +1685,8 @@ select {
 }
 
 .social-mini-board__list {
-  max-height: 352px;
+  height: 100%;
+  max-height: none;
   display: grid;
   gap: 6px;
   overflow-y: auto;
