@@ -228,6 +228,7 @@ const state = {
   leaderboardPage: 1,
   leaderboardRefreshing: false,
   leaderboardOpen: false,
+  playerStatsOpen: false,
   hasBoundGameId: false,
   gameIdEditable: true,
   socialBusy: false,
@@ -327,6 +328,7 @@ function init() {
   ui.discardAction.addEventListener("click", handleDiscardAction);
   ui.clearSelection.addEventListener("click", clearSelection);
   document.addEventListener("keydown", handleKeyDown);
+  document.addEventListener("click", handleDocumentClick);
   window.addEventListener("resize", updateGameLayoutScale);
 
   const legacyIdLabel = ui.playerIdSelect?.closest("label");
@@ -487,14 +489,16 @@ function ensureSocialPanel() {
       <h2>好友与邀请</h2>
       <p>搜索游戏 ID、添加好友，并邀请好友进入 2 / 3 / 4 人等待房间。</p>
     </div>
-    <div class="social-search-row">
-      <input id="social-search-id" type="text" maxlength="20" placeholder="搜索游戏 ID">
-      <button id="social-search-btn" class="ghost-btn" type="button">搜索</button>
-    </div>
-    <p id="social-status" class="social-status">登录后可以搜索好友并创建房间。</p>
-    <div id="social-search-result" class="social-card-list"></div>
     <div class="social-layout">
       <div class="social-left-stack">
+        <div class="social-search-area">
+          <div class="social-search-row">
+            <input id="social-search-id" type="text" maxlength="20" placeholder="搜索游戏 ID">
+            <button id="social-search-btn" class="ghost-btn" type="button">搜索</button>
+          </div>
+          <p id="social-status" class="social-status">登录后可以搜索好友并创建房间。</p>
+          <div id="social-search-result" class="social-card-list"></div>
+        </div>
         <div class="social-inbox-row">
           <div class="social-column">
             <h3>好友申请</h3>
@@ -506,7 +510,6 @@ function ensureSocialPanel() {
           </div>
         </div>
         <div id="social-room-card" class="social-room-card"></div>
-        <div id="social-player-stats-slot" class="social-player-stats-slot"></div>
       </div>
       <div class="social-column social-friends-column">
         <h3>好友列表</h3>
@@ -547,11 +550,12 @@ function bindSocialPanelRefs() {
 }
 
 function placePlayerStatsCardInSocialPanel() {
-  const statsSlot = document.getElementById("social-player-stats-slot");
-  if (!statsSlot || !ui.playerStatsCard || ui.playerStatsCard.parentElement === statsSlot) {
+  const statsHost = ui.playerId?.closest("label");
+  if (!statsHost || !ui.playerStatsCard || ui.playerStatsCard.parentElement === statsHost) {
     return;
   }
-  statsSlot.appendChild(ui.playerStatsCard);
+  statsHost.classList.add("player-id-card");
+  statsHost.appendChild(ui.playerStatsCard);
 }
 
 function setSocialStatus(message, tone = "info") {
@@ -1988,6 +1992,60 @@ function getDefaultPlayerIdHint() {
   return "首次开始游戏时，会创建这个唯一 ID；创建后不能与别人重复，也不能再次修改。";
 }
 
+function renderPlayerIdHint() {
+  if (!ui.playerIdHint) {
+    return;
+  }
+
+  const defaultHint = getDefaultPlayerIdHint();
+  const hasCustomHint = Boolean(state.playerIdHintMessage);
+  const canOpenStats = !hasCustomHint && state.authUser && state.hasBoundGameId && state.currentPlayerId;
+
+  if (!canOpenStats) {
+    state.playerStatsOpen = false;
+    ui.playerIdHint.textContent = state.playerIdHintMessage || defaultHint;
+    return;
+  }
+
+  const idHtml = escapeHtml(state.currentPlayerId);
+  if (state.gameIdEditable) {
+    ui.playerIdHint.innerHTML = `当前账号暂时绑定了 ID：<button class="player-id-details-toggle" type="button" aria-expanded="${state.playerStatsOpen}">${idHtml}</button>。因为还没产生正式战绩，你现在仍然可以改成别的 ID。`;
+  } else {
+    ui.playerIdHint.innerHTML = `当前账号已绑定唯一 ID：<button class="player-id-details-toggle" type="button" aria-expanded="${state.playerStatsOpen}">${idHtml}</button>`;
+  }
+
+  const toggle = ui.playerIdHint.querySelector(".player-id-details-toggle");
+  toggle?.addEventListener("click", togglePlayerStatsPopover);
+}
+
+function togglePlayerStatsPopover(event) {
+  event?.preventDefault();
+  event?.stopPropagation();
+  state.playerStatsOpen = !state.playerStatsOpen;
+  renderAuthControls();
+  renderPlayerStatsDashboard();
+}
+
+function closePlayerStatsPopover() {
+  if (!state.playerStatsOpen) {
+    return;
+  }
+  state.playerStatsOpen = false;
+  renderAuthControls();
+  renderPlayerStatsDashboard();
+}
+
+function handleDocumentClick(event) {
+  if (!state.playerStatsOpen) {
+    return;
+  }
+  const target = event.target;
+  if (target?.closest?.(".player-id-details-toggle") || ui.playerStatsCard?.contains(target)) {
+    return;
+  }
+  closePlayerStatsPopover();
+}
+
 function renderAuthControls() {
   const signedIn = Boolean(state.authUser);
   const lockedId = signedIn && state.hasBoundGameId && !state.gameIdEditable;
@@ -2026,7 +2084,7 @@ function renderAuthControls() {
   ui.playerId.disabled = state.authBusy || !signedIn || lockedId;
   ui.authStatus.textContent = state.authStatusMessage;
   ui.playerId.value = state.currentPlayerId || ui.playerId.value;
-  ui.playerIdHint.textContent = state.playerIdHintMessage || getDefaultPlayerIdHint();
+  renderPlayerIdHint();
   renderBeansCenter();
 }
 
@@ -4515,6 +4573,10 @@ function renderPlayerStatsDashboard() {
     ? state.playerStats[state.currentPlayerId]
     : null;
   const currentModeStats = currentProfile ? getModeStats(currentProfile, mode) : createEmptyModeStats();
+  if (!currentProfile) {
+    state.playerStatsOpen = false;
+  }
+  ui.playerStatsCard?.classList.toggle("hidden", !state.playerStatsOpen || !currentProfile);
   const sorted = getSortedPlayerStats(mode);
   const pageSize = 5;
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
@@ -4566,11 +4628,19 @@ function renderPlayerStatsDashboard() {
       `;
     } else {
       ui.playerStatsCard.innerHTML = `
+        <div class="player-stats-card__head">
+          <strong>账号信息</strong>
+          <button id="player-stats-close" class="player-stats-close" type="button" aria-label="关闭账号信息">×</button>
+        </div>
         <p>当前 ID：${currentProfile.id}</p>
         <p>联机门票：2 人 ${formatBeans(ROOM_TICKETS[2])} · 3 人 ${formatBeans(ROOM_TICKETS[3])} · 4 人 ${formatBeans(ROOM_TICKETS[4])}</p>
         <p>${mode} 人模式 · 累计积分：${currentModeStats.totalScore} 分 · 局数：${currentModeStats.rounds} 局</p>
         <p>胜场：${currentModeStats.wins} 局 · 单局最高：${currentModeStats.bestScore} 分 · 上一局：${currentModeStats.lastScore} 分</p>
       `;
+      ui.playerStatsCard.querySelector("#player-stats-close")?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        closePlayerStatsPopover();
+      });
     }
   }
 

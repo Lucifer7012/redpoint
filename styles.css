@@ -1300,6 +1300,60 @@ select {
   padding: 16px;
 }
 
+.player-id-card {
+  position: relative;
+}
+
+.player-id-details-toggle {
+  min-height: 0;
+  padding: 0 3px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--accent-dark);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.player-id-details-toggle:hover {
+  background: rgba(180, 76, 43, 0.1);
+}
+
+.player-id-card .player-stats-card {
+  position: absolute;
+  top: calc(100% - 2px);
+  right: 0;
+  z-index: 12;
+  width: min(460px, calc(100vw - 48px));
+  margin-top: 0;
+  padding: 14px 16px;
+  background: rgba(255, 252, 247, 0.98);
+  box-shadow: 0 18px 36px rgba(52, 40, 28, 0.18);
+}
+
+.player-stats-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.player-stats-close {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--muted);
+  cursor: pointer;
+}
+
 .social-panel {
   margin-top: 18px;
   padding: 16px;
@@ -1314,9 +1368,10 @@ select {
 
 .social-search-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(220px, 1fr) 92px;
   gap: 10px;
-  margin: 12px 0 10px;
+  margin: 0;
+  max-width: 640px;
 }
 
 .social-search-row input {
@@ -1329,7 +1384,7 @@ select {
 }
 
 .social-status {
-  margin: 0 0 12px;
+  margin: 10px 0 0;
   color: var(--muted);
   line-height: 1.6;
   padding: 10px 14px;
@@ -1465,6 +1520,10 @@ select {
 .social-left-stack {
   display: grid;
   gap: 12px;
+  min-width: 0;
+}
+
+.social-search-area {
   min-width: 0;
 }
 
