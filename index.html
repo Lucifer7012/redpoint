@@ -54,18 +54,20 @@
           <strong id="current-beans-balance">0 欢乐豆</strong>
           <small>联机房门票会从这里扣除。</small>
         </div>
-        <label>
+        <div class="player-options-card">
+          <label class="field-block">
           <span>玩家人数</span>
           <select id="player-count">
             <option value="2">2 人</option>
             <option value="3">3 人</option>
             <option value="4">4 人</option>
           </select>
-        </label>
-        <label class="checkbox-row">
-          <input type="checkbox" id="use-dice" checked>
-          <span>启用摇骰子定先手</span>
-        </label>
+          </label>
+          <label class="dice-inline-row">
+            <input type="checkbox" id="use-dice" checked>
+            <span>启用摇骰子定先手</span>
+          </label>
+        </div>
         <label>
           <span>游戏 ID</span>
           <input id="player-id" type="text" maxlength="20" placeholder="输入你的游戏 ID">

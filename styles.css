@@ -209,7 +209,29 @@ input {
 }
 
 .setup-panel.is-lobby-mode .auth-row {
-  grid-template-columns: auto minmax(220px, 1fr);
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  max-width: min(46vw, 420px);
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  margin: 0;
+  z-index: 2;
+}
+
+.setup-panel.is-lobby-mode .panel-head {
+  padding-right: min(48vw, 440px);
+}
+
+.setup-panel.is-lobby-mode .setup-grid {
+  grid-template-columns: minmax(180px, 0.78fr) minmax(240px, 1fr) minmax(240px, 1fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.setup-panel.is-lobby-mode .button-row {
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .history-panel {
@@ -258,6 +280,7 @@ input {
 }
 
 .setup-grid label,
+.setup-grid .player-options-card,
 .setup-grid .auth-card,
 .bean-balance-card,
 .checkbox-row,
@@ -271,11 +294,35 @@ input {
 }
 
 .setup-grid label,
+.setup-grid .player-options-card,
 .setup-grid .auth-card {
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 14px;
+}
+
+.setup-grid .field-block {
+  display: contents;
+}
+
+.setup-grid .dice-inline-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding: 6px 0 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.setup-grid .dice-inline-row input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
 }
 
 .setup-grid .remember-row {
@@ -2635,6 +2682,20 @@ select {
   }
 
   .auth-row {
+    grid-template-columns: 1fr;
+  }
+
+  .setup-panel.is-lobby-mode .auth-row {
+    position: static;
+    max-width: none;
+    margin: 0 0 12px;
+  }
+
+  .setup-panel.is-lobby-mode .panel-head {
+    padding-right: 0;
+  }
+
+  .setup-panel.is-lobby-mode .setup-grid {
     grid-template-columns: 1fr;
   }
 

@@ -4632,7 +4632,7 @@ function render() {
 
   if (state.phase === "setup") {
     updateGameLayoutScale();
-    ui.heroSection.classList.remove("hidden");
+    ui.heroSection.classList.toggle("hidden", Boolean(state.authUser));
     ui.setupPanel.classList.remove("hidden");
     ui.historyPanel.classList.toggle("hidden", !state.lastFinishedResult);
     ui.gameLayout.classList.add("hidden");
