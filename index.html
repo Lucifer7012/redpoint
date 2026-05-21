@@ -73,6 +73,11 @@
           <input id="player-id" type="text" maxlength="20" placeholder="输入你的游戏 ID">
           <small id="player-id-hint">同一浏览器内可累计战绩和排行。</small>
         </label>
+        <div class="button-row lobby-actions-card">
+          <button id="start-game" class="primary-btn">开始游戏</button>
+          <button class="ghost-btn rules-trigger" type="button">查看规则</button>
+          <button id="view-last-result" class="ghost-btn hidden" type="button">上一局结算</button>
+        </div>
         <label>
           <span>已有 ID</span>
           <select id="player-id-select">
@@ -85,11 +90,6 @@
         <button id="auth-register" class="ghost-btn" type="button">注册账号</button>
         <button id="auth-logout" class="ghost-btn" type="button">退出登录</button>
         <p id="auth-status" class="auth-status">还没有登录账号。</p>
-      </div>
-      <div class="button-row">
-        <button id="start-game" class="primary-btn">开始游戏</button>
-        <button class="ghost-btn rules-trigger" type="button">查看规则</button>
-        <button id="view-last-result" class="ghost-btn hidden" type="button">上一局结算</button>
       </div>
       <div class="player-stats-card" id="player-stats-card"></div>
       <div class="leaderboard-block">

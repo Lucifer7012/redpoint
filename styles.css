@@ -224,14 +224,22 @@ input {
 }
 
 .setup-panel.is-lobby-mode .setup-grid {
-  grid-template-columns: minmax(180px, 0.78fr) minmax(240px, 1fr) minmax(240px, 1fr);
-  gap: 12px;
-  margin-bottom: 14px;
+  grid-template-columns: minmax(150px, 0.8fr) minmax(210px, 1fr) minmax(220px, 1fr) minmax(210px, 0.95fr);
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .setup-panel.is-lobby-mode .button-row {
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 8px;
+  margin: 0;
+}
+
+.setup-panel.is-lobby-mode .setup-grid label,
+.setup-panel.is-lobby-mode .setup-grid .player-options-card,
+.setup-panel.is-lobby-mode .setup-grid .lobby-actions-card,
+.setup-panel.is-lobby-mode .bean-balance-card {
+  min-height: 138px;
+  padding: 12px;
 }
 
 .history-panel {
@@ -281,6 +289,7 @@ input {
 
 .setup-grid label,
 .setup-grid .player-options-card,
+.setup-grid .lobby-actions-card,
 .setup-grid .auth-card,
 .bean-balance-card,
 .checkbox-row,
@@ -295,11 +304,21 @@ input {
 
 .setup-grid label,
 .setup-grid .player-options-card,
+.setup-grid .lobby-actions-card,
 .setup-grid .auth-card {
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 14px;
+}
+
+.setup-grid .lobby-actions-card {
+  justify-content: center;
+}
+
+.setup-grid .lobby-actions-card .primary-btn,
+.setup-grid .lobby-actions-card .ghost-btn {
+  width: 100%;
 }
 
 .setup-grid .field-block {
