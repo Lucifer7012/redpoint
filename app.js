@@ -44,6 +44,7 @@ const FIRESTORE_COLLECTIONS = {
   rooms: "rooms",
 };
 const LEADERBOARD_MODES = ["2", "3", "4"];
+const LAST_AUTH_EMAIL_STORAGE_KEY = "redpoint-last-auth-email";
 const INITIAL_BEANS = 2000;
 const ROOM_TICKETS = {
   2: 100,
@@ -217,6 +218,7 @@ const state = {
   authUser: null,
   authBusy: false,
   authReady: false,
+  authSessionConfirmed: false,
   authStatusMessage: "正在连接 Firebase...",
   playerIdHintMessage: "",
   leaderboardLoaded: false,
@@ -286,6 +288,7 @@ const state = {
 };
 
 function init() {
+  restoreRememberedAuthEmail();
   ui.heroToggle?.addEventListener("click", toggleHeroIntro);
   ui.rulesTriggers.forEach((button) => button.addEventListener("click", openRulesModal));
   ui.rulesBackdrop.addEventListener("click", closeRulesModal);
@@ -294,6 +297,7 @@ function init() {
   ui.authLogin.addEventListener("click", handleAuthLogin);
   ui.authRegister.addEventListener("click", handleAuthRegister);
   ui.authLogout.addEventListener("click", handleAuthLogout);
+  ui.authEmail.addEventListener("input", handleAuthEmailInput);
   ui.rechargeBeans?.addEventListener("click", handleRechargeBeans);
   ui.beansBackdrop?.addEventListener("click", closeBeansModal);
   ui.beansClose?.addEventListener("click", closeBeansModal);
@@ -2192,21 +2196,41 @@ async function initFirebase() {
     firebaseApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(FIREBASE_CONFIG);
     auth = firebase.auth();
     db = firebase.firestore();
-    state.authStatusMessage = "Firebase 已连接，正在读取账号状态...";
+    if (auth.setPersistence && firebase.auth?.Auth?.Persistence?.NONE) {
+      await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+    }
+    state.authStatusMessage = ui.authEmail.value.trim()
+      ? "已填入上次使用的邮箱，请点击登录进入大厅。"
+      : "Firebase 已连接，请登录账号。";
     renderAuthControls();
     render();
 
     await loadLeaderboard();
 
     auth.onAuthStateChanged(async (user) => {
-      state.authUser = user;
       state.authReady = true;
 
       if (user) {
+        if (!state.authSessionConfirmed) {
+          rememberAuthEmail(user.email || ui.authEmail.value.trim());
+          if (!ui.authEmail.value && user.email) {
+            ui.authEmail.value = user.email;
+          }
+          state.authUser = null;
+          state.authStatusMessage = "已填入上次使用的邮箱，请点击登录进入大厅。";
+          renderAuthControls();
+          render();
+          auth.signOut().catch(() => {});
+          return;
+        }
+
+        state.authUser = user;
+        rememberAuthEmail(user.email || ui.authEmail.value.trim());
         state.authStatusMessage = `已登录：${maskEmail(user.email)}`;
         await loadCurrentUserProfile();
         startSocialSync();
       } else {
+        state.authUser = null;
         clearSocialListeners();
         resetSocialState();
         state.currentPlayerId = "";
@@ -2221,8 +2245,9 @@ async function initFirebase() {
         state.gameIdEditable = true;
         state.playerIdHintMessage = "先登录或注册账号，再创建全局唯一的游戏 ID。";
         ui.playerId.value = "";
-        ui.authPassword.value = "";
-        state.authStatusMessage = "还没有登录账号。";
+        state.authStatusMessage = ui.authEmail.value.trim()
+          ? "已填入上次使用的邮箱，请点击登录进入大厅。"
+          : "还没有登录账号。";
       }
 
       await loadLeaderboard();
@@ -2235,6 +2260,34 @@ async function initFirebase() {
     renderAuthControls();
     render();
   }
+}
+
+function restoreRememberedAuthEmail() {
+  try {
+    const email = localStorage.getItem(LAST_AUTH_EMAIL_STORAGE_KEY);
+    if (email && !ui.authEmail.value) {
+      ui.authEmail.value = email;
+    }
+  } catch (error) {
+    // Ignore private-mode storage failures; browser password managers can still autofill.
+  }
+}
+
+function rememberAuthEmail(email) {
+  const normalizedEmail = String(email || "").trim();
+  if (!normalizedEmail) {
+    return;
+  }
+
+  try {
+    localStorage.setItem(LAST_AUTH_EMAIL_STORAGE_KEY, normalizedEmail);
+  } catch (error) {
+    // Do not block login if local storage is unavailable.
+  }
+}
+
+function handleAuthEmailInput() {
+  rememberAuthEmail(ui.authEmail.value);
 }
 
 function getAuthFormCredentials() {
@@ -2266,13 +2319,16 @@ async function handleAuthLogin() {
 
   const { email, password } = credentials;
   state.authBusy = true;
+  state.authSessionConfirmed = true;
   state.authStatusMessage = "正在登录账号...";
+  rememberAuthEmail(email);
   renderAuthControls();
   render();
 
   try {
     await auth.signInWithEmailAndPassword(email, password);
   } catch (error) {
+    state.authSessionConfirmed = false;
     state.authStatusMessage = formatAuthError(error);
   } finally {
     state.authBusy = false;
@@ -2289,13 +2345,16 @@ async function handleAuthRegister() {
 
   const { email, password } = credentials;
   state.authBusy = true;
+  state.authSessionConfirmed = true;
   state.authStatusMessage = "正在注册账号...";
+  rememberAuthEmail(email);
   renderAuthControls();
   render();
 
   try {
     await auth.createUserWithEmailAndPassword(email, password);
   } catch (error) {
+    state.authSessionConfirmed = false;
     state.authStatusMessage = formatAuthError(error);
   } finally {
     state.authBusy = false;
@@ -2316,6 +2375,7 @@ async function handleAuthLogout() {
 
   try {
     await auth.signOut();
+    state.authSessionConfirmed = false;
   } catch (error) {
     state.authStatusMessage = formatAuthError(error);
   } finally {
