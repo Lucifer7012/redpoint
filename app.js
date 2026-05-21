@@ -6151,12 +6151,6 @@ function renderSocialLeaderboardCompact() {
   const sorted = getSortedPlayerStats(mode);
   const section = document.createElement("section");
   section.className = "social-mini-board";
-  section.innerHTML = `
-    <div class="social-mini-board__head">
-      <strong>${mode} 人榜</strong>
-      <span>单局最高</span>
-    </div>
-  `;
 
   const list = document.createElement("div");
   list.className = "social-mini-board__list";
@@ -6176,7 +6170,7 @@ function renderSocialLeaderboardCompact() {
         </div>
         <div class="social-rank-score">
           <strong>${stats.bestScore}</strong>
-          <span>最高</span>
+          <span>单局最高</span>
         </div>
       `;
       list.appendChild(row);

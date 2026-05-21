@@ -1742,7 +1742,7 @@ select {
 }
 
 .social-rank-score {
-  min-width: 32px;
+  min-width: 54px;
   text-align: right;
 }
 
@@ -1750,6 +1750,10 @@ select {
   display: block;
   font-size: 16px;
   line-height: 1.1;
+}
+
+.social-rank-score span {
+  white-space: nowrap;
 }
 
 .social-inline-actions {
