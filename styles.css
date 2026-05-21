@@ -1414,7 +1414,14 @@ select {
 }
 
 .social-room-card {
+  height: 100%;
   margin: 0;
+  min-height: 0;
+}
+
+.social-room-card > .empty-state,
+.social-room-card > .social-room-inner {
+  height: 100%;
 }
 
 .social-room-inner,
@@ -1444,6 +1451,7 @@ select {
 .social-room-create {
   align-items: flex-start;
   flex-direction: column;
+  justify-content: flex-start;
 }
 
 .social-room-create .social-inline-actions {
@@ -1517,13 +1525,15 @@ select {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
   margin-top: 12px;
 }
 
 .social-left-stack {
   display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
   gap: 12px;
+  height: 552px;
   min-width: 0;
 }
 
