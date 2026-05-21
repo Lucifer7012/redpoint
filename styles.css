@@ -235,9 +235,9 @@ input {
   margin: 0;
 }
 
-.setup-panel.is-lobby-mode .setup-grid label,
-.setup-panel.is-lobby-mode .setup-grid .player-options-card,
-.setup-panel.is-lobby-mode .setup-grid .lobby-actions-card,
+.setup-panel.is-lobby-mode .setup-grid > label,
+.setup-panel.is-lobby-mode .setup-grid > .player-options-card,
+.setup-panel.is-lobby-mode .setup-grid > .lobby-actions-card,
 .setup-panel.is-lobby-mode .bean-balance-card {
   min-height: 112px;
   padding: 10px 12px;
@@ -254,6 +254,12 @@ input {
 .setup-panel.is-lobby-mode .setup-grid .lobby-actions-card {
   gap: 8px;
   justify-content: center;
+}
+
+.setup-panel.is-lobby-mode .dice-inline-row {
+  min-height: 0;
+  padding: 0;
+  margin-top: 2px;
 }
 
 .history-panel {
