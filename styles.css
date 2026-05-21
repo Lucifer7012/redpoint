@@ -227,6 +227,7 @@ input {
   grid-template-columns: minmax(150px, 0.8fr) minmax(210px, 1fr) minmax(220px, 1fr) minmax(210px, 0.95fr);
   gap: 10px;
   margin-bottom: 12px;
+  align-items: start;
 }
 
 .setup-panel.is-lobby-mode .button-row {
@@ -238,8 +239,21 @@ input {
 .setup-panel.is-lobby-mode .setup-grid .player-options-card,
 .setup-panel.is-lobby-mode .setup-grid .lobby-actions-card,
 .setup-panel.is-lobby-mode .bean-balance-card {
-  min-height: 138px;
-  padding: 12px;
+  min-height: 112px;
+  padding: 10px 12px;
+}
+
+.setup-panel.is-lobby-mode .bean-balance-card {
+  min-height: 112px;
+}
+
+.setup-panel.is-lobby-mode .bean-balance-card strong {
+  font-size: 22px;
+}
+
+.setup-panel.is-lobby-mode .setup-grid .lobby-actions-card {
+  gap: 8px;
+  justify-content: center;
 }
 
 .history-panel {
@@ -330,8 +344,8 @@ input {
   flex-direction: row;
   align-items: center;
   gap: 8px;
-  margin-top: auto;
-  padding: 6px 0 0;
+  margin-top: 2px;
+  padding: 2px 0 0;
   border: 0;
   background: transparent;
   border-radius: 0;
