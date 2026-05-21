@@ -45,6 +45,7 @@ const FIRESTORE_COLLECTIONS = {
 };
 const LEADERBOARD_MODES = ["2", "3", "4"];
 const LAST_AUTH_EMAIL_STORAGE_KEY = "redpoint-last-auth-email";
+const REMEMBER_AUTH_EMAIL_STORAGE_KEY = "redpoint-remember-auth-email";
 const INITIAL_BEANS = 2000;
 const ROOM_TICKETS = {
   2: 100,
@@ -82,6 +83,7 @@ const ui = {
   useDice: document.getElementById("use-dice"),
   authEmail: document.getElementById("auth-email"),
   authPassword: document.getElementById("auth-password"),
+  authRemember: document.getElementById("auth-remember"),
   authLogin: document.getElementById("auth-login"),
   authRegister: document.getElementById("auth-register"),
   authLogout: document.getElementById("auth-logout"),
@@ -298,6 +300,7 @@ function init() {
   ui.authRegister.addEventListener("click", handleAuthRegister);
   ui.authLogout.addEventListener("click", handleAuthLogout);
   ui.authEmail.addEventListener("input", handleAuthEmailInput);
+  ui.authRemember?.addEventListener("change", handleAuthRememberChange);
   ui.rechargeBeans?.addEventListener("click", handleRechargeBeans);
   ui.beansBackdrop?.addEventListener("click", closeBeansModal);
   ui.beansClose?.addEventListener("click", closeBeansModal);
@@ -2213,7 +2216,7 @@ async function initFirebase() {
       if (user) {
         if (!state.authSessionConfirmed) {
           rememberAuthEmail(user.email || ui.authEmail.value.trim());
-          if (!ui.authEmail.value && user.email) {
+          if (!ui.authEmail.value && user.email && ui.authRemember?.checked !== false) {
             ui.authEmail.value = user.email;
           }
           state.authUser = null;
@@ -2264,6 +2267,13 @@ async function initFirebase() {
 
 function restoreRememberedAuthEmail() {
   try {
+    const rememberEmail = localStorage.getItem(REMEMBER_AUTH_EMAIL_STORAGE_KEY) !== "0";
+    if (ui.authRemember) {
+      ui.authRemember.checked = rememberEmail;
+    }
+    if (!rememberEmail) {
+      return;
+    }
     const email = localStorage.getItem(LAST_AUTH_EMAIL_STORAGE_KEY);
     if (email && !ui.authEmail.value) {
       ui.authEmail.value = email;
@@ -2275,11 +2285,12 @@ function restoreRememberedAuthEmail() {
 
 function rememberAuthEmail(email) {
   const normalizedEmail = String(email || "").trim();
-  if (!normalizedEmail) {
+  if (!normalizedEmail || ui.authRemember?.checked === false) {
     return;
   }
 
   try {
+    localStorage.setItem(REMEMBER_AUTH_EMAIL_STORAGE_KEY, "1");
     localStorage.setItem(LAST_AUTH_EMAIL_STORAGE_KEY, normalizedEmail);
   } catch (error) {
     // Do not block login if local storage is unavailable.
@@ -2288,6 +2299,20 @@ function rememberAuthEmail(email) {
 
 function handleAuthEmailInput() {
   rememberAuthEmail(ui.authEmail.value);
+}
+
+function handleAuthRememberChange() {
+  try {
+    if (ui.authRemember?.checked) {
+      localStorage.setItem(REMEMBER_AUTH_EMAIL_STORAGE_KEY, "1");
+      rememberAuthEmail(ui.authEmail.value);
+    } else {
+      localStorage.setItem(REMEMBER_AUTH_EMAIL_STORAGE_KEY, "0");
+      localStorage.removeItem(LAST_AUTH_EMAIL_STORAGE_KEY);
+    }
+  } catch (error) {
+    // The checkbox still works for this page even if persistence is unavailable.
+  }
 }
 
 function getAuthFormCredentials() {

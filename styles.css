@@ -258,6 +258,7 @@ input {
 }
 
 .setup-grid label,
+.setup-grid .auth-card,
 .bean-balance-card,
 .checkbox-row,
 .selection-metrics > div,
@@ -269,11 +270,39 @@ input {
   background: rgba(255, 255, 255, 0.62);
 }
 
-.setup-grid label {
+.setup-grid label,
+.setup-grid .auth-card {
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 14px;
+}
+
+.setup-grid .remember-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.setup-grid .remember-row input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.setup-grid .remember-row span {
+  font-size: 13px;
+}
+
+.setup-grid .remember-row small {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .bean-balance-card {
