@@ -171,8 +171,14 @@ const ui = {
   socialSearchResult: null,
   socialFriendRequests: null,
   socialFriends: null,
+  socialFriendsPane: null,
   socialRoomInvites: null,
   socialRoomCard: null,
+  socialSideFriendsTab: null,
+  socialSideLeaderboardTab: null,
+  socialLeaderboardPane: null,
+  socialLeaderboardCompact: null,
+  socialLeaderboardRefresh: null,
   passOverlay: document.getElementById("pass-overlay"),
   overlayTag: document.getElementById("overlay-tag"),
   overlayTitle: document.getElementById("overlay-title"),
@@ -229,6 +235,7 @@ const state = {
   leaderboardRefreshing: false,
   leaderboardOpen: false,
   playerStatsOpen: false,
+  socialSideView: "friends",
   hasBoundGameId: false,
   gameIdEditable: true,
   socialBusy: false,
@@ -460,6 +467,7 @@ function ensureLeaderboardControls() {
 async function refreshLeaderboardNow() {
   state.leaderboardRefreshing = true;
   renderPlayerStatsDashboard();
+  renderSocialPanel();
   await loadLeaderboard();
   if (state.authUser) {
     await loadCurrentUserProfile();
@@ -467,6 +475,7 @@ async function refreshLeaderboardNow() {
   state.leaderboardRefreshing = false;
   renderPlayerStatsDashboard();
   renderAuthControls();
+  renderSocialPanel();
 }
 
 function ensureSocialPanel() {
@@ -485,12 +494,12 @@ function ensureSocialPanel() {
   panel.className = "social-panel";
   panel.id = "social-panel";
   panel.innerHTML = `
-    <div class="panel-head compact-head">
-      <h2>好友与邀请</h2>
-      <p>搜索游戏 ID、添加好友，并邀请好友进入 2 / 3 / 4 人等待房间。</p>
-    </div>
     <div class="social-layout">
       <div class="social-left-stack">
+        <div class="panel-head compact-head social-panel-head">
+          <h2>好友与邀请</h2>
+          <p>搜索游戏 ID、添加好友，并邀请好友进入 2 / 3 / 4 人等待房间。</p>
+        </div>
         <div class="social-search-area">
           <div class="social-search-row">
             <input id="social-search-id" type="text" maxlength="20" placeholder="搜索游戏 ID">
@@ -511,9 +520,21 @@ function ensureSocialPanel() {
         </div>
         <div id="social-room-card" class="social-room-card"></div>
       </div>
-      <div class="social-column social-friends-column">
-        <h3>好友列表</h3>
-        <div id="social-friends" class="social-card-list social-friends-list"></div>
+      <div class="social-column social-side-column">
+        <div class="social-side-tabs" role="tablist" aria-label="好友与排行榜">
+          <button id="social-side-friends-tab" class="social-side-tab active" type="button">好友列表</button>
+          <button id="social-side-leaderboard-tab" class="social-side-tab" type="button">排行榜</button>
+        </div>
+        <div id="social-friends-pane" class="social-side-pane">
+          <div id="social-friends" class="social-card-list social-friends-list"></div>
+        </div>
+        <div id="social-leaderboard-pane" class="social-side-pane hidden">
+          <div class="social-leaderboard-head">
+            <strong>云端排行榜</strong>
+            <button id="social-leaderboard-refresh" class="ghost-btn leaderboard-refresh" type="button">刷新</button>
+          </div>
+          <div id="social-leaderboard-compact" class="social-leaderboard-compact"></div>
+        </div>
       </div>
     </div>
   `;
@@ -531,8 +552,14 @@ function bindSocialPanelRefs() {
   ui.socialSearchResult = document.getElementById("social-search-result");
   ui.socialFriendRequests = document.getElementById("social-friend-requests");
   ui.socialFriends = document.getElementById("social-friends");
+  ui.socialFriendsPane = document.getElementById("social-friends-pane");
   ui.socialRoomInvites = document.getElementById("social-room-invites");
   ui.socialRoomCard = document.getElementById("social-room-card");
+  ui.socialSideFriendsTab = document.getElementById("social-side-friends-tab");
+  ui.socialSideLeaderboardTab = document.getElementById("social-side-leaderboard-tab");
+  ui.socialLeaderboardPane = document.getElementById("social-leaderboard-pane");
+  ui.socialLeaderboardCompact = document.getElementById("social-leaderboard-compact");
+  ui.socialLeaderboardRefresh = document.getElementById("social-leaderboard-refresh");
 
   if (ui.socialSearchButton && !ui.socialSearchButton.dataset.bound) {
     ui.socialSearchButton.dataset.bound = "1";
@@ -546,6 +573,26 @@ function bindSocialPanelRefs() {
         handleSocialSearch();
       }
     });
+  }
+  if (ui.socialSideFriendsTab && !ui.socialSideFriendsTab.dataset.bound) {
+    ui.socialSideFriendsTab.dataset.bound = "1";
+    ui.socialSideFriendsTab.addEventListener("click", () => {
+      state.socialSideView = "friends";
+      state.renderCache.social = "";
+      renderSocialPanel();
+    });
+  }
+  if (ui.socialSideLeaderboardTab && !ui.socialSideLeaderboardTab.dataset.bound) {
+    ui.socialSideLeaderboardTab.dataset.bound = "1";
+    ui.socialSideLeaderboardTab.addEventListener("click", () => {
+      state.socialSideView = "leaderboard";
+      state.renderCache.social = "";
+      renderSocialPanel();
+    });
+  }
+  if (ui.socialLeaderboardRefresh && !ui.socialLeaderboardRefresh.dataset.bound) {
+    ui.socialLeaderboardRefresh.dataset.bound = "1";
+    ui.socialLeaderboardRefresh.addEventListener("click", refreshLeaderboardNow);
   }
 }
 
@@ -4680,7 +4727,7 @@ function renderPlayerStatsDashboard() {
       <div class="leaderboard-rank">#${absoluteRank}</div>
       <div class="leaderboard-main">
         <h3>${item.id}</h3>
-        <p>${mode} 人模式 · 单局最高 ${stats.bestScore} · 胜场 ${stats.wins} · 局数 ${stats.rounds}</p>
+        <p>${mode} 人模式 · 胜场 ${stats.wins} · 局数 ${stats.rounds}</p>
       </div>
       <div class="leaderboard-side">
         <strong>${stats.bestScore}</strong>
@@ -6064,17 +6111,78 @@ function renderSeat(container, player) {
   container.appendChild(seat);
 }
 
+function getCompactLeaderboardSignature() {
+  return LEADERBOARD_MODES.map((mode) => {
+    const sorted = getSortedPlayerStats(mode);
+    return `${mode}:${sorted.map((item) => {
+      const stats = getModeStats(item, mode);
+      return `${item.id}:${stats.bestScore}:${stats.wins}:${stats.rounds}`;
+    }).join(",")}`;
+  }).join("|");
+}
+
+function renderSocialLeaderboardCompact() {
+  if (!ui.socialLeaderboardCompact) {
+    return;
+  }
+
+  ui.socialLeaderboardCompact.innerHTML = "";
+  LEADERBOARD_MODES.forEach((mode) => {
+    const sorted = getSortedPlayerStats(mode);
+    const section = document.createElement("section");
+    section.className = "social-mini-board";
+    section.innerHTML = `
+      <div class="social-mini-board__head">
+        <strong>${mode} 人榜</strong>
+        <span>单局最高</span>
+      </div>
+    `;
+
+    const list = document.createElement("div");
+    list.className = "social-mini-board__list";
+    if (!sorted.length) {
+      list.appendChild(createEmptyState("还没有完成对局。"));
+    } else {
+      sorted.forEach((item, index) => {
+        const stats = getModeStats(item, mode);
+        const row = document.createElement("article");
+        row.className = `social-rank-item${item.id === state.currentPlayerId ? " active" : ""}`;
+        row.innerHTML = `
+          <div class="social-rank-index">#${index + 1}</div>
+          <div class="social-rank-main">
+            <strong>${escapeHtml(item.id)}</strong>
+            <p>胜场 ${stats.wins} · 局数 ${stats.rounds}</p>
+          </div>
+          <div class="social-rank-score">
+            <strong>${stats.bestScore}</strong>
+            <span>最高</span>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+    }
+    section.appendChild(list);
+    ui.socialLeaderboardCompact.appendChild(section);
+  });
+}
+
 function renderSocialPanel() {
-  if (!ui.socialPanel || !ui.socialStatus || !ui.socialSearchResult || !ui.socialFriendRequests || !ui.socialFriends || !ui.socialRoomInvites || !ui.socialRoomCard) {
+  if (!ui.socialPanel || !ui.socialStatus || !ui.socialSearchResult || !ui.socialFriendRequests || !ui.socialFriends ||
+    !ui.socialFriendsPane || !ui.socialRoomInvites || !ui.socialRoomCard || !ui.socialSideFriendsTab ||
+    !ui.socialSideLeaderboardTab || !ui.socialLeaderboardPane || !ui.socialLeaderboardCompact) {
     return;
   }
 
   const signedIn = Boolean(state.authUser);
   const room = state.socialActiveRoom;
+  const sideView = state.socialSideView === "leaderboard" ? "leaderboard" : "friends";
   const signature = JSON.stringify({
     signedIn,
+    sideView,
     currentPlayerId: state.currentPlayerId,
     currentBeans: state.currentBeans,
+    leaderboardRefreshing: state.leaderboardRefreshing,
+    leaderboardCompact: getCompactLeaderboardSignature(),
     socialBusy: state.socialBusy,
     socialStatusMessage: state.socialStatusMessage,
     socialStatusTone: state.socialStatusTone,
@@ -6118,6 +6226,18 @@ function renderSocialPanel() {
   state.renderCache.social = signature;
 
   ui.socialPanel.classList.toggle("is-disabled", !signedIn);
+  ui.socialSideFriendsTab.classList.toggle("active", sideView === "friends");
+  ui.socialSideLeaderboardTab.classList.toggle("active", sideView === "leaderboard");
+  ui.socialSideFriendsTab.setAttribute("aria-selected", String(sideView === "friends"));
+  ui.socialSideLeaderboardTab.setAttribute("aria-selected", String(sideView === "leaderboard"));
+  ui.socialFriendsPane.classList.toggle("hidden", sideView !== "friends");
+  ui.socialLeaderboardPane.classList.toggle("hidden", sideView !== "leaderboard");
+  if (ui.socialLeaderboardRefresh) {
+    ui.socialLeaderboardRefresh.disabled = state.leaderboardRefreshing;
+    ui.socialLeaderboardRefresh.textContent = state.leaderboardRefreshing ? "刷新中" : "刷新";
+  }
+  renderSocialLeaderboardCompact();
+
   ui.socialSearchInput.disabled = !signedIn || state.socialBusy;
   ui.socialSearchButton.disabled = !signedIn || state.socialBusy;
   ui.socialStatus.className = `social-status is-${state.socialStatusTone || "info"}`;
