@@ -229,6 +229,7 @@ const state = {
   currentBeans: 0,
   currentBeansBenefits: null,
   beansBenefitBusy: false,
+  beansAwardBusy: false,
   authUser: null,
   authBusy: false,
   authReady: false,
@@ -1974,6 +1975,7 @@ function getBeansSettlementRows(result = getRankedPlayers()) {
   const round = state.beansRound;
   const ticket = Number(round?.ticket || 0);
   const pot = Number(round?.pot || 0);
+  const awardedAmount = Number(round?.awardedAmount || 0);
   const paidUids = Array.isArray(round?.paidUids) ? round.paidUids : [];
   const winner = getSingleWinner(result);
 
@@ -1986,11 +1988,12 @@ function getBeansSettlementRows(result = getRankedPlayers()) {
     ));
     const ticketCost = paidTicket ? ticket : 0;
     const isWinner = Boolean(winner && isSameResultPlayer(item, winner));
-    const grossAward = isWinner && winner ? pot : 0;
+    const grossAward = isWinner && winner ? (awardedAmount > 0 ? awardedAmount : pot) : 0;
+    const adBonus = Math.max(0, grossAward - pot);
     const delta = round ? grossAward - ticketCost : 0;
     const detail = round
       ? isWinner
-        ? `奖池 +${formatBeans(grossAward)} · 门票 -${formatBeans(ticketCost)}`
+        ? `奖池 +${formatBeans(pot)}${adBonus > 0 ? ` · 广告翻倍 +${formatBeans(adBonus)}` : ""} · 门票 -${formatBeans(ticketCost)}`
         : `门票 -${formatBeans(ticketCost)}`
       : "单机练习局不涉及欢乐豆";
 
@@ -2046,22 +2049,7 @@ function maybeSettleBeansAward(result) {
   }
 
   state.pendingBeansAward = award;
-  settleBeansForFinishedRound(result).then(async (settled) => {
-    if (!settled) {
-      return;
-    }
-    state.pendingBeansAward = null;
-    await loadCurrentUserProfile();
-    await loadLeaderboard();
-    setFeedback(`奖励已到账：${formatBeans(award.amount)}。`, "info");
-    renderAuthControls();
-    render();
-  }).catch((error) => {
-    state.pendingBeansAward = null;
-    state.authStatusMessage = `欢乐豆派奖失败：${formatAuthError(error)}`;
-    renderAuthControls();
-    render();
-  });
+  setFeedback(`你赢得本局奖池 ${formatBeans(award.amount)}，可以直接领取或看广告翻倍。`, "info");
   return true;
 }
 
@@ -2955,9 +2943,13 @@ async function awardBeansToCurrentUser(amount, reason = "win", roundId = "") {
 }
 
 async function settleBeansForFinishedRound(result) {
+  return claimBeansForFinishedRound(result, 1);
+}
+
+async function claimBeansForFinishedRound(result, multiplier = 1) {
   const round = state.beansRound;
   if (!round || round.awarded) {
-    return;
+    return Boolean(round?.awarded);
   }
 
   const winner = getSingleWinner(result);
@@ -2973,15 +2965,25 @@ async function settleBeansForFinishedRound(result) {
     return;
   }
 
-  const awardResult = await awardBeansToCurrentUser(round.pot, "round-win", round.id);
+  const awardMultiplier = Math.max(1, Math.floor(Number(multiplier) || 1));
+  const baseAmount = Number(round.pot || 0);
+  const awardAmount = baseAmount * awardMultiplier;
+  const awardReason = awardMultiplier > 1 ? "round-win-ad-double" : "round-win";
+  const awardResult = await awardBeansToCurrentUser(awardAmount, awardReason, round.id);
   if (awardResult === "failed") {
     return false;
   }
+  const effectiveAwardAmount = awardResult === "already" ? baseAmount : awardAmount;
+  const effectiveAwardMultiplier = awardResult === "already" ? 1 : awardMultiplier;
 
   round.awarded = true;
   round.awardedUid = state.authUser.uid;
+  round.awardedGameId = state.currentPlayerId;
+  round.awardedAmount = effectiveAwardAmount;
+  round.awardMultiplier = effectiveAwardMultiplier;
   if (awardResult === "awarded") {
-    pushLog(`你赢得本局奖池 ${formatBeans(round.pot)}。`);
+    const extraText = effectiveAwardMultiplier > 1 ? "，广告翻倍" : "";
+    pushLog(`你赢得本局奖池${extraText}，已领取 ${formatBeans(effectiveAwardAmount)}。`);
   } else {
     pushLog(`本局奖池 ${formatBeans(round.pot)} 已领取过。`);
   }
@@ -2993,6 +2995,23 @@ async function settleBeansForFinishedRound(result) {
       awarded: true,
       awardedUid: state.authUser.uid,
       awardedGameId: state.currentPlayerId,
+      awardedAmount: effectiveAwardAmount,
+      awardMultiplier: effectiveAwardMultiplier,
+    };
+    state.socialActiveRoom = {
+      ...state.socialActiveRoom,
+      beansRound: awardedRound,
+      gameState: {
+        ...(state.socialActiveRoom.gameState || {}),
+        beansRound: awardedRound,
+      },
+      beansAward: {
+        winnerUid: state.authUser.uid,
+        winnerGameId: state.currentPlayerId,
+        amount: effectiveAwardAmount,
+        basePot: baseAmount,
+        multiplier: effectiveAwardMultiplier,
+      },
     };
     await roomRef.set({
       beansRound: awardedRound,
@@ -3002,14 +3021,61 @@ async function settleBeansForFinishedRound(result) {
       beansAward: {
         winnerUid: state.authUser.uid,
         winnerGameId: state.currentPlayerId,
-        amount: round.pot,
+        amount: effectiveAwardAmount,
+        basePot: baseAmount,
+        multiplier: effectiveAwardMultiplier,
         awardedAt: firebase.firestore.FieldValue.serverTimestamp(),
       },
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     }, { merge: true }).catch(() => {});
   }
 
-  return true;
+  return awardResult;
+}
+
+async function handleClaimRoundBeans(multiplier = 1) {
+  if (state.beansAwardBusy) {
+    return;
+  }
+
+  const result = state.lastFinishedResult || getRankedPlayers();
+  const award = getPendingBeansAward(result);
+  if (!award) {
+    setFeedback("本局没有可领取的欢乐豆奖励，或奖励已经领取过。", "error");
+    render();
+    return;
+  }
+
+  const awardMultiplier = Math.max(1, Math.floor(Number(multiplier) || 1));
+  state.pendingBeansAward = award;
+  state.beansAwardBusy = true;
+  setFeedback(awardMultiplier > 1 ? "正在模拟观看广告，完成后奖励翻倍到账。" : "正在领取本局欢乐豆奖励。", "info");
+  render();
+
+  try {
+    const settled = await claimBeansForFinishedRound(result, awardMultiplier);
+    state.beansAwardBusy = false;
+    if (settled) {
+      const actualAmount = Number(state.beansRound?.awardedAmount || award.amount * awardMultiplier);
+      const amountText = formatBeans(actualAmount);
+      state.pendingBeansAward = null;
+      await loadCurrentUserProfile();
+      await loadLeaderboard();
+      const alreadyText = settled === "already" ? "本局奖池之前已经领取过。" : "";
+      setFeedback(alreadyText || (actualAmount > award.amount ? `广告翻倍奖励已到账：${amountText}。` : `奖励已到账：${amountText}。`), "info");
+      renderAuthControls();
+      render();
+    } else {
+      setFeedback(state.authStatusMessage || "奖励暂未到账，请稍后再试。", "error");
+      render();
+    }
+  } catch (error) {
+    state.beansAwardBusy = false;
+    state.authStatusMessage = `欢乐豆领取失败：${formatAuthError(error)}`;
+    setFeedback(state.authStatusMessage, "error");
+    renderAuthControls();
+    render();
+  }
 }
 
 async function ensureBeansPaidForRoom(room) {
@@ -3759,24 +3825,8 @@ function startOpeningSequence() {
 
 async function handleOverlayButton() {
   if (state.overlayAction === "claim-beans") {
-    const award = state.pendingBeansAward;
-    ui.overlayButton.disabled = true;
-    ui.overlayButton.textContent = "领取中...";
-    const settled = await settleBeansForFinishedRound(state.lastFinishedResult);
-    ui.overlayButton.disabled = false;
-
-    if (settled) {
-      const amountText = formatBeans(award?.amount || state.beansRound?.pot || 0);
-      state.pendingBeansAward = null;
-      await loadCurrentUserProfile();
-      await loadLeaderboard();
-      hideOverlay();
-      setFeedback(`奖励已到账：${amountText}。`, "info");
-      renderAuthControls();
-      render();
-    } else {
-      showOverlay("领取失败", "奖励暂未到账", state.authStatusMessage || "请稍后再试。", "重试领取", "", "claim-beans");
-    }
+    await handleClaimRoundBeans(1);
+    hideOverlay();
     return;
   }
 
@@ -4417,7 +4467,10 @@ async function finishGame() {
     syncMultiplayerRoomState().catch((error) => {
       state.authStatusMessage = `联机同步失败：${formatAuthError(error)}`;
       renderAuthControls();
-    }).finally(settleAward);
+    }).finally(() => {
+      settleAward();
+      render();
+    });
   } else {
     settleAward();
   }
@@ -5306,16 +5359,22 @@ function renderRoundSettlementSummary(result = state.lastFinishedResult || getRa
   const rows = getBeansSettlementRows(result);
   const round = state.beansRound;
   const winner = getSingleWinner(result);
+  const pendingAward = getPendingBeansAward(result);
+  const canClaimAward = Boolean(pendingAward && !round?.awarded);
   const title = round
     ? `本局门票 ${formatBeans(round.ticket || 0)} · 奖池 ${formatBeans(round.pot || 0)}`
     : "本局未消耗欢乐豆";
   const awardState = state.pendingBeansAward
-    ? "奖励入账中..."
+    ? state.beansAwardBusy
+      ? "奖励领取中..."
+      : "等待你领取奖励"
     : round?.awarded
-      ? "奖池已结算"
+      ? round.awardMultiplier > 1
+        ? "广告翻倍已领取"
+        : "奖池已领取"
       : round
         ? winner
-          ? "等待赢家客户端同步派奖"
+          ? "等待赢家领取"
           : "并列第一，暂未派奖"
         : "单机练习结算";
 
@@ -5325,6 +5384,20 @@ function renderRoundSettlementSummary(result = state.lastFinishedResult || getRa
     const redCardText = item.redCards.length
       ? item.redCards.map((card) => `${cardSymbol(card)}${card.rank}`).join(" ")
       : "无红牌";
+    const claimActions = canClaimAward && item.isWinner
+      ? `
+        <div class="settlement-card__actions">
+          <button class="settlement-claim-btn settlement-claim-btn--primary" type="button" data-claim-multiplier="1"${state.beansAwardBusy ? " disabled" : ""}>
+            <span>直接领取</span>
+            <strong>${formatBeans(pendingAward.amount)}</strong>
+          </button>
+          <button class="settlement-claim-btn" type="button" data-claim-multiplier="2"${state.beansAwardBusy ? " disabled" : ""}>
+            <span>看广告翻倍</span>
+            <strong>${formatBeans(pendingAward.amount * 2)}</strong>
+          </button>
+        </div>
+      `
+      : "";
     return `
       <article class="settlement-card settlement-card--${item.tone}${item.isWinner ? " is-winner" : ""}">
         <div class="settlement-card__head">
@@ -5337,6 +5410,7 @@ function renderRoundSettlementSummary(result = state.lastFinishedResult || getRa
         <p class="settlement-card__beans">${formatBeansDelta(item.delta)}</p>
         <p class="settlement-card__detail">${escapeHtml(item.detail)}</p>
         <p class="settlement-card__meta">红牌 ${item.redCards.length} 张 · ${escapeHtml(redCardText)}</p>
+        ${claimActions}
       </article>
     `;
   }).join("");
@@ -5355,6 +5429,9 @@ function renderRoundSettlementSummary(result = state.lastFinishedResult || getRa
       </div>
     </section>
   `;
+  ui.handCards.querySelectorAll("[data-claim-multiplier]").forEach((button) => {
+    button.addEventListener("click", () => handleClaimRoundBeans(button.dataset.claimMultiplier));
+  });
 }
 
 function renderHumanHand(humanPlayer) {
@@ -5367,8 +5444,9 @@ function renderHumanHand(humanPlayer) {
         getCurrentPlayer()?.id || "",
         state.pendingDrawCard?.id || "",
         state.lastFinishedResult?.map((item) => `${item.name}:${item.score}:${item.captured}`).join(",") || "",
-        state.beansRound ? `${state.beansRound.id}:${state.beansRound.awarded}:${state.beansRound.pot}:${state.beansRound.ticket}` : "",
+        state.beansRound ? `${state.beansRound.id}:${state.beansRound.awarded}:${state.beansRound.awardedAmount || 0}:${state.beansRound.awardMultiplier || 1}:${state.beansRound.pot}:${state.beansRound.ticket}` : "",
         state.pendingBeansAward?.roundId || "",
+        state.beansAwardBusy ? "claiming" : "idle",
       ].join("|");
 
   if (state.renderCache.humanHand === signature) {

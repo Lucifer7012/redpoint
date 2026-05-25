@@ -1495,6 +1495,49 @@ select {
   color: var(--text);
 }
 
+.settlement-card__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.settlement-claim-btn {
+  min-width: 0;
+  min-height: 38px;
+  padding: 6px 8px;
+  border: 1px solid rgba(31, 106, 78, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--green-dark);
+  cursor: pointer;
+  display: grid;
+  gap: 1px;
+  justify-items: center;
+  line-height: 1.15;
+}
+
+.settlement-claim-btn--primary {
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  color: #fffaf1;
+}
+
+.settlement-claim-btn span {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.settlement-claim-btn strong {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+
+.settlement-claim-btn:disabled {
+  opacity: 0.58;
+  cursor: wait;
+}
+
 .controls {
   margin-top: 18px;
   display: grid;
