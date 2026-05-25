@@ -4715,7 +4715,7 @@ function markBeginnerGuideSeen() {
 function getHumanTurnStartMessage() {
   if (!hasSeenBeginnerGuide()) {
     markBeginnerGuideSeen();
-    return "新手提示：先选一张手牌；能钓的公共牌会亮起，暂时不能钓的会变淡。不想钓时可以弃到台面。";
+    return "新手提示：先选一张手牌；选中后能钓的公共牌会亮起，其他公共牌会变淡。不想钓时可以弃到台面。";
   }
 
   return isMultiplayerActive()
@@ -5186,7 +5186,7 @@ function getSelectionHint() {
 
   const sourceCard = getSelectedSourceCard();
   if (!sourceCard) {
-    return "轮到你了：先选一张手牌，可钓的公共牌会自动亮起。";
+    return "轮到你了：先选一张手牌；公共牌会先保持原样，选牌后再提示可钓目标。";
   }
 
   const selectedTableCards = getSelectedTableCards();
@@ -5480,11 +5480,10 @@ function renderTableCards(selectedSourceCard) {
     const selected = state.selectedTable.has(card.id);
     const hasSource = Boolean(selectedSourceCard);
     const playable = playableIds.has(card.id);
-    const waitingForSource = isLocalTurnPlayable() && !hasSource;
     const unavailable = isLocalTurnPlayable() && hasSource && !playable && !selected;
     const disabledReason = !isLocalTurnPlayable()
       ? getTurnBlockReason()
-      : waitingForSource
+      : !hasSource
         ? "先选一张手牌，再点公共牌。"
         : unavailable
           ? "这张公共牌不能和当前手牌组成钓牌。"
@@ -5494,9 +5493,9 @@ function renderTableCards(selectedSourceCard) {
       focused: state.focusedTableIds.has(card.id),
       table: true,
       playable,
-      dimmed: waitingForSource || unavailable,
+      dimmed: unavailable,
       onClick: () => toggleTableCard(card.id),
-      disabled: !isLocalTurnPlayable() || waitingForSource || unavailable,
+      disabled: !isLocalTurnPlayable() || !hasSource || unavailable,
       disabledReason,
       cardIndex: index,
       animate: shouldAnimate,
