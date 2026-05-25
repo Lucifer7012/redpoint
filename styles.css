@@ -10,6 +10,7 @@
   --accent: #b44c2b;
   --accent-dark: #843317;
   --green: #1f6a4e;
+  --green-dark: #0f4f39;
   --shadow: 0 20px 45px rgba(52, 40, 28, 0.12);
   --radius-lg: 24px;
   --radius-md: 18px;
@@ -1515,11 +1516,14 @@ select {
   gap: 1px;
   justify-items: center;
   line-height: 1.15;
+  box-shadow: 0 6px 12px rgba(31, 106, 78, 0.08);
 }
 
 .settlement-claim-btn--primary {
   background: linear-gradient(135deg, var(--green), var(--green-dark));
   color: #fffaf1;
+  border-color: rgba(15, 79, 57, 0.42);
+  box-shadow: 0 8px 16px rgba(15, 79, 57, 0.2);
 }
 
 .settlement-claim-btn span {
