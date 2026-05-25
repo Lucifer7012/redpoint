@@ -4936,3 +4936,556 @@ select {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+@media (max-width: 960px) and (orientation: landscape) {
+  body.is-game-view {
+    width: 100vw;
+    height: 100dvh;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 50% -24%, rgba(255, 255, 255, 0.16), transparent 34%),
+      linear-gradient(180deg, #0e6247, #073a2c);
+  }
+
+  body.is-game-view .app-shell {
+    width: 100vw;
+    height: 100dvh;
+    margin: 0;
+    padding: 4px 6px 0;
+    overflow: hidden;
+  }
+
+  body.is-game-view .game-layout {
+    height: 100%;
+    min-height: 0;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  body.is-game-view .game-layout::before,
+  body.is-game-view .game-layout::after {
+    inset: 28px -8px calc(-112px - env(safe-area-inset-bottom, 0px));
+    border-radius: 20px 20px 0 0;
+  }
+
+  body.is-game-view .play-stage {
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 28px minmax(0, 1fr);
+    gap: 4px;
+    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+    overflow: hidden;
+  }
+
+  body.is-game-view .table-topbar {
+    min-height: 0;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0;
+    padding: 0;
+    position: relative;
+    z-index: 24;
+  }
+
+  body.is-game-view .table-topbar > div:first-child,
+  body.is-game-view .status-strip {
+    display: none;
+  }
+
+  body.is-game-view .topbar-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body.is-game-view .topbar-actions .ghost-btn {
+    width: auto;
+    flex: 0 0 auto;
+    min-height: 26px;
+    padding: 0 8px;
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff8ec;
+    box-shadow: none;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  body.is-game-view .table-board {
+    position: relative;
+    display: block;
+    min-height: 0;
+    height: 100%;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  body.is-game-view .seat-slot {
+    width: min(25vw, 116px);
+    z-index: 9;
+  }
+
+  body.is-game-view .seat-top-left {
+    top: 0;
+    left: 88px;
+  }
+
+  body.is-game-view .seat-top {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  body.is-game-view .seat-top-right {
+    top: 0;
+    right: 88px;
+  }
+
+  body.is-game-view .seat-left {
+    top: 58px;
+    left: 6px;
+    transform: none;
+  }
+
+  body.is-game-view .seat-right {
+    top: 58px;
+    right: 6px;
+    transform: none;
+  }
+
+  body.is-game-view .seat-card {
+    min-height: 44px;
+    padding: 5px 7px;
+    gap: 3px;
+    border-radius: 12px;
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 252, 247, 0.78);
+    box-shadow: 0 6px 14px rgba(6, 28, 22, 0.14);
+  }
+
+  body.is-game-view .seat-card.active {
+    border-color: rgba(255, 232, 176, 0.76);
+    box-shadow: 0 0 0 2px rgba(255, 232, 176, 0.18);
+  }
+
+  body.is-game-view .seat-card h3 {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 11px;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  body.is-game-view .seat-meta {
+    gap: 3px;
+    font-size: 9px;
+    line-height: 1.1;
+  }
+
+  body.is-game-view .seat-backs,
+  body.is-game-view .seat-action {
+    display: none;
+  }
+
+  body.is-game-view .table-public-area {
+    position: absolute;
+    top: 56px;
+    right: 186px;
+    bottom: 4px;
+    left: 114px;
+    transform: none;
+    width: auto;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 6px;
+    overflow: hidden;
+    border-radius: 16px;
+    border-color: rgba(255, 255, 255, 0.12);
+    background:
+      radial-gradient(circle at top, rgba(255, 255, 255, 0.12), transparent 30%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.12));
+  }
+
+  body.is-game-view .table-public-head {
+    margin-bottom: 4px;
+  }
+
+  body.is-game-view .table-public-head h3 {
+    color: #fff8ec;
+    font-size: 12px;
+    line-height: 1.1;
+    text-shadow: 0 1px 5px rgba(4, 27, 20, 0.48);
+  }
+
+  body.is-game-view .table-public-head p {
+    display: none;
+  }
+
+  body.is-game-view .table-public-slot {
+    min-height: 0;
+    height: calc(100% - 18px);
+  }
+
+  body.is-game-view .table-cards {
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-auto-rows: minmax(48px, 1fr);
+    gap: 4px;
+    padding: 5px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  body.is-game-view .table-cards .card-btn {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    margin: 0;
+    padding: 5px;
+    border-radius: 10px;
+  }
+
+  body.is-game-view .center-stage {
+    position: absolute;
+    top: 56px;
+    right: 6px;
+    bottom: 4px;
+    left: auto;
+    transform: none;
+    width: 174px;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr) 34px;
+    grid-template-areas:
+      "feedback"
+      "stage"
+      "draw";
+    gap: 5px;
+    overflow: hidden;
+    background: none;
+    border: none;
+  }
+
+  body.is-game-view .center-stage .compact-head,
+  body.is-game-view .draw-preview,
+  body.is-game-view .selection-metrics {
+    display: none !important;
+  }
+
+  body.is-game-view .center-stage .feedback-banner.hidden {
+    display: none !important;
+  }
+
+  body.is-game-view .feedback-banner {
+    grid-area: feedback;
+    max-height: 42px;
+    padding: 6px 7px;
+    overflow: hidden;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+
+  body.is-game-view .action-stage {
+    grid-area: stage;
+    min-height: 0;
+    padding: 7px;
+    gap: 5px;
+    overflow: hidden;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  body.is-game-view .action-stage__meta h3 {
+    display: -webkit-box;
+    overflow: hidden;
+    color: #fff8ec;
+    font-size: 13px;
+    line-height: 1.22;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  body.is-game-view .action-stage__meta p {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 10px;
+    line-height: 1.25;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  body.is-game-view .action-stage__cards {
+    min-height: 0;
+    gap: 4px;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  body.is-game-view .action-stage__cards .card-btn {
+    min-width: 42px;
+    width: 42px;
+    min-height: 50px;
+    padding: 5px;
+    border-radius: 9px;
+  }
+
+  body.is-game-view .draw-zone {
+    grid-area: draw;
+    margin: 0;
+    min-height: 0;
+  }
+
+  body.is-game-view .draw-pile {
+    min-height: 34px;
+    height: 34px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+  }
+
+  body.is-game-view .draw-pile__stack {
+    display: none;
+  }
+
+  body.is-game-view .draw-pile__meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  body.is-game-view .draw-pile__meta span,
+  body.is-game-view .draw-pile__meta strong {
+    font-size: 11px;
+    line-height: 1.1;
+  }
+
+  body.is-game-view .table-board .card-rank,
+  body.is-game-view .human-panel .card-rank {
+    font-size: 16px;
+  }
+
+  body.is-game-view .table-board .card-value,
+  body.is-game-view .human-panel .card-value {
+    display: none;
+  }
+
+  body.is-game-view .human-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 26;
+    height: calc(106px + env(safe-area-inset-bottom, 0px));
+    max-height: none;
+    padding: 5px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow: hidden;
+    border-radius: 14px 14px 0 0;
+    background:
+      linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(245, 238, 226, 0.98));
+    box-shadow: 0 -10px 24px rgba(10, 30, 24, 0.2);
+    animation: none;
+  }
+
+  body.is-game-view .human-panel .panel-head,
+  body.is-game-view .human-summary,
+  body.is-game-view .control-hint,
+  body.is-game-view #restart-game {
+    display: none !important;
+  }
+
+  body.is-game-view .controls {
+    order: 1;
+    margin: 0;
+    gap: 0;
+  }
+
+  body.is-game-view .human-panel .button-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  body.is-game-view .human-panel .primary-btn,
+  body.is-game-view .human-panel .ghost-btn {
+    min-height: 28px;
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  body.is-game-view .human-panel .primary-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: #fff8f0;
+    border: 0;
+  }
+
+  body.is-game-view .human-panel .ghost-btn {
+    border: 1px solid rgba(61, 53, 43, 0.12);
+    background: rgba(255, 255, 255, 0.88);
+    color: var(--text);
+  }
+
+  body.is-game-view .hand-grid {
+    order: 2;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    padding: 0 3px 2px;
+    gap: 0;
+    align-items: flex-end;
+    justify-content: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  body.is-game-view .human-panel .card-btn {
+    min-width: 52px;
+    min-height: 64px;
+    padding: 5px;
+    border-radius: 10px;
+  }
+
+  body.is-game-view .hand-grid .card-btn {
+    margin-left: -11px;
+  }
+
+  body.is-game-view .hand-grid .card-btn:first-child {
+    margin-left: 0;
+  }
+
+  body.is-game-view .hand-grid .card-btn.source-selected {
+    transform: translateY(-7px) !important;
+  }
+
+  body.is-game-view .card-top {
+    font-size: 10px;
+  }
+
+  body.is-game-view .seat-dice-top {
+    top: 48px;
+  }
+
+  body.is-game-view .seat-dice-top-left,
+  body.is-game-view .seat-dice-top-right {
+    top: 44px;
+  }
+
+  body.is-game-view .seat-dice-left,
+  body.is-game-view .seat-dice-right {
+    top: 102px;
+    transform: none;
+  }
+
+  body.is-game-view .seat-dice__cube {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 22px;
+  }
+
+  body.is-game-view .seat-dice__label,
+  body.is-game-view .seat-dice__meta {
+    font-size: 10px;
+  }
+
+  body.is-game-view .seat-result {
+    width: min(160px, calc(100vw - 16px));
+    padding: 8px 9px;
+    border-radius: 14px;
+  }
+
+  body.is-game-view .seat-result-top-left,
+  body.is-game-view .seat-result-top,
+  body.is-game-view .seat-result-top-right {
+    top: 48px;
+  }
+
+  body.is-game-view .seat-result-left,
+  body.is-game-view .seat-result-right {
+    top: 108px;
+  }
+
+  body.is-game-view .seat-result-bottom {
+    bottom: 2px;
+  }
+
+  body.is-game-view .seat-result h3 {
+    font-size: 15px;
+  }
+
+  body.is-game-view .seat-result__score {
+    font-size: 22px;
+  }
+
+  body.is-game-view .seat-result__meta,
+  body.is-game-view .seat-result__card,
+  body.is-game-view .seat-result__empty {
+    font-size: 10px;
+  }
+
+  body.is-game-view .human-panel.is-settlement {
+    height: calc(120px + env(safe-area-inset-bottom, 0px));
+    padding: 6px 8px calc(7px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body.is-game-view .human-panel.is-settlement .hand-grid {
+    display: block;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  body.is-game-view .round-settlement-grid {
+    grid-template-columns: repeat(4, minmax(128px, 1fr));
+    gap: 6px;
+  }
+
+  body.is-game-view .settlement-card {
+    min-height: 94px;
+    padding: 7px 8px;
+    gap: 2px;
+  }
+
+  body.is-game-view .settlement-card h3 {
+    font-size: 14px;
+  }
+
+  body.is-game-view .settlement-card__beans {
+    font-size: 17px;
+  }
+
+  body.is-game-view .settlement-card__role,
+  body.is-game-view .settlement-card__detail,
+  body.is-game-view .settlement-card__meta {
+    font-size: 10px;
+  }
+
+  body.is-game-view .events-panel,
+  body.is-game-view .result-panel {
+    display: none !important;
+  }
+}
