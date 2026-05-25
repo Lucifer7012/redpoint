@@ -1414,14 +1414,7 @@ select {
 }
 
 .social-room-card {
-  height: 100%;
   margin: 0;
-  min-height: 0;
-}
-
-.social-room-card > .empty-state,
-.social-room-card > .social-room-inner {
-  height: 100%;
 }
 
 .social-room-inner,
@@ -1451,7 +1444,6 @@ select {
 .social-room-create {
   align-items: flex-start;
   flex-direction: column;
-  justify-content: flex-start;
 }
 
 .social-room-create .social-inline-actions {
@@ -1525,15 +1517,13 @@ select {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
   gap: 20px;
-  align-items: stretch;
+  align-items: start;
   margin-top: 12px;
 }
 
 .social-left-stack {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
   gap: 12px;
-  height: 552px;
   min-width: 0;
 }
 
@@ -1588,7 +1578,7 @@ select {
   grid-template-rows: auto minmax(0, 1fr);
   gap: 10px;
   align-self: start;
-  height: 552px;
+  height: var(--social-side-height, auto);
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
@@ -2968,6 +2958,18 @@ select {
   .social-panel-head,
   .social-side-tabs {
     min-height: 0;
+  }
+
+  .social-side-column,
+  .social-side-pane,
+  .social-leaderboard-compact,
+  .social-mini-board {
+    height: auto;
+  }
+
+  .social-friends-list,
+  .social-mini-board__list {
+    max-height: 352px;
   }
 
   .social-room-inner,

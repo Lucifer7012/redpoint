@@ -67,6 +67,7 @@ const ROOM_INVITE_REJECT_REASONS = [
 let firebaseApp = null;
 let auth = null;
 let db = null;
+let socialSideResizeObserver = null;
 
 const ui = {
   heroSection: document.getElementById("hero-section"),
@@ -169,11 +170,13 @@ const ui = {
   socialSearchInput: null,
   socialSearchButton: null,
   socialSearchResult: null,
+  socialLeftStack: null,
   socialFriendRequests: null,
   socialFriends: null,
   socialFriendsPane: null,
   socialRoomInvites: null,
   socialRoomCard: null,
+  socialSideColumn: null,
   socialSideFriendsTab: null,
   socialSideLeaderboardTab: null,
   socialLeaderboardPane: null,
@@ -340,6 +343,7 @@ function init() {
   document.addEventListener("keydown", handleKeyDown);
   document.addEventListener("click", handleDocumentClick);
   window.addEventListener("resize", updateGameLayoutScale);
+  window.addEventListener("resize", syncSocialSideHeight);
 
   const legacyIdLabel = ui.playerIdSelect?.closest("label");
   if (legacyIdLabel) {
@@ -557,11 +561,13 @@ function bindSocialPanelRefs() {
   ui.socialSearchInput = document.getElementById("social-search-id");
   ui.socialSearchButton = document.getElementById("social-search-btn");
   ui.socialSearchResult = document.getElementById("social-search-result");
+  ui.socialLeftStack = document.querySelector(".social-left-stack");
   ui.socialFriendRequests = document.getElementById("social-friend-requests");
   ui.socialFriends = document.getElementById("social-friends");
   ui.socialFriendsPane = document.getElementById("social-friends-pane");
   ui.socialRoomInvites = document.getElementById("social-room-invites");
   ui.socialRoomCard = document.getElementById("social-room-card");
+  ui.socialSideColumn = document.querySelector(".social-side-column");
   ui.socialSideFriendsTab = document.getElementById("social-side-friends-tab");
   ui.socialSideLeaderboardTab = document.getElementById("social-side-leaderboard-tab");
   ui.socialLeaderboardPane = document.getElementById("social-leaderboard-pane");
@@ -616,6 +622,39 @@ function bindSocialPanelRefs() {
       });
     }
   });
+  setupSocialSideHeightSync();
+}
+
+function setupSocialSideHeightSync() {
+  if (!ui.socialLeftStack || !ui.socialSideColumn) {
+    return;
+  }
+
+  if ("ResizeObserver" in window) {
+    if (!socialSideResizeObserver) {
+      socialSideResizeObserver = new ResizeObserver(() => syncSocialSideHeight());
+    }
+    socialSideResizeObserver.disconnect();
+    socialSideResizeObserver.observe(ui.socialLeftStack);
+  }
+
+  syncSocialSideHeight();
+}
+
+function syncSocialSideHeight() {
+  if (!ui.socialLeftStack || !ui.socialSideColumn) {
+    return;
+  }
+
+  if (window.matchMedia("(max-width: 900px)").matches) {
+    ui.socialSideColumn.style.removeProperty("--social-side-height");
+    return;
+  }
+
+  const leftHeight = Math.ceil(ui.socialLeftStack.getBoundingClientRect().height);
+  if (leftHeight > 0) {
+    ui.socialSideColumn.style.setProperty("--social-side-height", `${leftHeight}px`);
+  }
 }
 
 function placePlayerStatsCardInSocialPanel() {
@@ -6475,4 +6514,5 @@ function renderSocialPanel() {
       ui.socialFriends.appendChild(card);
     });
   }
+  requestAnimationFrame(syncSocialSideHeight);
 }

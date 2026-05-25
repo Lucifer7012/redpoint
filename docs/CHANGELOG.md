@@ -9,6 +9,20 @@
 - 如当前状态、测试方式或后续注意点发生变化，同时更新 `docs/PROJECT_STATUS.md`。
 - 桌面总工作记录同步更新：`C:\Users\OgCloud\Desktop\Codex-Worklog\WORKLOG.md`。
 
+## 2026-05-25
+
+### 社交区右侧高度跟随左侧
+
+- 撤销上一版把左侧流程列固定为右侧高度的处理，左侧搜索、申请/邀请和房间卡片恢复自然高度。
+- 右侧“好友列表 / 排行榜”框改为读取左侧流程列实际高度并动态对齐，内容超出时仍在右侧框内滚动。
+- 小屏单列布局下取消右侧动态高度，避免移动端被桌面高度规则限制。
+
+验证：
+
+- `node --check app.js` 通过。
+- 本地服务 `http://127.0.0.1:4173/index.html?verify=social-right-align` 返回 200。
+- 内置浏览器确认页面加载 `styles.css?v=20260525-social-right-align` 和 `app.js?v=20260525-social-right-align`，左侧没有固定高度规则，右侧通过 `--social-side-height` 跟随左侧高度。
+
 ## 2026-05-21
 
 ### 大厅压缩布局
