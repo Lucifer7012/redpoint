@@ -1196,6 +1196,14 @@ select {
 }
 
 @media (min-width: 1121px) {
+  .human-panel {
+    width: calc(100% - 360px);
+  }
+
+  #restart-game {
+    display: none;
+  }
+
   .seat-card {
     min-height: 196px;
   }

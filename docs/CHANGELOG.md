@@ -23,6 +23,18 @@
 - 本地服务 `http://127.0.0.1:4173/index.html?verify=social-right-align` 返回 200。
 - 内置浏览器确认页面加载 `styles.css?v=20260525-social-right-align` 和 `app.js?v=20260525-social-right-align`，左侧没有固定高度规则，右侧通过 `--social-side-height` 跟随左侧高度。
 
+### 牌桌动作区留白
+
+- 确认顶部“再来一局”和底部“重新开局”绑定同一个重开逻辑。
+- 宽屏牌桌下隐藏底部重复的“重新开局”，保留右上角“再来一局”。
+- 宽屏牌桌下将底部手牌白色面板右侧让出动作通道，让右侧最近动作区域继续显示绿色桌面背景，身份框随手牌面板右边界向左移动。
+
+验证：
+
+- `node --check app.js` 通过。
+- 本地服务 `http://127.0.0.1:4173/index.html?verify=action-lane` 返回 200。
+- 内置浏览器确认页面加载 `styles.css?v=20260525-action-lane` 和 `app.js?v=20260525-action-lane`，宽屏规则包含手牌面板右侧让位和底部重复重开按钮隐藏。
+
 ## 2026-05-21
 
 ### 大厅压缩布局
