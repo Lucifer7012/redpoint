@@ -1575,21 +1575,21 @@ select {
   align-items: center;
   max-width: 100%;
   min-height: 0;
-  padding: 2px 8px;
-  border: 1px solid rgba(180, 76, 43, 0.28);
-  border-radius: 6px;
-  background: rgba(180, 76, 43, 0.1);
-  color: var(--accent-dark);
+  padding: 3px 10px;
+  border: 1px solid rgba(180, 76, 43, 0.4);
+  border-radius: 999px;
+  background: rgba(180, 76, 43, 0.16);
+  color: #6f2a12;
   font-weight: 800;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(95, 61, 38, 0.08);
+  box-shadow: 0 4px 10px rgba(95, 61, 38, 0.12);
 }
 
 .player-id-details-toggle:hover,
 .player-id-details-toggle:focus-visible {
-  background: rgba(180, 76, 43, 0.16);
-  border-color: rgba(180, 76, 43, 0.46);
+  background: rgba(180, 76, 43, 0.23);
+  border-color: rgba(180, 76, 43, 0.62);
   outline: none;
 }
 

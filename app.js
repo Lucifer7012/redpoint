@@ -2181,7 +2181,7 @@ function renderPlayerIdHint() {
   }
 
   const defaultHint = getDefaultPlayerIdHint();
-  const hasCustomHint = Boolean(state.playerIdHintMessage);
+  const hasCustomHint = Boolean(state.playerIdHintMessage && state.playerIdHintMessage !== defaultHint);
   const canOpenStats = !hasCustomHint && state.authUser && state.hasBoundGameId && state.currentPlayerId;
 
   if (!canOpenStats) {
