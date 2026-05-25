@@ -1780,7 +1780,7 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
   }
 
   if (state.phase === "game-over" && Array.isArray(state.lastFinishedResult)) {
-    maybePromptBeansAward(state.lastFinishedResult);
+    maybeSettleBeansAward(state.lastFinishedResult);
   }
 
   ui.heroSection.classList.add("hidden");
@@ -1935,6 +1935,88 @@ function getSingleWinner(result) {
   return winners.length === 1 ? winners[0] : null;
 }
 
+function findPlayerForResult(resultItem) {
+  return state.players.find((player) => (
+    (resultItem?.uid && player.uid === resultItem.uid)
+    || (resultItem?.id && player.id === resultItem.id)
+    || player.name === resultItem?.name
+  )) || null;
+}
+
+function getSettlementRoleLabels(player) {
+  const labels = [];
+  if (player && isLocalSeatPlayer(player)) {
+    labels.push("你");
+  }
+  if (player?.uid && state.socialActiveRoom?.hostUid === player.uid) {
+    labels.push("房主");
+  }
+  if (player && isRemoteSeatPlayer(player)) {
+    labels.push("好友");
+  }
+  if (!labels.length) {
+    labels.push("电脑");
+  }
+  return labels;
+}
+
+function isSameResultPlayer(a, b) {
+  return Boolean(
+    a && b && (
+      (a.uid && b.uid && a.uid === b.uid)
+      || (a.id && b.id && a.id === b.id)
+      || a.name === b.name
+    )
+  );
+}
+
+function getBeansSettlementRows(result = getRankedPlayers()) {
+  const round = state.beansRound;
+  const ticket = Number(round?.ticket || 0);
+  const pot = Number(round?.pot || 0);
+  const paidUids = Array.isArray(round?.paidUids) ? round.paidUids : [];
+  const winner = getSingleWinner(result);
+
+  return result.map((item, index) => {
+    const player = findPlayerForResult(item);
+    const paidTicket = Boolean(round && ticket > 0 && (
+      !paidUids.length
+      || (item.uid && paidUids.includes(item.uid))
+      || (player?.uid && paidUids.includes(player.uid))
+    ));
+    const ticketCost = paidTicket ? ticket : 0;
+    const isWinner = Boolean(winner && isSameResultPlayer(item, winner));
+    const grossAward = isWinner && winner ? pot : 0;
+    const delta = round ? grossAward - ticketCost : 0;
+    const detail = round
+      ? isWinner
+        ? `奖池 +${formatBeans(grossAward)} · 门票 -${formatBeans(ticketCost)}`
+        : `门票 -${formatBeans(ticketCost)}`
+      : "单机练习局不涉及欢乐豆";
+
+    return {
+      ...item,
+      rank: index + 1,
+      player,
+      roleLabels: getSettlementRoleLabels(player),
+      isWinner,
+      delta,
+      detail,
+      tone: delta > 0 ? "win" : delta < 0 ? "loss" : "even",
+    };
+  });
+}
+
+function formatBeansDelta(delta) {
+  if (delta > 0) {
+    return `赢 ${formatBeans(delta)}`;
+  }
+  if (delta < 0) {
+    return `输 ${formatBeans(Math.abs(delta))}`;
+  }
+  return "不输不赢";
+}
+
 function getPendingBeansAward(result) {
   const round = state.beansRound;
   if (!round || round.awarded || !round.pot) {
@@ -1953,7 +2035,7 @@ function getPendingBeansAward(result) {
   };
 }
 
-function maybePromptBeansAward(result) {
+function maybeSettleBeansAward(result) {
   const award = getPendingBeansAward(result);
   if (!award) {
     return false;
@@ -1964,17 +2046,22 @@ function maybePromptBeansAward(result) {
   }
 
   state.pendingBeansAward = award;
-  showOverlay(
-    "领取奖励",
-    "你赢得本局奖池",
-    `确认领取 ${formatBeans(award.amount)}，领取后会写入你的欢乐豆余额。`,
-    "领取奖励",
-    `<div class="reward-confirm">
-      <strong>${formatBeans(award.amount)}</strong>
-      <span>本局奖池</span>
-    </div>`,
-    "claim-beans",
-  );
+  settleBeansForFinishedRound(result).then(async (settled) => {
+    if (!settled) {
+      return;
+    }
+    state.pendingBeansAward = null;
+    await loadCurrentUserProfile();
+    await loadLeaderboard();
+    setFeedback(`奖励已到账：${formatBeans(award.amount)}。`, "info");
+    renderAuthControls();
+    render();
+  }).catch((error) => {
+    state.pendingBeansAward = null;
+    state.authStatusMessage = `欢乐豆派奖失败：${formatAuthError(error)}`;
+    renderAuthControls();
+    render();
+  });
   return true;
 }
 
@@ -3683,9 +3770,10 @@ async function handleOverlayButton() {
       state.pendingBeansAward = null;
       await loadCurrentUserProfile();
       await loadLeaderboard();
+      hideOverlay();
+      setFeedback(`奖励已到账：${amountText}。`, "info");
       renderAuthControls();
       render();
-      showOverlay("奖励已领取", "奖励已到账", `已领取 ${amountText}。点击按钮查看完整结算榜单。`, "查看结果");
     } else {
       showOverlay("领取失败", "奖励暂未到账", state.authStatusMessage || "请稍后再试。", "重试领取", "", "claim-beans");
     }
@@ -3694,9 +3782,6 @@ async function handleOverlayButton() {
 
   if (state.phase === "game-over") {
     hideOverlay();
-    setTimeout(() => {
-      ui.resultPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 0);
     return;
   }
 }
@@ -4301,6 +4386,7 @@ async function syncRoundResultToCloud(humanResult, isWin) {
 
 async function finishGame() {
   clearAiTimer();
+  hideOverlay();
   state.phase = "game-over";
   const result = getRankedPlayers();
   const humanResult = result.find((item) => item.name === "玩家 1" || item.name === state.currentPlayerId || item.name === getCurrentPlayer()?.name);
@@ -4321,17 +4407,19 @@ async function finishGame() {
 
   setFeedback(`结算完成，${winnerText}。`, "info");
   pushLog(`游戏结束，${winnerText}。`);
-  if (!maybePromptBeansAward(result)) {
-    showOverlay("本局结束", "本局结束", `${winnerText}。点击按钮查看完整结算榜单。`, "查看结果");
-  }
   if (localResult && state.authUser && state.currentPlayerId) {
     syncRoundResultToCloud(localResult, isHumanWin);
   }
+  const settleAward = () => {
+    maybeSettleBeansAward(result);
+  };
   if (isMultiplayerActive()) {
     syncMultiplayerRoomState().catch((error) => {
       state.authStatusMessage = `联机同步失败：${formatAuthError(error)}`;
       renderAuthControls();
-    });
+    }).finally(settleAward);
+  } else {
+    settleAward();
   }
   render();
 }
@@ -4598,6 +4686,8 @@ function getRedScore(cards) {
 function getRankedPlayers() {
   return state.players
     .map((player) => ({
+      id: player.id,
+      uid: player.uid || "",
       name: player.name,
       score: getRedScore(player.captured),
       captured: player.captured.length,
@@ -4831,7 +4921,7 @@ function render() {
   ui.statusText.textContent = getStatusText();
   ui.drawCount.textContent = `${state.drawPile.length} 张`;
   ui.tableCount.textContent = `${state.tableCards.length} 张`;
-  ui.currentPlayerTitle.textContent = "你的手牌";
+  ui.currentPlayerTitle.textContent = state.phase === "game-over" ? "结算明细" : "你的手牌";
   ui.turnNote.textContent = getTurnNote(currentPlayer);
   ui.selectedCardDisplay.textContent = selectedSourceCard
     ? `${cardLabel(selectedSourceCard)}${state.pendingDrawCard ? "（摸牌）" : ""}`
@@ -5203,15 +5293,73 @@ function renderTableCards(selectedSourceCard) {
   });
 }
 
+function renderRoundSettlementSummary(result = state.lastFinishedResult || getRankedPlayers()) {
+  const rows = getBeansSettlementRows(result);
+  const round = state.beansRound;
+  const winner = getSingleWinner(result);
+  const title = round
+    ? `本局门票 ${formatBeans(round.ticket || 0)} · 奖池 ${formatBeans(round.pot || 0)}`
+    : "本局未消耗欢乐豆";
+  const awardState = state.pendingBeansAward
+    ? "奖励入账中..."
+    : round?.awarded
+      ? "奖池已结算"
+      : round
+        ? winner
+          ? "等待赢家客户端同步派奖"
+          : "并列第一，暂未派奖"
+        : "单机练习结算";
+
+  const cardsHtml = rows.map((item) => {
+    const name = escapeHtml(item.name);
+    const roles = item.roleLabels.map(escapeHtml).join(" · ");
+    const redCardText = item.redCards.length
+      ? item.redCards.map((card) => `${cardSymbol(card)}${card.rank}`).join(" ")
+      : "无红牌";
+    return `
+      <article class="settlement-card settlement-card--${item.tone}${item.isWinner ? " is-winner" : ""}">
+        <div class="settlement-card__head">
+          <span>第 ${item.rank} 名</span>
+          ${item.isWinner ? "<strong>最高分</strong>" : ""}
+        </div>
+        <h3>${name}</h3>
+        <p class="settlement-card__role">${roles}</p>
+        <p class="settlement-card__score">${item.score} 分</p>
+        <p class="settlement-card__beans">${formatBeansDelta(item.delta)}</p>
+        <p class="settlement-card__detail">${escapeHtml(item.detail)}</p>
+        <p class="settlement-card__meta">红牌 ${item.redCards.length} 张 · ${escapeHtml(redCardText)}</p>
+      </article>
+    `;
+  }).join("");
+
+  ui.handCards.innerHTML = `
+    <section class="round-settlement-summary">
+      <div class="round-settlement-summary__head">
+        <div>
+          <h3>本局结算</h3>
+          <p>${title}</p>
+        </div>
+        <span>${awardState}</span>
+      </div>
+      <div class="round-settlement-grid">
+        ${cardsHtml}
+      </div>
+    </section>
+  `;
+}
+
 function renderHumanHand(humanPlayer) {
   const signature = !humanPlayer
-    ? "empty"
+    ? `empty:${state.phase}:${state.lastFinishedResult?.length || 0}`
     : [
+        state.phase,
         humanPlayer.hand.map((card) => card.id).join(","),
         state.selectedHandCardId || "",
         getCurrentPlayer()?.id || "",
-        state.phase,
         state.pendingDrawCard?.id || "",
+        state.lastFinishedResult?.map((item) => `${item.name}:${item.score}:${item.captured}`).join(",") || "",
+        state.beansRound ? `${state.beansRound.id}:${state.beansRound.awarded}:${state.beansRound.pot}:${state.beansRound.ticket}` : "",
+        state.pendingBeansAward?.roundId || "",
       ].join("|");
 
   if (state.renderCache.humanHand === signature) {
@@ -5219,7 +5367,14 @@ function renderHumanHand(humanPlayer) {
   }
   state.renderCache.humanHand = signature;
 
+  ui.handCards.closest(".human-panel")?.classList.toggle("is-settlement", state.phase === "game-over");
   ui.handCards.innerHTML = "";
+  ui.handCards.classList.toggle("settlement-grid", state.phase === "game-over");
+  if (state.phase === "game-over") {
+    renderRoundSettlementSummary();
+    return;
+  }
+
   if (!humanPlayer || humanPlayer.hand.length === 0) {
     const emptyText = state.phase === "opening-deal"
       ? "正在发你的手牌"
@@ -5259,38 +5414,14 @@ function renderLog() {
 }
 
 function renderResults() {
-  const signature = state.phase === "game-over"
-    ? getRankedPlayers().map((item) => `${item.name}:${item.score}:${item.captured}`).join("|")
-    : "hidden";
-
+  const signature = "hidden";
   if (state.renderCache.results === signature) {
     return;
   }
   state.renderCache.results = signature;
 
-  if (state.phase !== "game-over") {
-    ui.resultPanel.classList.add("hidden");
-    ui.resultGrid.innerHTML = "";
-    return;
-  }
-
-  ui.resultPanel.classList.remove("hidden");
+  ui.resultPanel.classList.add("hidden");
   ui.resultGrid.innerHTML = "";
-  getRankedPlayers().forEach((item, index) => {
-    const redCardText = item.redCards.length
-      ? item.redCards.map((card) => `${cardLabel(card)}(${card.scoreValue})`).join("、")
-      : "本局没有赢到红牌";
-    const article = document.createElement("article");
-    article.className = `result-card${index === 0 ? " top" : ""}`;
-    article.innerHTML = `
-      <p class="result-rank">第 ${index + 1} 名</p>
-      <h3>${item.name}</h3>
-      <p class="result-score">${item.score} 分</p>
-      <p class="result-meta">已赢 ${item.captured} 张牌，红牌 ${item.redCards.length} 张</p>
-      <p class="result-red-cards">${redCardText}</p>
-    `;
-    ui.resultGrid.appendChild(article);
-  });
 }
 
 function getVisibleRoomInvite() {
@@ -5599,7 +5730,7 @@ function getStatusText() {
 
 function getTurnNote(currentPlayer) {
   if (state.phase === "game-over") {
-    return "本局已经结束，可以查看桌面上的结算卡，或返回模式选择查看上一局结算。";
+    return "本局已经结束，桌面保留每个人的得分卡，下面显示欢乐豆输赢明细。";
   }
 
   if (state.phase === "dice-rolling") {

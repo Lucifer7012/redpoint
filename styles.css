@@ -1342,6 +1342,143 @@ select {
   scrollbar-width: thin;
 }
 
+.hand-grid.settlement-grid {
+  display: block;
+  overflow: visible;
+}
+
+.human-panel.is-settlement .controls {
+  display: none;
+}
+
+.round-settlement-summary {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+}
+
+.round-settlement-summary__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(31, 106, 78, 0.18);
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.round-settlement-summary__head h3,
+.round-settlement-summary__head p {
+  margin: 0;
+}
+
+.round-settlement-summary__head h3 {
+  font-size: 18px;
+}
+
+.round-settlement-summary__head p {
+  margin-top: 4px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.round-settlement-summary__head > span {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(31, 106, 78, 0.1);
+  color: var(--green-dark);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.round-settlement-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.settlement-card {
+  min-height: 166px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(61, 53, 43, 0.1);
+  background: rgba(255, 255, 255, 0.78);
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
+.settlement-card.is-winner {
+  border-color: rgba(31, 106, 78, 0.28);
+  background: linear-gradient(180deg, rgba(31, 106, 78, 0.13), rgba(255, 255, 255, 0.86));
+}
+
+.settlement-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.settlement-card__head span,
+.settlement-card__head strong {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.settlement-card__head span {
+  color: var(--muted);
+  background: rgba(36, 29, 24, 0.06);
+}
+
+.settlement-card__head strong {
+  color: #fff8f0;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+}
+
+.settlement-card h3,
+.settlement-card p {
+  margin: 0;
+}
+
+.settlement-card h3 {
+  font-size: 20px;
+}
+
+.settlement-card__role,
+.settlement-card__detail,
+.settlement-card__meta {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.settlement-card__score {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.settlement-card__beans {
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.settlement-card--win .settlement-card__beans {
+  color: var(--green-dark);
+}
+
+.settlement-card--loss .settlement-card__beans {
+  color: var(--accent-dark);
+}
+
+.settlement-card--even .settlement-card__beans {
+  color: var(--text);
+}
+
 .controls {
   margin-top: 18px;
   display: grid;
