@@ -46,6 +46,7 @@ const FIRESTORE_COLLECTIONS = {
 const LEADERBOARD_MODES = ["2", "3", "4"];
 const LAST_AUTH_EMAIL_STORAGE_KEY = "redpoint-last-auth-email";
 const REMEMBER_AUTH_EMAIL_STORAGE_KEY = "redpoint-remember-auth-email";
+const BEGINNER_GUIDE_STORAGE_KEY = "redpoint-beginner-guide-seen-v1";
 const INITIAL_BEANS = 2000;
 const ROOM_TICKETS = {
   2: 100,
@@ -149,6 +150,7 @@ const ui = {
   confirmAction: document.getElementById("confirm-action"),
   discardAction: document.getElementById("discard-action"),
   clearSelection: document.getElementById("clear-selection"),
+  controlHint: document.getElementById("control-hint"),
   logList: document.getElementById("log-list"),
   resultPanel: document.getElementById("result-panel"),
   resultGrid: document.getElementById("result-grid"),
@@ -230,6 +232,7 @@ const state = {
   currentBeansBenefits: null,
   beansBenefitBusy: false,
   beansAwardBusy: false,
+  beginnerGuideSeen: false,
   authUser: null,
   authBusy: false,
   authReady: false,
@@ -4285,7 +4288,7 @@ function beginCurrentTurn() {
 
   if (player.isHuman) {
     state.phase = "human-turn";
-    setFeedback(isMultiplayerActive() ? "轮到你了，你的操作会实时同步给房间里的其他玩家。" : "轮到你了，先选一张手牌，再决定钓牌还是弃到台面。", "info");
+    setFeedback(getHumanTurnStartMessage(), "info");
     render();
     return;
   }
@@ -4688,6 +4691,38 @@ function getSelectionHelper(sourceCard, tableCards) {
   return evaluateTableSelection(sourceCard, tableCards).helper || "请选择合适的台面牌。";
 }
 
+function hasSeenBeginnerGuide() {
+  if (state.beginnerGuideSeen) {
+    return true;
+  }
+  try {
+    state.beginnerGuideSeen = localStorage.getItem(BEGINNER_GUIDE_STORAGE_KEY) === "1";
+  } catch (error) {
+    // Private-mode storage can fail; fall back to session state.
+  }
+  return state.beginnerGuideSeen;
+}
+
+function markBeginnerGuideSeen() {
+  state.beginnerGuideSeen = true;
+  try {
+    localStorage.setItem(BEGINNER_GUIDE_STORAGE_KEY, "1");
+  } catch (error) {
+    // Ignore storage failures; the current session still records the guide.
+  }
+}
+
+function getHumanTurnStartMessage() {
+  if (!hasSeenBeginnerGuide()) {
+    markBeginnerGuideSeen();
+    return "新手提示：先选一张手牌；能钓的公共牌会亮起，暂时不能钓的会变淡。不想钓时可以弃到台面。";
+  }
+
+  return isMultiplayerActive()
+    ? "轮到你了，你的操作会实时同步给房间里的其他玩家。"
+    : "轮到你了，先选一张手牌，再决定钓牌还是弃到台面。";
+}
+
 function getSelectedTableCards() {
   return state.tableCards.filter((card) => state.selectedTable.has(card.id));
 }
@@ -5017,10 +5052,14 @@ function render() {
       `;
   }
 
-  const canUseControls = isLocalTurnPlayable();
-  ui.confirmAction.disabled = !canUseControls;
-  ui.discardAction.disabled = !canUseControls;
-  ui.clearSelection.disabled = !canUseControls;
+  const controlState = getTurnControlState(selectedSourceCard, selectedTableCards, evaluation);
+  applyButtonState(ui.confirmAction, controlState.confirm);
+  applyButtonState(ui.discardAction, controlState.discard);
+  applyButtonState(ui.clearSelection, controlState.clear);
+  if (ui.controlHint) {
+    ui.controlHint.textContent = controlState.hint;
+    ui.controlHint.classList.toggle("hidden", !controlState.hint);
+  }
 
   renderFeedback();
   renderDrawPile();
@@ -5132,10 +5171,105 @@ function getSelectionHint() {
   if (state.phase === "ai-turn") {
     return "电脑玩家正在出牌，请观察桌面中央和各座位前方的动作。";
   }
-  if (state.pendingDrawCard) {
-    return "补枪阶段不需要再选手牌，只需要从公共牌中选目标；不想补就让摸牌落台。";
+  if (state.phase === "remote-turn") {
+    return "好友正在操作，出牌后会自动同步到你的桌面。";
   }
-  return "A 按 1 点参与凑十；10/J/Q/K 只能钓同点牌；三张相同需要台面恰好选 3 张同点牌。";
+  if (!isLocalTurnPlayable()) {
+    return "还没轮到你，先观察桌面中央的最近动作。";
+  }
+  if (state.pendingDrawCard) {
+    const playableCount = getPlayableTargetIds(state.pendingDrawCard).size;
+    return playableCount
+      ? `补枪阶段：${cardLabel(state.pendingDrawCard)} 已在手边，绿色亮起的是可补目标。`
+      : `补枪阶段：${cardLabel(state.pendingDrawCard)} 暂时没有可钓目标，可以让摸牌落台。`;
+  }
+
+  const sourceCard = getSelectedSourceCard();
+  if (!sourceCard) {
+    return "轮到你了：先选一张手牌，可钓的公共牌会自动亮起。";
+  }
+
+  const selectedTableCards = getSelectedTableCards();
+  const evaluation = evaluateTableSelection(sourceCard, selectedTableCards);
+  if (evaluation.ready) {
+    return `${evaluation.helper}，可以点“${state.pendingDrawCard ? "尝试补枪" : "尝试钓牌"}”。`;
+  }
+
+  const playableCount = getPlayableTargetIds(sourceCard).size;
+  if (!playableCount) {
+    return `${cardLabel(sourceCard)} 这回合没有可钓公共牌，可以考虑弃到台面。`;
+  }
+  if (selectedTableCards.length) {
+    return evaluation.helper || "继续选择亮起的公共牌，或清空后重选。";
+  }
+  return `${cardLabel(sourceCard)} 已选中：绿色亮起的是可钓目标，变淡的牌暂时不能钓。`;
+}
+
+function getTurnBlockReason() {
+  if (state.phase === "game-over") {
+    return "本局已经结束。";
+  }
+  if (state.phase === "opening-deal") {
+    return "开局发牌中，等发牌完成后再操作。";
+  }
+  if (state.phase === "dice-rolling" || state.phase === "dice-result") {
+    return "摇骰子阶段结束后才能操作。";
+  }
+  const currentPlayer = getCurrentPlayer();
+  if (!isLocalSeatPlayer(currentPlayer)) {
+    return `还没轮到你，当前是 ${getPlayerDisplayName(currentPlayer)}。`;
+  }
+  return "现在还不能操作。";
+}
+
+function getTurnControlState(sourceCard, selectedTableCards, evaluation) {
+  if (!isLocalTurnPlayable()) {
+    const reason = getTurnBlockReason();
+    return {
+      confirm: { disabled: true, reason },
+      discard: { disabled: true, reason },
+      clear: { disabled: true, reason },
+      hint: reason,
+    };
+  }
+
+  const hasSelection = Boolean(sourceCard || selectedTableCards.length);
+  const sourceReason = state.pendingDrawCard ? "" : "请先选择一张手牌。";
+  const confirmReason = !sourceCard
+    ? sourceReason
+    : selectedTableCards.length === 0
+      ? "请选择亮起的公共牌；如果没有合适目标，可以弃到台面。"
+      : !evaluation.ready
+        ? (evaluation.helper || evaluation.message || "当前组合还不能结算。")
+        : "";
+  const discardReason = !sourceCard
+    ? sourceReason
+    : "";
+  const clearReason = hasSelection ? "" : "当前还没有选择。";
+  const hint = confirmReason || discardReason || (evaluation.ready ? "选择已满足，可以钓牌；也可以清空后改选。" : "");
+
+  return {
+    confirm: { disabled: Boolean(confirmReason), reason: confirmReason },
+    discard: { disabled: Boolean(discardReason), reason: discardReason },
+    clear: { disabled: !hasSelection, reason: clearReason },
+    hint,
+  };
+}
+
+function applyButtonState(button, stateConfig) {
+  if (!button || !stateConfig) {
+    return;
+  }
+  button.disabled = Boolean(stateConfig.disabled);
+  if (stateConfig.reason) {
+    button.title = stateConfig.reason;
+    button.dataset.disabledReason = stateConfig.reason;
+    button.setAttribute("aria-label", `${button.textContent}：${stateConfig.reason}`);
+  } else {
+    button.removeAttribute("title");
+    delete button.dataset.disabledReason;
+    button.removeAttribute("aria-label");
+  }
 }
 
 function getRuleTargetText(sourceCard, selectedTableCards, evaluation) {
@@ -5321,6 +5455,7 @@ function renderTableCards(selectedSourceCard) {
     [...state.selectedTable].sort().join(","),
     [...state.focusedTableIds].sort().join(","),
     [...playableIds].sort().join(","),
+    selectedSourceCard?.id || "",
     currentPlayer?.id || "",
     state.phase,
   ].join("|");
@@ -5342,13 +5477,27 @@ function renderTableCards(selectedSourceCard) {
   state.tableCards.forEach((card, index) => {
     const shouldAnimate = !state.renderCache.seenCards.table.has(card.id);
     state.renderCache.seenCards.table.add(card.id);
+    const selected = state.selectedTable.has(card.id);
+    const hasSource = Boolean(selectedSourceCard);
+    const playable = playableIds.has(card.id);
+    const waitingForSource = isLocalTurnPlayable() && !hasSource;
+    const unavailable = isLocalTurnPlayable() && hasSource && !playable && !selected;
+    const disabledReason = !isLocalTurnPlayable()
+      ? getTurnBlockReason()
+      : waitingForSource
+        ? "先选一张手牌，再点公共牌。"
+        : unavailable
+          ? "这张公共牌不能和当前手牌组成钓牌。"
+          : "";
     ui.tableCards.appendChild(createCardButton(card, {
-      selected: state.selectedTable.has(card.id),
+      selected,
       focused: state.focusedTableIds.has(card.id),
       table: true,
-      playable: playableIds.has(card.id),
+      playable,
+      dimmed: waitingForSource || unavailable,
       onClick: () => toggleTableCard(card.id),
-      disabled: !isLocalTurnPlayable(),
+      disabled: !isLocalTurnPlayable() || waitingForSource || unavailable,
+      disabledReason,
       cardIndex: index,
       animate: shouldAnimate,
     }));
@@ -5473,11 +5622,20 @@ function renderHumanHand(humanPlayer) {
   humanPlayer.hand.forEach((card, index) => {
     const shouldAnimate = !state.renderCache.seenCards.hand.has(card.id);
     state.renderCache.seenCards.hand.add(card.id);
+    const clickable = isLocalTurnPlayable() && getCurrentPlayer()?.id === humanPlayer.id && !state.pendingDrawCard;
+    const disabledReason = state.pendingDrawCard
+      ? "补枪阶段只能处理摸到的牌。"
+      : !clickable
+        ? getTurnBlockReason()
+        : "";
     ui.handCards.appendChild(createCardButton(card, {
       selected: state.selectedHandCardId === card.id,
       hiddenZone: true,
+      playable: clickable,
+      dimmed: !clickable,
       onClick: () => selectHandCard(card.id),
-      disabled: !isLocalTurnPlayable() || getCurrentPlayer()?.id !== humanPlayer.id || Boolean(state.pendingDrawCard),
+      disabled: !clickable,
+      disabledReason,
       cardIndex: index,
       animate: shouldAnimate,
     }));
@@ -5725,6 +5883,9 @@ function createCardButton(card, options = {}) {
   if (options.playable) {
     classes.push("playable-target");
   }
+  if (options.dimmed) {
+    classes.push("dimmed-card");
+  }
   if (options.animate) {
     classes.push("new-card");
   }
@@ -5732,6 +5893,10 @@ function createCardButton(card, options = {}) {
   button.className = classes.join(" ");
   button.type = "button";
   button.disabled = Boolean(options.disabled);
+  if (options.disabledReason) {
+    button.title = options.disabledReason;
+    button.setAttribute("aria-label", `${cardLabel(card)}：${options.disabledReason}`);
+  }
   button.style.setProperty("--card-index", String(options.cardIndex ?? 0));
   if (options.onClick) {
     button.addEventListener("click", options.onClick);
