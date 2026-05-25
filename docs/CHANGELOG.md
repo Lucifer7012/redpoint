@@ -53,12 +53,14 @@
 - 原手牌区改为显示“本局结算”，逐个展示玩家排名、身份、分数、净赢/输欢乐豆，以及奖池和门票拆分。
 - 房主、赢家和输家都会显示本局欢乐豆变化；赢家自动尝试同步派奖，不再需要额外点击领取弹窗。
 - 游戏内底部旧结算榜单默认隐藏，上一局结算仍可回到大厅查看。
+- 100% 缩放下结算状态会隐藏原手牌区顶部标题、说明和身份框，并收起结算摘要栏，让玩家结果卡整体上移；结果卡同步压缩高度，减少被底部遮挡。
 
 验证：
 
 - `node --check app.js` 通过。
 - 本地服务 `http://127.0.0.1:4173/index.html?verify=settlement-hand` 返回 200。
 - 页面加载 `styles.css?v=20260525-settlement-hand` 和 `app.js?v=20260525-settlement-hand`。
+- 本地服务 `http://127.0.0.1:4173/index.html?verify=settlement-compact` 返回 200，页面加载 `styles.css?v=20260525-settlement-compact` 和 `app.js?v=20260525-settlement-compact`。
 
 ## 2026-05-21
 
