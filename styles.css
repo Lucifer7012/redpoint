@@ -989,7 +989,7 @@ select {
 .center-stage {
   position: absolute;
   right: 24px;
-  top: 220px;
+  top: 252px;
   width: 320px;
   padding: 0;
   display: grid;
@@ -1004,6 +1004,58 @@ select {
   align-items: start;
   background: none;
   border: none;
+}
+
+.center-stage .compact-head {
+  margin-bottom: 4px;
+}
+
+.center-stage .compact-head h2,
+.action-stage__meta h3 {
+  color: #fff8ec;
+  font-weight: 900;
+  text-shadow: 0 2px 8px rgba(4, 27, 20, 0.55);
+}
+
+.center-stage .compact-head h2 {
+  font-size: 20px;
+}
+
+.center-stage .compact-head p,
+.action-stage__meta p,
+.center-stage .draw-pile__meta span {
+  color: rgba(255, 248, 235, 0.92);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-shadow: 0 1px 6px rgba(4, 27, 20, 0.45);
+}
+
+.action-stage__meta h3 {
+  font-size: 18px;
+}
+
+.draw-pile__meta strong {
+  color: #fff8ec;
+  text-shadow: 0 2px 8px rgba(4, 27, 20, 0.5);
+}
+
+.center-stage .selection-metrics span {
+  color: #4c4036;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.center-stage .selection-metrics strong {
+  font-size: 23px;
+  font-weight: 900;
+}
+
+.center-stage .feedback-banner {
+  background: rgba(255, 255, 255, 0.84);
+  color: #241d18;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .feedback-banner {
