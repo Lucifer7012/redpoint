@@ -209,6 +209,49 @@ body.is-lobby-setup .app-shell {
   max-width: 720px;
 }
 
+.setup-panel.is-id-setup-mode .auth-card,
+.setup-panel.is-id-setup-mode .bean-balance-card,
+.setup-panel.is-id-setup-mode .player-options-card,
+.setup-panel.is-id-setup-mode .social-panel,
+.setup-panel.is-id-setup-mode .player-stats-card,
+.setup-panel.is-id-setup-mode .leaderboard-block {
+  display: none;
+}
+
+.setup-panel.is-id-setup-mode .setup-grid {
+  grid-template-columns: minmax(260px, 420px);
+  max-width: 460px;
+  gap: 12px;
+}
+
+.setup-panel.is-id-setup-mode .setup-grid > label,
+.setup-panel.is-id-setup-mode .setup-grid .lobby-actions-card {
+  min-height: 0;
+}
+
+.setup-panel.is-id-setup-mode .setup-grid .lobby-actions-card {
+  justify-content: center;
+}
+
+.setup-panel.is-id-setup-mode .lobby-actions-card .ghost-btn {
+  display: none;
+}
+
+.setup-panel.is-id-setup-mode .auth-row {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  max-width: min(46vw, 420px);
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  margin: 0;
+  z-index: 2;
+}
+
+.setup-panel.is-id-setup-mode .panel-head {
+  padding-right: min(48vw, 440px);
+}
+
 .setup-panel.is-lobby-mode .auth-card {
   display: none;
 }
@@ -3300,18 +3343,22 @@ select {
     grid-template-columns: 1fr;
   }
 
-  .setup-panel.is-lobby-mode .auth-row {
+  .setup-panel.is-lobby-mode .auth-row,
+  .setup-panel.is-id-setup-mode .auth-row {
     position: static;
     max-width: none;
     margin: 0 0 12px;
   }
 
-  .setup-panel.is-lobby-mode .panel-head {
+  .setup-panel.is-lobby-mode .panel-head,
+  .setup-panel.is-id-setup-mode .panel-head {
     padding-right: 0;
   }
 
-  .setup-panel.is-lobby-mode .setup-grid {
+  .setup-panel.is-lobby-mode .setup-grid,
+  .setup-panel.is-id-setup-mode .setup-grid {
     grid-template-columns: 1fr;
+    max-width: none;
   }
 
   .events-panel {

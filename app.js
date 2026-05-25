@@ -332,9 +332,7 @@ function init() {
   ui.roomInviteRejectConfirm?.addEventListener("click", handleRejectActiveRoomInvite);
   ui.playerId.addEventListener("input", handlePlayerIdInput);
   ui.playerCount.addEventListener("change", renderAuthControls);
-  ui.startGame.addEventListener("click", async () => {
-    await startGame(Number(ui.playerCount.value), ui.useDice.checked);
-  });
+  ui.startGame.addEventListener("click", handleStartGameButton);
   ui.viewLastResult.addEventListener("click", handleViewLastResult);
   ui.restartGame.addEventListener("click", handleRestartRequest);
   ui.restartRound.addEventListener("click", handleRestartRequest);
@@ -2175,7 +2173,11 @@ function getDefaultPlayerIdHint() {
     }
     return `当前账号已绑定唯一 ID：${state.currentPlayerId}`;
   }
-  return "首次开始游戏时，会创建这个唯一 ID；创建后不能与别人重复，也不能再次修改。";
+  return "输入你想使用的游戏 ID，点击“创建 ID，进入大厅”后会检查唯一性并绑定。";
+}
+
+function needsInitialPlayerIdSetup() {
+  return Boolean(state.authUser && !state.hasBoundGameId);
 }
 
 function renderPlayerIdHint() {
@@ -2234,20 +2236,29 @@ function handleDocumentClick(event) {
 
 function renderAuthControls() {
   const signedIn = Boolean(state.authUser);
+  const needsIdSetup = needsInitialPlayerIdSetup();
+  const lobbyMode = signedIn && !needsIdSetup;
   const lockedId = signedIn && state.hasBoundGameId && !state.gameIdEditable;
   const shownBeans = signedIn ? state.currentBeans : 0;
   const setupTitle = ui.setupPanel?.querySelector(".panel-head h2");
   const setupCopy = ui.setupPanel?.querySelector(".panel-head p");
 
   ui.setupPanel?.classList.toggle("is-login-mode", !signedIn);
-  ui.setupPanel?.classList.toggle("is-lobby-mode", signedIn);
+  ui.setupPanel?.classList.toggle("is-id-setup-mode", needsIdSetup);
+  ui.setupPanel?.classList.toggle("is-lobby-mode", lobbyMode);
   if (setupTitle) {
-    setupTitle.textContent = signedIn ? "游戏大厅" : "登录钓红点";
+    setupTitle.textContent = needsIdSetup
+      ? "创建游戏 ID"
+      : signedIn
+        ? "游戏大厅"
+        : "登录钓红点";
   }
   if (setupCopy) {
-    setupCopy.textContent = signedIn
-      ? "选择单机开局、创建好友房或处理邀请，结束后回到这里继续下一局。"
-      : "登录或注册后进入大厅，创建游戏 ID，再开始单机或好友房。";
+    setupCopy.textContent = needsIdSetup
+      ? "这是朋友搜索、邀请和排行榜展示用的名字；创建后进入大厅。"
+      : signedIn
+        ? "选择单机开局、创建好友房或处理邀请，结束后回到这里继续下一局。"
+        : "登录或注册后先创建游戏 ID，再进入大厅开始单机或好友房。";
   }
 
   ui.authEmail.disabled = state.authBusy || signedIn;
@@ -2265,7 +2276,7 @@ function renderAuthControls() {
     ui.rechargeBeans.disabled = state.authBusy || state.beansBenefitBusy || !signedIn;
     ui.rechargeBeans.title = signedIn ? "打开欢乐豆中心" : "登录后打开欢乐豆中心";
   }
-  ui.startGame.textContent = "开始游戏";
+  ui.startGame.textContent = needsIdSetup ? "创建 ID，进入大厅" : "开始游戏";
   ui.startGame.disabled = state.authBusy || !signedIn || !state.authReady;
   ui.playerId.disabled = state.authBusy || !signedIn || lockedId;
   ui.authStatus.textContent = state.authStatusMessage;
@@ -2767,7 +2778,7 @@ async function prepareCurrentPlayerProfile() {
 
   const playerId = desiredPlayerId;
   if (!playerId) {
-    state.playerIdHintMessage = "请输入你想创建的游戏 ID，再开始本局。";
+    state.playerIdHintMessage = "请输入你想创建的游戏 ID。";
     renderAuthControls();
     return false;
   }
@@ -3269,6 +3280,20 @@ function handleViewLastResult() {
     return;
   }
   ui.historyPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function handleStartGameButton() {
+  if (needsInitialPlayerIdSetup()) {
+    const created = await prepareCurrentPlayerProfile();
+    if (created) {
+      state.authStatusMessage = "游戏 ID 已创建，可以进入大厅开始游戏或邀请好友。";
+      renderAuthControls();
+      render();
+    }
+    return;
+  }
+
+  await startGame(Number(ui.playerCount.value), ui.useDice.checked);
 }
 
 function updateReturnToRoomButton() {
@@ -5009,7 +5034,7 @@ function render() {
     updateGameLayoutScale();
     ui.heroSection.classList.toggle("hidden", Boolean(state.authUser));
     ui.setupPanel.classList.remove("hidden");
-    ui.historyPanel.classList.toggle("hidden", !state.lastFinishedResult);
+    ui.historyPanel.classList.toggle("hidden", needsInitialPlayerIdSetup() || !state.lastFinishedResult);
     ui.gameLayout.classList.add("hidden");
     return;
   }
