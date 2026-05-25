@@ -4317,14 +4317,23 @@ function startDrawPhase(player) {
   }
 
   if (player.isHuman) {
+    const playableCount = getPlayableTargetIds(state.pendingDrawCard).size;
+    const drawLabel = cardLabel(state.pendingDrawCard);
     setActionDisplay({
       playerId: player.id,
       playerName: player.name,
-      text: `摸到 ${cardLabel(state.pendingDrawCard)}，可以立刻补枪`,
+      text: playableCount
+        ? `摸到 ${drawLabel}，可以立刻补枪`
+        : `摸到 ${drawLabel}，暂无可补目标`,
       cards: [state.pendingDrawCard],
     });
-    updateLastAction(player, `摸到 ${cardLabel(state.pendingDrawCard)}`, [state.pendingDrawCard]);
-    setFeedback(`你摸到了 ${cardLabel(state.pendingDrawCard)}，现在可以继续补枪。`, "info");
+    updateLastAction(player, `摸到 ${drawLabel}`, [state.pendingDrawCard]);
+    setFeedback(
+      playableCount
+        ? `你摸到了 ${drawLabel}，现在可以继续补枪。`
+        : `你摸到了 ${drawLabel}，暂时没有可补目标，可以让摸牌落台。`,
+      "info",
+    );
     render();
     if (isMultiplayerActive()) {
       syncMultiplayerRoomState().catch((error) => {
@@ -5481,12 +5490,15 @@ function renderTableCards(selectedSourceCard) {
     const hasSource = Boolean(selectedSourceCard);
     const playable = playableIds.has(card.id);
     const unavailable = isLocalTurnPlayable() && hasSource && !playable && !selected;
+    const unavailableReason = state.pendingDrawCard
+      ? `这张公共牌不能和摸到的 ${cardLabel(selectedSourceCard)} 组成补枪。`
+      : "这张公共牌不能和当前手牌组成钓牌。";
     const disabledReason = !isLocalTurnPlayable()
       ? getTurnBlockReason()
       : !hasSource
         ? "先选一张手牌，再点公共牌。"
         : unavailable
-          ? "这张公共牌不能和当前手牌组成钓牌。"
+          ? unavailableReason
           : "";
     ui.tableCards.appendChild(createCardButton(card, {
       selected,
@@ -5498,7 +5510,7 @@ function renderTableCards(selectedSourceCard) {
       disabled: !isLocalTurnPlayable() || !hasSource || unavailable,
       disabledReason,
       cardIndex: index,
-      animate: shouldAnimate,
+      animate: shouldAnimate && !unavailable,
     }));
   });
 }
