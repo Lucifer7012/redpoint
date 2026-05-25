@@ -4767,13 +4767,21 @@ function renderSetupHistory() {
 function renderPlayerStatsDashboard() {
   const mode = String(state.leaderboardMode || "2");
   const leaderboardOpen = Boolean(state.leaderboardOpen);
-  const currentProfile = state.currentPlayerId && state.playerStats[state.currentPlayerId]
+  const savedProfile = state.currentPlayerId && state.playerStats[state.currentPlayerId]
     ? state.playerStats[state.currentPlayerId]
     : null;
+  const currentProfile = savedProfile || (state.currentPlayerId
+    ? {
+        id: state.currentPlayerId,
+        beans: state.currentBeans,
+        statsByMode: {
+          "2": createEmptyModeStats(),
+          "3": createEmptyModeStats(),
+          "4": createEmptyModeStats(),
+        },
+      }
+    : null);
   const currentModeStats = currentProfile ? getModeStats(currentProfile, mode) : createEmptyModeStats();
-  if (!currentProfile) {
-    state.playerStatsOpen = false;
-  }
   ui.playerStatsCard?.classList.toggle("hidden", !state.playerStatsOpen || !currentProfile);
   const sorted = getSortedPlayerStats(mode);
   const pageSize = 5;
@@ -4830,7 +4838,8 @@ function renderPlayerStatsDashboard() {
           <strong>账号信息</strong>
           <button id="player-stats-close" class="player-stats-close" type="button" aria-label="关闭账号信息">×</button>
         </div>
-        <p>当前 ID：${currentProfile.id}</p>
+        ${savedProfile ? "" : '<p class="player-stats-card__note">战绩同步中或暂未产生正式战绩，先显示当前账号信息。</p>'}
+        <p>当前 ID：${escapeHtml(currentProfile.id)}</p>
         <p>联机门票：2 人 ${formatBeans(ROOM_TICKETS[2])} · 3 人 ${formatBeans(ROOM_TICKETS[3])} · 4 人 ${formatBeans(ROOM_TICKETS[4])}</p>
         <p>${mode} 人模式 · 累计积分：${currentModeStats.totalScore} 分 · 局数：${currentModeStats.rounds} 局</p>
         <p>胜场：${currentModeStats.wins} 局 · 单局最高：${currentModeStats.bestScore} 分 · 上一局：${currentModeStats.lastScore} 分</p>
