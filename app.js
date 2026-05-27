@@ -299,7 +299,7 @@ const state = {
       action: new Set(),
     },
   },
-  rulesOpen: true,
+  rulesOpen: false,
   heroIntroOpen: false,
   settings: {
     playerCount: 2,
@@ -5029,6 +5029,7 @@ function render() {
   renderSocialPanel();
   renderRoomInviteModal();
   document.body.classList.toggle("is-lobby-setup", state.phase === "setup" && Boolean(state.authUser));
+  document.body.classList.toggle("is-login-view", state.phase === "setup" && !state.authUser);
   document.body.classList.toggle("is-game-view", state.phase !== "setup");
 
   if (state.phase === "setup") {
