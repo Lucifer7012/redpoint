@@ -196,9 +196,18 @@ body.is-lobby-setup .app-shell {
   overflow: hidden;
 }
 
+.entry-account,
+.entry-start-card {
+  display: none;
+}
+
 .setup-panel.is-login-mode .setup-grid {
   grid-template-columns: minmax(260px, 420px);
   max-width: 460px;
+}
+
+.setup-panel.is-login-mode:not(.is-auth-form-open) .setup-grid {
+  display: none;
 }
 
 .setup-panel.is-login-mode .setup-grid > :not(.auth-card),
@@ -212,6 +221,23 @@ body.is-lobby-setup .app-shell {
 .setup-panel.is-login-mode .auth-row {
   grid-template-columns: auto auto minmax(220px, 1fr);
   max-width: 720px;
+}
+
+.setup-panel.is-entry-mode .setup-grid,
+.setup-panel.is-entry-mode .social-panel,
+.setup-panel.is-entry-mode .player-stats-card,
+.setup-panel.is-entry-mode .leaderboard-block {
+  display: none;
+}
+
+.setup-panel.is-entry-mode .entry-start-card {
+  display: grid;
+  max-width: 420px;
+  margin: 18px auto 0;
+}
+
+.setup-panel.is-entry-mode .entry-start-card .primary-btn {
+  width: 100%;
 }
 
 .setup-panel.is-id-setup-mode .auth-card,
@@ -446,6 +472,20 @@ body.is-lobby-setup .app-shell {
 .setup-grid .remember-row small {
   color: var(--muted);
   font-size: 12px;
+}
+
+.auth-card-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.auth-card-actions .primary-btn,
+.auth-card-actions .ghost-btn {
+  min-height: 40px;
+  padding: 0 14px;
 }
 
 .bean-balance-card {
@@ -5213,6 +5253,211 @@ select {
     font-size: 12px;
   }
 
+  body.is-login-view {
+    background:
+      linear-gradient(90deg, rgba(3, 14, 16, 0.72), rgba(10, 34, 32, 0.36) 46%, rgba(4, 16, 20, 0.76)),
+      linear-gradient(160deg, #123d38, #0a261f 54%, #071411);
+  }
+
+  body.is-login-view .app-shell {
+    position: relative;
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 0;
+    padding: 0;
+    background:
+      linear-gradient(110deg, transparent 0 30%, rgba(255, 238, 190, 0.08) 30% 31%, transparent 31% 100%),
+      linear-gradient(250deg, transparent 0 58%, rgba(57, 147, 109, 0.16) 58% 59%, transparent 59% 100%);
+  }
+
+  body.is-login-view .hero,
+  body.is-login-view .setup-panel {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    background: transparent;
+  }
+
+  body.is-login-view .hero {
+    padding: 18px 24px 8px;
+    align-items: center;
+  }
+
+  body.is-login-view .hero-main {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 14px;
+  }
+
+  body.is-login-view .hero .eyebrow {
+    color: rgba(248, 242, 220, 0.74);
+    font-size: 12px;
+  }
+
+  body.is-login-view .hero h1 {
+    font-size: 52px;
+    line-height: 1;
+    color: #fff8da;
+    text-shadow: 0 4px 18px rgba(0, 0, 0, 0.45), 0 0 26px rgba(220, 183, 92, 0.28);
+  }
+
+  body.is-login-view .hero-copy {
+    max-width: none;
+    color: rgba(255, 251, 229, 0.86);
+    font-size: 15px;
+  }
+
+  body.is-login-view .hero-toggle {
+    min-width: 118px;
+    border-color: rgba(240, 216, 160, 0.34);
+    background: rgba(9, 30, 30, 0.45);
+    color: #fff4cf;
+  }
+
+  body.is-login-view .hero.is-open {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  body.is-login-view .hero.is-open .hero-details {
+    justify-self: center;
+    width: min(720px, calc(100vw - 48px));
+    max-height: 126px;
+    border-color: rgba(240, 216, 160, 0.24);
+    background: rgba(255, 252, 240, 0.92);
+  }
+
+  body.is-login-view .setup-panel {
+    padding: 0 20px calc(16px + env(safe-area-inset-bottom, 0px));
+    display: grid;
+    place-items: center;
+  }
+
+  body.is-login-view .setup-panel .panel-head {
+    display: none;
+  }
+
+  body.is-login-view .setup-panel.is-login-mode .setup-grid {
+    display: none;
+  }
+
+  body.is-login-view .setup-panel.is-login-mode.is-auth-form-open .setup-grid {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: grid;
+    place-items: center;
+    width: 100vw;
+    max-width: none;
+    min-height: 100dvh;
+    padding: 18px 22px;
+    background: rgba(3, 13, 14, 0.54);
+  }
+
+  body.is-login-view .setup-grid .auth-card {
+    width: min(410px, calc(100vw - 48px));
+    max-height: calc(100dvh - 36px);
+    padding: 16px;
+    gap: 8px;
+    overflow-y: auto;
+    border-color: rgba(64, 53, 35, 0.14);
+    background: rgba(255, 252, 246, 0.98);
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.32);
+  }
+
+  body.is-login-view .auth-card-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.is-login-view .auth-card-actions #auth-form-cancel {
+    grid-column: 1 / -1;
+  }
+
+  body.is-login-view .setup-panel.is-login-mode .auth-row {
+    width: min(460px, calc(100vw - 40px));
+    max-width: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0 auto;
+    align-items: center;
+  }
+
+  body.is-login-view .setup-panel.is-login-mode.is-auth-form-open .auth-row {
+    position: fixed;
+    left: 50%;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    z-index: 21;
+    transform: translateX(-50%);
+    grid-template-columns: minmax(0, 1fr);
+    pointer-events: none;
+  }
+
+  body.is-login-view .setup-panel.is-login-mode .auth-row .auth-method-btn {
+    min-height: 42px;
+    border-color: rgba(240, 216, 160, 0.36);
+    background: linear-gradient(180deg, rgba(25, 96, 77, 0.92), rgba(15, 66, 57, 0.94));
+    color: #fff8dc;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
+  }
+
+  body.is-login-view .setup-panel.is-login-mode .auth-status {
+    grid-column: 1 / -1;
+    min-height: 18px;
+    color: rgba(255, 248, 224, 0.72);
+    text-align: center;
+  }
+
+  body.is-login-view .setup-panel.is-entry-mode .auth-row,
+  body.is-login-view .setup-panel.is-entry-mode .setup-grid {
+    display: none;
+  }
+
+  body.is-auth-entry-view .entry-account {
+    position: fixed;
+    top: calc(10px + env(safe-area-inset-top, 0px));
+    right: calc(14px + env(safe-area-inset-right, 0px));
+    z-index: 12;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff6da;
+    font-weight: 800;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.42);
+  }
+
+  body.is-auth-entry-view .entry-account .ghost-btn {
+    min-height: 34px;
+    padding: 0 14px;
+    border-color: rgba(240, 216, 160, 0.34);
+    background: rgba(17, 46, 58, 0.72);
+    color: #fff6da;
+  }
+
+  body.is-auth-entry-view .entry-start-card {
+    position: fixed;
+    left: 50%;
+    bottom: calc(62px + env(safe-area-inset-bottom, 0px));
+    z-index: 10;
+    width: min(340px, 46vw);
+    margin: 0;
+    transform: translateX(-50%);
+  }
+
+  body.is-auth-entry-view .entry-start-card .primary-btn {
+    min-height: 58px;
+    border: 1px solid rgba(255, 245, 196, 0.48);
+    background: linear-gradient(180deg, #f4d98f, #b67825);
+    color: #fff9df;
+    font-size: 26px;
+    font-weight: 900;
+    text-shadow: 0 2px 8px rgba(70, 37, 0, 0.5);
+    box-shadow: 0 18px 34px rgba(0, 0, 0, 0.32);
+  }
+
 }
 
 @media (max-width: 700px) and (orientation: landscape) {
@@ -5261,6 +5506,54 @@ select {
   body.is-login-view #auth-password,
   body.is-login-view .auth-row .ghost-btn {
     min-height: 32px;
+  }
+
+  body.is-login-view .app-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 0;
+    padding: 0;
+  }
+
+  body.is-login-view .hero {
+    padding: 12px 16px 4px;
+  }
+
+  body.is-login-view .hero,
+  body.is-login-view .setup-panel {
+    border-radius: 0;
+  }
+
+  body.is-login-view .hero h1 {
+    font-size: 40px;
+  }
+
+  body.is-login-view .hero-copy {
+    font-size: 12px;
+  }
+
+  body.is-login-view .setup-panel {
+    padding: 0 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body.is-login-view .setup-panel.is-login-mode .auth-row {
+    width: min(420px, calc(100vw - 28px));
+    gap: 8px;
+  }
+
+  body.is-login-view .setup-grid .auth-card {
+    width: min(380px, calc(100vw - 32px));
+    padding: 12px;
+  }
+
+  body.is-auth-entry-view .entry-start-card {
+    width: min(300px, 50vw);
+    bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body.is-auth-entry-view .entry-start-card .primary-btn {
+    min-height: 50px;
+    font-size: 22px;
   }
 }
 

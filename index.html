@@ -5,11 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>钓红点</title>
   <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="stylesheet" href="styles.css?v=20260527-login-landscape">
+  <link rel="stylesheet" href="styles.css?v=20260527-auth-entry">
 </head>
 <body>
   <main class="app-shell">
     <section class="hero" id="hero-section">
+      <div class="entry-account" id="entry-account">
+        <span id="entry-game-id">ID: 未登录</span>
+        <button id="entry-logout" class="ghost-btn" type="button">退出登录</button>
+      </div>
       <div class="hero-main">
         <div>
           <p class="eyebrow">好友房测试版</p>
@@ -45,6 +49,11 @@
             <span>记住邮箱</span>
             <small>密码由浏览器保存</small>
           </label>
+          <div class="auth-card-actions">
+            <button id="auth-login" class="primary-btn" type="button">登录账号</button>
+            <button id="auth-register" class="ghost-btn" type="button">注册账号</button>
+            <button id="auth-form-cancel" class="ghost-btn" type="button">收起</button>
+          </div>
         </div>
         <div class="bean-balance-card" id="bean-balance-card">
           <div class="bean-balance-head">
@@ -86,10 +95,13 @@
         </label>
       </div>
       <div class="auth-row">
-        <button id="auth-login" class="ghost-btn" type="button">登录账号</button>
-        <button id="auth-register" class="ghost-btn" type="button">注册账号</button>
+        <button id="auth-email-entry" class="ghost-btn auth-method-btn" type="button">邮箱登录</button>
+        <button id="auth-google" class="ghost-btn auth-method-btn" type="button">Google 账号登录</button>
         <button id="auth-logout" class="ghost-btn" type="button">退出登录</button>
         <p id="auth-status" class="auth-status">还没有登录账号。</p>
+      </div>
+      <div class="entry-start-card" id="entry-start-card">
+        <button id="entry-start-game" class="primary-btn" type="button">开始游戏</button>
       </div>
       <div class="player-stats-card" id="player-stats-card"></div>
       <div class="leaderboard-block">
@@ -376,6 +388,6 @@
   <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=20260527-login-landscape"></script>
+  <script src="app.js?v=20260527-auth-entry"></script>
 </body>
 </html>

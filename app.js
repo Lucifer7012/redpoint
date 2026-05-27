@@ -73,6 +73,9 @@ let socialSideResizeObserver = null;
 const ui = {
   heroSection: document.getElementById("hero-section"),
   heroToggle: document.getElementById("hero-toggle"),
+  entryAccount: document.getElementById("entry-account"),
+  entryGameId: document.getElementById("entry-game-id"),
+  entryLogout: document.getElementById("entry-logout"),
   setupPanel: document.getElementById("setup-panel"),
   gameLayout: document.getElementById("game-layout"),
   playStage: document.getElementById("play-stage"),
@@ -86,8 +89,11 @@ const ui = {
   authEmail: document.getElementById("auth-email"),
   authPassword: document.getElementById("auth-password"),
   authRemember: document.getElementById("auth-remember"),
+  authEmailEntry: document.getElementById("auth-email-entry"),
+  authGoogle: document.getElementById("auth-google"),
   authLogin: document.getElementById("auth-login"),
   authRegister: document.getElementById("auth-register"),
+  authFormCancel: document.getElementById("auth-form-cancel"),
   authLogout: document.getElementById("auth-logout"),
   authStatus: document.getElementById("auth-status"),
   currentBeansBalance: document.getElementById("current-beans-balance"),
@@ -118,6 +124,8 @@ const ui = {
   playerId: document.getElementById("player-id"),
   playerIdHint: document.getElementById("player-id-hint"),
   playerIdSelect: document.getElementById("player-id-select"),
+  entryStartCard: document.getElementById("entry-start-card"),
+  entryStartGame: document.getElementById("entry-start-game"),
   startGame: document.getElementById("start-game"),
   viewLastResult: document.getElementById("view-last-result"),
   restartGame: document.getElementById("restart-game"),
@@ -237,6 +245,8 @@ const state = {
   authBusy: false,
   authReady: false,
   authSessionConfirmed: false,
+  authFormOpen: false,
+  authEntryActive: false,
   authStatusMessage: "正在连接 Firebase...",
   playerIdHintMessage: "",
   leaderboardLoaded: false,
@@ -314,9 +324,13 @@ function init() {
   ui.rulesBackdrop.addEventListener("click", closeRulesModal);
   ui.rulesClose.addEventListener("click", closeRulesModal);
   ui.rulesAck.addEventListener("click", closeRulesModal);
+  ui.authEmailEntry?.addEventListener("click", handleOpenEmailAuthForm);
+  ui.authGoogle?.addEventListener("click", handleAuthGoogleLogin);
   ui.authLogin.addEventListener("click", handleAuthLogin);
   ui.authRegister.addEventListener("click", handleAuthRegister);
+  ui.authFormCancel?.addEventListener("click", handleCloseEmailAuthForm);
   ui.authLogout.addEventListener("click", handleAuthLogout);
+  ui.entryLogout?.addEventListener("click", handleAuthLogout);
   ui.authEmail.addEventListener("input", handleAuthEmailInput);
   ui.authRemember?.addEventListener("change", handleAuthRememberChange);
   ui.rechargeBeans?.addEventListener("click", handleRechargeBeans);
@@ -332,6 +346,7 @@ function init() {
   ui.roomInviteRejectConfirm?.addEventListener("click", handleRejectActiveRoomInvite);
   ui.playerId.addEventListener("input", handlePlayerIdInput);
   ui.playerCount.addEventListener("change", renderAuthControls);
+  ui.entryStartGame?.addEventListener("click", handleEntryStartGame);
   ui.startGame.addEventListener("click", handleStartGameButton);
   ui.viewLastResult.addEventListener("click", handleViewLastResult);
   ui.restartGame.addEventListener("click", handleRestartRequest);
@@ -2223,6 +2238,56 @@ function closePlayerStatsPopover() {
   renderPlayerStatsDashboard();
 }
 
+function isAuthEntryViewActive() {
+  return state.phase === "setup" && Boolean(state.authUser) && state.authEntryActive;
+}
+
+function isLoginEntryViewActive() {
+  return state.phase === "setup" && (!state.authUser || state.authEntryActive);
+}
+
+function handleOpenEmailAuthForm() {
+  state.authFormOpen = true;
+  state.authStatusMessage = ui.authEmail.value.trim()
+    ? "已填入上次使用的邮箱，请输入密码后登录。"
+    : "请输入邮箱和密码登录账号。";
+  renderAuthControls();
+  render();
+  setTimeout(() => {
+    if (!ui.authEmail?.value) {
+      ui.authEmail?.focus();
+    } else {
+      ui.authPassword?.focus();
+    }
+  }, 0);
+}
+
+function handleCloseEmailAuthForm() {
+  if (state.authBusy) {
+    return;
+  }
+  state.authFormOpen = false;
+  state.authStatusMessage = state.authReady
+    ? "请选择邮箱或 Google 账号登录。"
+    : "正在连接 Firebase...";
+  renderAuthControls();
+  render();
+}
+
+function handleEntryStartGame() {
+  if (!state.authUser) {
+    handleOpenEmailAuthForm();
+    return;
+  }
+  state.authEntryActive = false;
+  state.authFormOpen = false;
+  state.authStatusMessage = needsInitialPlayerIdSetup()
+    ? "先创建游戏 ID，之后就可以进入大厅。"
+    : "已进入游戏大厅，可以开始单机或好友房。";
+  renderAuthControls();
+  render();
+}
+
 function handleDocumentClick(event) {
   if (!state.playerStatsOpen) {
     return;
@@ -2236,39 +2301,70 @@ function handleDocumentClick(event) {
 
 function renderAuthControls() {
   const signedIn = Boolean(state.authUser);
+  const authEntryMode = isAuthEntryViewActive();
   const needsIdSetup = needsInitialPlayerIdSetup();
-  const lobbyMode = signedIn && !needsIdSetup;
+  const lobbyMode = signedIn && !needsIdSetup && !authEntryMode;
   const lockedId = signedIn && state.hasBoundGameId && !state.gameIdEditable;
   const shownBeans = signedIn ? state.currentBeans : 0;
   const setupTitle = ui.setupPanel?.querySelector(".panel-head h2");
   const setupCopy = ui.setupPanel?.querySelector(".panel-head p");
 
   ui.setupPanel?.classList.toggle("is-login-mode", !signedIn);
-  ui.setupPanel?.classList.toggle("is-id-setup-mode", needsIdSetup);
+  ui.setupPanel?.classList.toggle("is-auth-form-open", !signedIn && state.authFormOpen);
+  ui.setupPanel?.classList.toggle("is-entry-mode", authEntryMode);
+  ui.setupPanel?.classList.toggle("is-id-setup-mode", !authEntryMode && needsIdSetup);
   ui.setupPanel?.classList.toggle("is-lobby-mode", lobbyMode);
   if (setupTitle) {
-    setupTitle.textContent = needsIdSetup
+    setupTitle.textContent = authEntryMode
+      ? "账号已登录"
+      : needsIdSetup
       ? "创建游戏 ID"
       : signedIn
         ? "游戏大厅"
         : "登录钓红点";
   }
   if (setupCopy) {
-    setupCopy.textContent = needsIdSetup
+    setupCopy.textContent = authEntryMode
+      ? "点击开始游戏后进入大厅；如果还没有 ID，会先创建唯一游戏 ID。"
+      : needsIdSetup
       ? "这是朋友搜索、邀请和排行榜展示用的名字；创建后进入大厅。"
       : signedIn
         ? "选择单机开局、创建好友房或处理邀请，结束后回到这里继续下一局。"
-        : "登录或注册后先创建游戏 ID，再进入大厅开始单机或好友房。";
+        : "选择邮箱或 Google 账号登录，进入后再开始游戏。";
   }
 
   ui.authEmail.disabled = state.authBusy || signedIn;
   ui.authPassword.disabled = state.authBusy || signedIn;
+  if (ui.authEmailEntry) {
+    ui.authEmailEntry.disabled = state.authBusy || signedIn || !auth;
+    ui.authEmailEntry.classList.toggle("hidden", signedIn || state.authFormOpen);
+  }
+  if (ui.authGoogle) {
+    ui.authGoogle.disabled = state.authBusy || signedIn || !auth;
+    ui.authGoogle.classList.toggle("hidden", signedIn || state.authFormOpen);
+  }
   ui.authLogin.disabled = state.authBusy || signedIn || !auth;
   ui.authRegister.disabled = state.authBusy || signedIn || !auth;
+  if (ui.authFormCancel) {
+    ui.authFormCancel.disabled = state.authBusy;
+  }
   ui.authLogout.disabled = state.authBusy || !signedIn;
   ui.authLogin.classList.toggle("hidden", signedIn);
   ui.authRegister.classList.toggle("hidden", signedIn);
   ui.authLogout.classList.toggle("hidden", !signedIn);
+  if (ui.entryStartCard) {
+    ui.entryStartCard.classList.toggle("hidden", !authEntryMode);
+  }
+  if (ui.entryStartGame) {
+    ui.entryStartGame.disabled = state.authBusy || !signedIn || !state.authReady;
+  }
+  if (ui.entryGameId) {
+    const entryId = state.currentPlayerId || (state.hasBoundGameId ? "读取中" : "未创建 ID");
+    ui.entryGameId.textContent = `ID: ${entryId}`;
+  }
+  if (ui.entryLogout) {
+    ui.entryLogout.disabled = state.authBusy || !signedIn;
+  }
   if (ui.currentBeansBalance) {
     ui.currentBeansBalance.textContent = signedIn ? formatBeans(shownBeans) : "登录后显示";
   }
@@ -2458,8 +2554,8 @@ async function initFirebase() {
       await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
     }
     state.authStatusMessage = ui.authEmail.value.trim()
-      ? "已填入上次使用的邮箱，请点击登录进入大厅。"
-      : "Firebase 已连接，请登录账号。";
+      ? "已填入上次使用的邮箱，点击邮箱登录后输入密码。"
+      : "请选择邮箱或 Google 账号登录。";
     renderAuthControls();
     render();
 
@@ -2475,20 +2571,25 @@ async function initFirebase() {
             ui.authEmail.value = user.email;
           }
           state.authUser = null;
-          state.authStatusMessage = "已填入上次使用的邮箱，请点击登录进入大厅。";
+          state.authStatusMessage = "已填入上次使用的邮箱，点击邮箱登录后输入密码。";
           renderAuthControls();
           render();
           auth.signOut().catch(() => {});
           return;
         }
 
+        const wasSignedIn = Boolean(state.authUser);
         state.authUser = user;
+        state.authFormOpen = false;
+        state.authEntryActive = wasSignedIn ? state.authEntryActive : true;
         rememberAuthEmail(user.email || ui.authEmail.value.trim());
-        state.authStatusMessage = `已登录：${maskEmail(user.email)}`;
+        state.authStatusMessage = `已登录：${maskEmail(user.email)}，点击开始游戏进入大厅。`;
         await loadCurrentUserProfile();
         startSocialSync();
       } else {
         state.authUser = null;
+        state.authEntryActive = false;
+        state.authFormOpen = false;
         clearSocialListeners();
         resetSocialState();
         state.currentPlayerId = "";
@@ -2504,7 +2605,7 @@ async function initFirebase() {
         state.playerIdHintMessage = "先登录或注册账号，再创建全局唯一的游戏 ID。";
         ui.playerId.value = "";
         state.authStatusMessage = ui.authEmail.value.trim()
-          ? "已填入上次使用的邮箱，请点击登录进入大厅。"
+          ? "已填入上次使用的邮箱，点击邮箱登录后输入密码。"
           : "还没有登录账号。";
       }
 
@@ -2582,6 +2683,7 @@ function getAuthFormCredentials() {
   }
 
   if (!email || !password) {
+    state.authFormOpen = true;
     state.authStatusMessage = "先输入邮箱和密码，再进行登录或注册。";
     renderAuthControls();
     render();
@@ -2607,6 +2709,7 @@ async function handleAuthLogin() {
 
   try {
     await auth.signInWithEmailAndPassword(email, password);
+    state.authFormOpen = false;
   } catch (error) {
     state.authSessionConfirmed = false;
     state.authStatusMessage = formatAuthError(error);
@@ -2633,6 +2736,37 @@ async function handleAuthRegister() {
 
   try {
     await auth.createUserWithEmailAndPassword(email, password);
+    state.authFormOpen = false;
+  } catch (error) {
+    state.authSessionConfirmed = false;
+    state.authStatusMessage = formatAuthError(error);
+  } finally {
+    state.authBusy = false;
+    renderAuthControls();
+    render();
+  }
+}
+
+async function handleAuthGoogleLogin() {
+  if (!auth || !window.firebase?.auth?.GoogleAuthProvider) {
+    state.authStatusMessage = "Google 登录暂时不可用，请稍后刷新再试。";
+    renderAuthControls();
+    render();
+    return;
+  }
+
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters?.({ prompt: "select_account" });
+
+  state.authBusy = true;
+  state.authSessionConfirmed = true;
+  state.authFormOpen = false;
+  state.authStatusMessage = "正在打开 Google 登录...";
+  renderAuthControls();
+  render();
+
+  try {
+    await auth.signInWithPopup(provider);
   } catch (error) {
     state.authSessionConfirmed = false;
     state.authStatusMessage = formatAuthError(error);
@@ -2649,6 +2783,8 @@ async function handleAuthLogout() {
   }
 
   state.authBusy = true;
+  state.authEntryActive = false;
+  state.authFormOpen = false;
   state.authStatusMessage = "正在退出登录...";
   renderAuthControls();
   render();
@@ -5028,15 +5164,18 @@ function render() {
   renderPlayerStatsDashboard();
   renderSocialPanel();
   renderRoomInviteModal();
-  document.body.classList.toggle("is-lobby-setup", state.phase === "setup" && Boolean(state.authUser));
-  document.body.classList.toggle("is-login-view", state.phase === "setup" && !state.authUser);
+  const loginEntryView = isLoginEntryViewActive();
+  const authEntryView = isAuthEntryViewActive();
+  document.body.classList.toggle("is-lobby-setup", state.phase === "setup" && Boolean(state.authUser) && !authEntryView);
+  document.body.classList.toggle("is-login-view", loginEntryView);
+  document.body.classList.toggle("is-auth-entry-view", authEntryView);
   document.body.classList.toggle("is-game-view", state.phase !== "setup");
 
   if (state.phase === "setup") {
     updateGameLayoutScale();
-    ui.heroSection.classList.toggle("hidden", Boolean(state.authUser));
+    ui.heroSection.classList.toggle("hidden", Boolean(state.authUser) && !authEntryView);
     ui.setupPanel.classList.remove("hidden");
-    ui.historyPanel.classList.toggle("hidden", needsInitialPlayerIdSetup() || !state.lastFinishedResult);
+    ui.historyPanel.classList.toggle("hidden", authEntryView || needsInitialPlayerIdSetup() || !state.lastFinishedResult);
     ui.gameLayout.classList.add("hidden");
     return;
   }
@@ -6143,6 +6282,15 @@ function formatAuthError(error) {
   }
   if (code === "auth/too-many-requests") {
     return "尝试次数过多，请稍后再试。";
+  }
+  if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
+    return "Google 登录窗口已关闭。";
+  }
+  if (code === "auth/popup-blocked") {
+    return "浏览器拦截了 Google 登录弹窗，请允许弹窗后再试。";
+  }
+  if (code === "auth/operation-not-allowed") {
+    return "Google 登录还没有在 Firebase 控制台启用。";
   }
   if (code === "permission-denied") {
     return "数据库权限拦住了这次操作，请更新 Firestore 规则。";
