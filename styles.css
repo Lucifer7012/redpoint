@@ -5800,18 +5800,7 @@ select {
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .player-id-card {
-    position: absolute;
-    left: 12px;
-    bottom: 51px;
-    z-index: 5;
-    width: 194px;
-    min-height: 58px !important;
-    padding: 8px 10px;
-    gap: 4px;
-    color: #eef9ff;
-    border-color: rgba(221, 238, 255, 0.2);
-    border-radius: 16px;
-    background: rgba(8, 34, 52, 0.64);
+    display: none;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .player-id-card > span,
@@ -5892,12 +5881,12 @@ select {
     position: absolute;
     left: 12px;
     top: 69px;
-    bottom: 118px;
+    bottom: 34px;
     z-index: 4;
     width: 194px;
     min-width: 0;
     display: grid;
-    grid-template-rows: auto minmax(0, 0.9fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 0.8fr) minmax(136px, 1.1fr);
     gap: 8px;
     overflow: hidden;
   }
@@ -5960,6 +5949,8 @@ select {
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-room-card {
     min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-room-inner,
@@ -5998,6 +5989,10 @@ select {
     width: 100%;
   }
 
+  body.is-lobby-setup .setup-panel.is-lobby-mode .social-room-create .social-inline-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-inline-actions .ghost-btn,
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-item .ghost-btn {
     width: 100%;
@@ -6008,6 +6003,15 @@ select {
     border-color: rgba(255, 229, 150, 0.28);
     background: rgba(255, 255, 255, 0.1);
     font-size: 10px;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .social-room-create .social-inline-actions .ghost-btn {
+    min-width: 0;
+    padding: 0 3px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: clip;
+    font-size: 9px;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .empty-state {
