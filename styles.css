@@ -5798,13 +5798,16 @@ select {
     z-index: 5;
     width: min(430px, calc(100vw - 432px));
     min-width: 320px;
-    min-height: 96px;
+    height: 146px;
+    min-height: 146px;
+    max-height: 146px;
     padding: 10px 14px;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: auto minmax(0, 1fr);
     gap: 10px;
-    align-items: center;
+    align-items: stretch;
+    overflow: hidden;
     transform: translateX(-50%);
     border: 1px solid rgba(255, 229, 150, 0.34);
     border-radius: 20px;
@@ -5814,7 +5817,6 @@ select {
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .player-options-card.is-friends-mode {
-    min-height: 146px;
     align-items: stretch;
   }
 
