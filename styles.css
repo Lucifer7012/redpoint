@@ -6027,17 +6027,18 @@ select {
     position: absolute;
     right: 12px;
     top: 68px;
-    bottom: 50px;
     z-index: 4;
     width: 214px;
+    height: min(238px, calc(100dvh - 118px));
     min-height: 0;
-    height: auto;
     padding: 9px;
     gap: 8px;
+    grid-template-rows: auto minmax(0, 1fr);
     border-radius: 18px;
     border-color: rgba(221, 238, 255, 0.2);
     background: rgba(7, 31, 48, 0.62);
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+    overflow: hidden;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-side-tab {
@@ -6059,7 +6060,28 @@ select {
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-mini-board__list {
     max-height: none;
     height: 100%;
+    min-height: 0;
     padding-right: 4px;
+    overflow-y: auto;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .social-side-pane,
+  body.is-lobby-setup .setup-panel.is-lobby-mode .social-leaderboard-pane,
+  body.is-lobby-setup .setup-panel.is-lobby-mode .social-mini-board {
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .social-leaderboard-compact {
+    min-height: 0;
+    height: calc(100% - 62px);
+    max-height: calc(100% - 62px);
+    overflow: hidden;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .social-leaderboard-pane {
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-friends-list .social-item {
@@ -6101,6 +6123,38 @@ select {
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-rank-score strong {
     color: #fff8d6;
     font-size: 12px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  body.is-lobby-setup .setup-panel.is-lobby-mode .social-side-column {
+    height: min(238px, calc(100dvh - 118px));
+    min-height: 0;
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .social-side-pane,
+  body.is-lobby-setup .setup-panel.is-lobby-mode .social-leaderboard-pane,
+  body.is-lobby-setup .setup-panel.is-lobby-mode .social-mini-board {
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .social-leaderboard-compact {
+    min-height: 0;
+    height: calc(100% - 62px);
+    max-height: calc(100% - 62px);
+    overflow: hidden;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .social-friends-list,
+  body.is-lobby-setup .setup-panel.is-lobby-mode .social-mini-board__list {
+    min-height: 0;
+    max-height: none;
+    height: 100%;
+    overflow-y: auto;
   }
 }
 
