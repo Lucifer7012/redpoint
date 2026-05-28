@@ -86,6 +86,12 @@ const ui = {
   rulesAck: document.getElementById("rules-ack"),
   playerCount: document.getElementById("player-count"),
   useDice: document.getElementById("use-dice"),
+  lobbyModeCard: document.getElementById("lobby-mode-card"),
+  lobbyModeSolo: document.getElementById("lobby-mode-solo"),
+  lobbyModeFriends: document.getElementById("lobby-mode-friends"),
+  lobbySoloOptions: document.getElementById("lobby-solo-options"),
+  lobbyFriendOptions: document.getElementById("lobby-friend-options"),
+  lobbyFriendRoomCard: document.getElementById("lobby-friend-room-card"),
   authEmail: document.getElementById("auth-email"),
   authPassword: document.getElementById("auth-password"),
   authRemember: document.getElementById("auth-remember"),
@@ -255,6 +261,7 @@ const state = {
   leaderboardRefreshing: false,
   leaderboardOpen: false,
   playerStatsOpen: false,
+  lobbyPlayMode: "solo",
   socialSideView: "friends",
   hasBoundGameId: false,
   gameIdEditable: true,
@@ -346,6 +353,8 @@ function init() {
   ui.roomInviteRejectConfirm?.addEventListener("click", handleRejectActiveRoomInvite);
   ui.playerId.addEventListener("input", handlePlayerIdInput);
   ui.playerCount.addEventListener("change", renderAuthControls);
+  ui.lobbyModeSolo?.addEventListener("click", () => setLobbyPlayMode("solo"));
+  ui.lobbyModeFriends?.addEventListener("click", () => setLobbyPlayMode("friends"));
   ui.entryStartGame?.addEventListener("click", handleEntryStartGame);
   ui.startGame.addEventListener("click", handleStartGameButton);
   ui.viewLastResult.addEventListener("click", handleViewLastResult);
@@ -2288,6 +2297,124 @@ function handleEntryStartGame() {
   render();
 }
 
+function setLobbyPlayMode(mode) {
+  const nextMode = mode === "friends" ? "friends" : "solo";
+  if (state.lobbyPlayMode === nextMode) {
+    return;
+  }
+  state.lobbyPlayMode = nextMode;
+  renderAuthControls();
+  renderLobbyModeControls();
+}
+
+function renderLobbyModeControls() {
+  if (!ui.lobbyModeCard) {
+    return;
+  }
+
+  const friendsMode = state.lobbyPlayMode === "friends";
+  ui.lobbyModeCard.classList.toggle("is-solo-mode", !friendsMode);
+  ui.lobbyModeCard.classList.toggle("is-friends-mode", friendsMode);
+  ui.lobbyModeSolo?.classList.toggle("active", !friendsMode);
+  ui.lobbyModeFriends?.classList.toggle("active", friendsMode);
+  ui.lobbyModeSolo?.setAttribute("aria-selected", String(!friendsMode));
+  ui.lobbyModeFriends?.setAttribute("aria-selected", String(friendsMode));
+  renderLobbyFriendRoomCard();
+}
+
+function renderLobbyFriendRoomCard() {
+  if (!ui.lobbyFriendRoomCard) {
+    return;
+  }
+
+  const signedIn = Boolean(state.authUser);
+  const room = state.socialActiveRoom;
+  ui.lobbyFriendRoomCard.innerHTML = "";
+
+  if (!signedIn) {
+    ui.lobbyFriendRoomCard.appendChild(createEmptyState("登录后可以创建好友房。"));
+    return;
+  }
+
+  if (!room) {
+    const wrap = document.createElement("div");
+    wrap.className = "social-room-inner social-room-create lobby-room-inner";
+    wrap.innerHTML = `
+      <div>
+        <strong>还没有等待中的房间</strong>
+        <p>先创建一个 2 / 3 / 4 人房，再邀请好友加入。创建时会扣除对应门票。</p>
+      </div>
+    `;
+    const actions = document.createElement("div");
+    actions.className = "social-inline-actions";
+    ["2", "3", "4"].forEach((mode) => {
+      const button = document.createElement("button");
+      button.className = "ghost-btn";
+      button.type = "button";
+      button.textContent = `创建${mode}人房`;
+      button.title = `门票 ${formatBeans(getTicketCost(mode))}`;
+      button.disabled = state.socialBusy || !state.currentPlayerId || state.currentBeans < getTicketCost(mode);
+      button.addEventListener("click", () => handleCreateRoom(mode));
+      actions.appendChild(button);
+    });
+    wrap.appendChild(actions);
+    ui.lobbyFriendRoomCard.appendChild(wrap);
+    return;
+  }
+
+  const members = Array.isArray(room.members) ? room.members : [];
+  const targetCount = Number(room.mode || 2);
+  const slotsLeft = Math.max(0, targetCount - members.length);
+  const memberText = members.map((member) => member.gameId).join("、") || "暂无";
+  const roomStatusText = room.status === "playing"
+    ? "联机对局进行中"
+    : slotsLeft > 0
+      ? `等待中，还差 ${slotsLeft} 人`
+      : "人数已满，可以开始联机";
+  const card = document.createElement("div");
+  card.className = "social-room-inner social-room-active lobby-room-inner";
+  card.innerHTML = `
+    <div class="social-room-details">
+      <strong>${room.mode} 人房 · ${room.hostUid === state.authUser.uid ? "你是房主" : "好友房间"}</strong>
+      <p>${roomStatusText}</p>
+      <p>当前成员：${escapeHtml(memberText)}</p>
+    </div>
+  `;
+  const actions = document.createElement("div");
+  actions.className = "social-inline-actions";
+
+  if (room.status === "playing") {
+    const resumeButton = document.createElement("button");
+    resumeButton.className = "ghost-btn";
+    resumeButton.type = "button";
+    resumeButton.textContent = "返回对局";
+    resumeButton.disabled = state.socialBusy;
+    resumeButton.addEventListener("click", handleReturnToActiveRoom);
+    actions.appendChild(resumeButton);
+  }
+
+  if (room.status === "waiting" && room.hostUid === state.authUser.uid && members.length === targetCount) {
+    const startButton = document.createElement("button");
+    startButton.className = "ghost-btn";
+    startButton.type = "button";
+    startButton.textContent = "开始联机";
+    startButton.disabled = state.socialBusy;
+    startButton.addEventListener("click", handleStartRoomMatch);
+    actions.appendChild(startButton);
+  }
+
+  const leaveButton = document.createElement("button");
+  leaveButton.className = "ghost-btn";
+  leaveButton.type = "button";
+  leaveButton.textContent = room.hostUid === state.authUser.uid ? "关闭房间" : "离开房间";
+  leaveButton.disabled = state.socialBusy;
+  leaveButton.addEventListener("click", handleLeaveRoom);
+  actions.appendChild(leaveButton);
+
+  card.appendChild(actions);
+  ui.lobbyFriendRoomCard.appendChild(card);
+}
+
 function handleDocumentClick(event) {
   if (!state.playerStatsOpen) {
     return;
@@ -2373,12 +2500,16 @@ function renderAuthControls() {
     ui.rechargeBeans.title = signedIn ? "打开欢乐豆中心" : "登录后打开欢乐豆中心";
   }
   ui.startGame.textContent = needsIdSetup ? "创建 ID，进入大厅" : "开始游戏";
+  if (!needsIdSetup && state.lobbyPlayMode === "friends") {
+    ui.startGame.textContent = "好友联机";
+  }
   ui.startGame.disabled = state.authBusy || !signedIn || !state.authReady;
   ui.playerId.disabled = state.authBusy || !signedIn || lockedId;
   ui.authStatus.textContent = state.authStatusMessage;
   ui.playerId.value = state.currentPlayerId || ui.playerId.value;
   renderPlayerIdHint();
   renderBeansCenter();
+  renderLobbyModeControls();
 }
 
 function handleRechargeBeans() {
@@ -3426,6 +3557,21 @@ async function handleStartGameButton() {
       renderAuthControls();
       render();
     }
+    return;
+  }
+
+  if (state.lobbyPlayMode === "friends") {
+    const room = state.socialActiveRoom;
+    const members = Array.isArray(room?.members) ? room.members : [];
+    const targetCount = Number(room?.mode || 2);
+    if (room?.status === "waiting" && room.hostUid === state.authUser?.uid && members.length === targetCount) {
+      await handleStartRoomMatch();
+      return;
+    }
+    setSocialStatus("先创建好友房并等好友到齐，再开始好友联机。", "info");
+    state.socialSideView = "friends";
+    renderSocialPanel();
+    renderLobbyModeControls();
     return;
   }
 
@@ -7083,5 +7229,6 @@ function renderSocialPanel() {
       ui.socialFriends.appendChild(card);
     });
   }
+  renderLobbyModeControls();
   requestAnimationFrame(syncSocialSideHeight);
 }

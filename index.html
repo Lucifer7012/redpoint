@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>钓红点</title>
   <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="stylesheet" href="styles.css?v=20260528-social-fixed-pane">
+  <link rel="stylesheet" href="styles.css?v=20260528-lobby-mode-switch">
 </head>
 <body>
   <main class="app-shell">
@@ -63,8 +63,12 @@
           <strong id="current-beans-balance">0 欢乐豆</strong>
           <small>联机房门票会从这里扣除。</small>
         </div>
-        <div class="player-options-card">
-          <label class="field-block">
+        <div class="player-options-card" id="lobby-mode-card">
+          <div class="lobby-mode-tabs" role="tablist" aria-label="大厅模式">
+            <button id="lobby-mode-solo" class="lobby-mode-tab active" type="button">单机</button>
+            <button id="lobby-mode-friends" class="lobby-mode-tab" type="button">好友联机</button>
+          </div>
+          <label class="field-block lobby-solo-options" id="lobby-solo-options">
           <span>玩家人数</span>
           <select id="player-count">
             <option value="2">2 人</option>
@@ -72,6 +76,9 @@
             <option value="4">4 人</option>
           </select>
           </label>
+          <div class="lobby-friend-options" id="lobby-friend-options">
+            <div id="lobby-friend-room-card" class="lobby-friend-room-card"></div>
+          </div>
           <label class="dice-inline-row">
             <input type="checkbox" id="use-dice" checked>
             <span>启用摇骰子定先手</span>
@@ -388,6 +395,6 @@
   <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=20260528-lobby-pane"></script>
+  <script src="app.js?v=20260528-lobby-mode-switch"></script>
 </body>
 </html>
