@@ -1,13 +1,14 @@
 # Project Status
 
-最新状态补充（2026-05-28）：
+最新状态补充（2026-06-01）：
+- 新增 `docs/HANDOFF.md`，作为跨电脑开发和新 Codex 会话继续项目时的固定交接入口；新会话应先读 `docs/HANDOFF.md`、`docs/PROJECT_STATUS.md`、`docs/CHANGELOG.md`、`FEATURE_LOG.md` 和 `agent.md`。
 - 手机横屏大厅中间“单机 / 好友联机”模式卡已固定为同一高度，按好友联机状态锁定，切换时不再变高或变矮。
 - 手机横屏大厅中间主入口已改为“单机 / 好友联机”切换；单机显示玩家人数和摇骰子，好友联机显示创建 2 / 3 / 4 人好友房卡片和摇骰子。
 - 右侧“好友列表 / 排行榜”固定外框再次向下延长，手机横屏下可显示更多列表内容。
 - 右侧“好友列表 / 排行榜”切换框已做二次固定高度修正，小屏和手机横屏大厅点击排行榜时不再撑高外框；排行榜和好友列表都在同一外框内滚动。
 - 当前缓存版本：`styles.css?v=20260528-lobby-mode-fixed`，`app.js?v=20260528-lobby-mode-fixed`。
 
-更新时间：2026-05-28
+更新时间：2026-06-01
 
 项目：钓红点 / redpoint
 
@@ -22,7 +23,7 @@ GitHub：`https://github.com/Lucifer7012/redpoint`
 - 项目是静态前端游戏，核心文件为 `index.html`、`app.js`、`styles.css`、`favicon.png`。
 - 当前可通过本地 HTTP 服务测试：`http://127.0.0.1:4173/`。
 - 上传 GitHub 的暂存目录为 `_github_upload`。
-- 详细功能记录保留在 `FEATURE_LOG.md`，本目录下 `CHANGELOG.md` 只写摘要。
+- 详细功能记录保留在 `FEATURE_LOG.md`，跨电脑和跨会话交接入口为 `docs/HANDOFF.md`，本目录下 `CHANGELOG.md` 只写摘要。
 
 ## 当前功能
 
@@ -87,6 +88,7 @@ http://127.0.0.1:4173/
 - `styles.css`
 - `favicon.png`
 - `FEATURE_LOG.md`
+- `docs/HANDOFF.md`
 - `docs/CHANGELOG.md`
 - `docs/PROJECT_STATUS.md`
 
@@ -106,5 +108,6 @@ GitHub 仓库根目录不应放置 `CHANGELOG.md` 或 `PROJECT_STATUS.md` 的副
 
 - 每次修改代码或内容后，更新 `docs/CHANGELOG.md`。
 - 当前状态、测试方式、上传范围或已知限制变化时，更新 `docs/PROJECT_STATUS.md`。
+- 当前正在做的事、下一步、跨电脑同步流程或交接注意事项变化时，更新 `docs/HANDOFF.md`。
 - 同步更新桌面总工作记录 `C:\Users\OgCloud\Desktop\Codex-Worklog\WORKLOG.md`。
 - 不记录 API Key、密码、Token、Cookie 或任何真实密钥。

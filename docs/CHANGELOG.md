@@ -9,6 +9,17 @@
 - 如当前状态、测试方式或后续注意点发生变化，同时更新 `docs/PROJECT_STATUS.md`。
 - 桌面总工作记录同步更新：`C:\Users\OgCloud\Desktop\Codex-Worklog\WORKLOG.md`。
 
+## 2026-06-01
+
+### 跨电脑开发交接文档
+
+- 新增 `docs/HANDOFF.md`，作为公司电脑、家里电脑和新 Codex 会话之间的固定交接入口。
+- 文档内记录了新会话必读文件、GitHub 跨电脑同步流程、每次开始/结束工作的命令、当前项目快照、可继续方向和测试方式。
+- 更新 `docs/PROJECT_STATUS.md`，把 `docs/HANDOFF.md` 纳入上传范围和后续记录规则。
+验证：
+- `node --check app.js` 通过。
+- 确认交接文档未记录 API Key、密码、Token、Cookie 或真实密钥。
+
 ## 2026-05-28
 
 ### 手机横屏大厅模式卡高度固定

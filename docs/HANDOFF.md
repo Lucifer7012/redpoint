@@ -1,0 +1,103 @@
+# Handoff
+
+本文件用于在不同电脑、不同 Codex 会话之间交接 `redpoint` 项目进度。这里不记录 API Key、密码、Token、Cookie 或任何真实密钥。
+
+## 新会话先读
+
+在新电脑或新聊天里，先让 Codex 读取这些文件：
+
+- `docs/HANDOFF.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/CHANGELOG.md`
+- `FEATURE_LOG.md`
+- `agent.md`
+
+可直接复制这句话作为开场：
+
+```text
+请先读取 docs/HANDOFF.md、docs/PROJECT_STATUS.md、docs/CHANGELOG.md、FEATURE_LOG.md 和 agent.md，然后继续这个项目的最新进度。不要记录任何 API Key、密码、Token。
+```
+
+## 跨电脑同步流程
+
+推荐把 GitHub 仓库作为两台电脑之间的唯一同步源：
+
+```powershell
+git clone https://github.com/Lucifer7012/redpoint.git
+cd redpoint
+```
+
+每次开始工作前：
+
+```powershell
+git pull --ff-only
+```
+
+每次结束工作前：
+
+```powershell
+node --check app.js
+git status --short
+git add index.html app.js styles.css favicon.png FEATURE_LOG.md docs
+git commit -m "简短说明这次改动"
+git push origin main
+```
+
+如果当前电脑沿用本机旧工作结构，`C:\Users\OgCloud\Desktop\redpoint` 不是 Git 仓库，实际提交目录是 `_github_repo`，上传暂存目录是 `_github_upload`。这种情况下结束工作时要把改动文件同步到 `_github_upload` 和 `_github_repo`，再在 `_github_repo` 里提交并推送。
+
+## 每次交接要更新
+
+每次修改代码或文档后，至少更新：
+
+- `docs/CHANGELOG.md`：写本次改了什么、怎么验证。
+- `docs/PROJECT_STATUS.md`：当前状态、缓存版本、测试方式、上传范围有变化时更新。
+- `docs/HANDOFF.md`：如果当前正在做的事、下一步、已知风险或跨电脑流程有变化，更新本文件。
+- `C:\Users\OgCloud\Desktop\Codex-Worklog\WORKLOG.md`：仅限本机总工作记录，不放进 GitHub 项目。
+
+## 当前项目快照
+
+- 项目：钓红点 / redpoint
+- GitHub：`https://github.com/Lucifer7012/redpoint`
+- 线上测试链接：`https://lucifer7012.github.io/redpoint/`
+- 本地测试地址：`http://127.0.0.1:4173/`
+- 当前缓存版本：`styles.css?v=20260528-lobby-mode-fixed`，`app.js?v=20260528-lobby-mode-fixed`
+- 最近主要改动：手机横屏大厅已改为“单机 / 好友联机”切换；中间模式卡已固定为好友联机高度，切换时不再跳动；右侧好友列表 / 排行榜共用固定外框并滚动。
+
+## 当前可继续方向
+
+- 继续根据手机横屏截图微调大厅布局、好友申请/房间邀请区域和右侧好友/排行榜区域。
+- 继续测试登录 -> 创建 ID -> 大厅 -> 单机/好友联机 -> 对局 -> 结算循环。
+- 如果要在另一台电脑继续开发，优先确认 `git pull --ff-only` 已拿到 GitHub `main` 最新提交。
+
+## 测试方式
+
+常规语法检查：
+
+```powershell
+node --check app.js
+```
+
+启动本地静态服务：
+
+```powershell
+python -m http.server 4173 --bind 127.0.0.1
+```
+
+打开：
+
+```text
+http://127.0.0.1:4173/
+```
+
+涉及界面布局时，优先验证：
+
+- 桌面浏览器 100% 缩放。
+- 安卓横屏模拟尺寸，例如 844 x 390。
+- 手机横屏下登录页、大厅页、对局页是否仍能一屏操作。
+
+## 注意事项
+
+- 不要把桌面总工作记录 `C:\Users\OgCloud\Desktop\Codex-Worklog\WORKLOG.md` 上传进项目仓库。
+- 不要把 API Key、密码、Token、Cookie 或 Firebase 敏感配置写入记录文件。
+- `docs/CHANGELOG.md` 和 `docs/PROJECT_STATUS.md` 应保留在 `docs/` 目录，不要传到仓库根目录。
+- 当前 `app.js` 是较大的单文件，实现新功能前尽量小步修改，避免顺手大重构。
