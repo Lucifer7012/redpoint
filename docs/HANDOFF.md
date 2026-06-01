@@ -18,6 +18,25 @@
 请先读取 docs/HANDOFF.md、docs/PROJECT_STATUS.md、docs/CHANGELOG.md、FEATURE_LOG.md 和 agent.md，然后继续这个项目的最新进度。不要记录任何 API Key、密码、Token。
 ```
 
+## 固定口令
+
+以后在任一电脑的新会话里，可以直接把这两句当成固定口令：
+
+- `开始前帮我同步最新代码`
+- `改完了，帮我检查并同步到 GitHub`
+
+对应的本地脚本入口：
+
+- `tools\sync-start.cmd`
+- `tools\sync-finish.cmd`
+
+如果想手动运行 PowerShell 版本：
+
+```powershell
+.\tools\sync-start.ps1
+.\tools\sync-finish.ps1 -Message "简短说明这次改动"
+```
+
 ## 跨电脑同步流程
 
 推荐把 GitHub 仓库作为两台电脑之间的唯一同步源：
@@ -27,23 +46,22 @@ git clone https://github.com/Lucifer7012/redpoint.git
 cd redpoint
 ```
 
-每次开始工作前：
+平时优先使用脚本入口。每次开始工作前：
 
 ```powershell
-git pull --ff-only
+.\tools\sync-start.ps1
 ```
 
 每次结束工作前：
 
 ```powershell
-node --check app.js
-git status --short
-git add index.html app.js styles.css favicon.png FEATURE_LOG.md docs
-git commit -m "简短说明这次改动"
-git push origin main
+.\tools\sync-finish.ps1 -Message "简短说明这次改动"
 ```
 
-如果当前电脑沿用本机旧工作结构，`C:\Users\OgCloud\Desktop\redpoint` 不是 Git 仓库，实际提交目录是 `_github_repo`，上传暂存目录是 `_github_upload`。这种情况下结束工作时要把改动文件同步到 `_github_upload` 和 `_github_repo`，再在 `_github_repo` 里提交并推送。
+脚本会自动兼容两种结构：
+
+- 新结构：项目根目录本身就是 Git 仓库。
+- 旧结构：`C:\Users\OgCloud\Desktop\redpoint` 不是 Git 仓库，实际提交目录是 `_github_repo`，上传暂存目录是 `_github_upload`。
 
 ## 每次交接要更新
 
@@ -52,6 +70,7 @@ git push origin main
 - `docs/CHANGELOG.md`：写本次改了什么、怎么验证。
 - `docs/PROJECT_STATUS.md`：当前状态、缓存版本、测试方式、上传范围有变化时更新。
 - `docs/HANDOFF.md`：如果当前正在做的事、下一步、已知风险或跨电脑流程有变化，更新本文件。
+- `tools/`：如果同步脚本逻辑有变化，同步更新这里的脚本文件。
 - `C:\Users\OgCloud\Desktop\Codex-Worklog\WORKLOG.md`：仅限本机总工作记录，不放进 GitHub 项目。
 
 ## 当前项目快照
@@ -100,4 +119,5 @@ http://127.0.0.1:4173/
 - 不要把桌面总工作记录 `C:\Users\OgCloud\Desktop\Codex-Worklog\WORKLOG.md` 上传进项目仓库。
 - 不要把 API Key、密码、Token、Cookie 或 Firebase 敏感配置写入记录文件。
 - `docs/CHANGELOG.md` 和 `docs/PROJECT_STATUS.md` 应保留在 `docs/` 目录，不要传到仓库根目录。
+- `tools/` 和 `agent.md` 也应随 GitHub 同步，这样两台电脑上的固定口令和项目上下文才一致。
 - 当前 `app.js` 是较大的单文件，实现新功能前尽量小步修改，避免顺手大重构。

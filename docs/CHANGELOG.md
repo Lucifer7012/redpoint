@@ -14,11 +14,13 @@
 ### 跨电脑开发交接文档
 
 - 新增 `docs/HANDOFF.md`，作为公司电脑、家里电脑和新 Codex 会话之间的固定交接入口。
-- 文档内记录了新会话必读文件、GitHub 跨电脑同步流程、每次开始/结束工作的命令、当前项目快照、可继续方向和测试方式。
-- 更新 `docs/PROJECT_STATUS.md`，把 `docs/HANDOFF.md` 纳入上传范围和后续记录规则。
+- 新增 `tools/sync-start.ps1`、`tools/sync-finish.ps1` 及对应 `.cmd` 包装器，把“开始前同步最新代码 / 改完后检查并同步到 GitHub”固化为两台电脑都能直接复用的脚本入口。
+- 文档内记录了新会话必读文件、固定口令、GitHub 跨电脑同步流程、脚本入口、当前项目快照、可继续方向和测试方式。
+- 更新 `docs/PROJECT_STATUS.md`，把 `docs/HANDOFF.md`、`tools/` 和 `agent.md` 纳入上传范围和后续记录规则。
 验证：
 - `node --check app.js` 通过。
-- 确认交接文档未记录 API Key、密码、Token、Cookie 或真实密钥。
+- `tools/sync-start.ps1` 实际执行 `git pull --ff-only` 通过。
+- 确认交接文档和脚本未记录 API Key、密码、Token、Cookie 或真实密钥。
 
 ## 2026-05-28
 

@@ -2,6 +2,7 @@
 
 最新状态补充（2026-06-01）：
 - 新增 `docs/HANDOFF.md`，作为跨电脑开发和新 Codex 会话继续项目时的固定交接入口；新会话应先读 `docs/HANDOFF.md`、`docs/PROJECT_STATUS.md`、`docs/CHANGELOG.md`、`FEATURE_LOG.md` 和 `agent.md`。
+- 新增 `tools/sync-start.ps1`、`tools/sync-finish.ps1` 及对应 `.cmd` 包装器；“开始前帮我同步最新代码 / 改完了，帮我检查并同步到 GitHub”已经固化成项目内固定脚本入口。
 - 手机横屏大厅中间“单机 / 好友联机”模式卡已固定为同一高度，按好友联机状态锁定，切换时不再变高或变矮。
 - 手机横屏大厅中间主入口已改为“单机 / 好友联机”切换；单机显示玩家人数和摇骰子，好友联机显示创建 2 / 3 / 4 人好友房卡片和摇骰子。
 - 右侧“好友列表 / 排行榜”固定外框再次向下延长，手机横屏下可显示更多列表内容。
@@ -88,6 +89,8 @@ http://127.0.0.1:4173/
 - `styles.css`
 - `favicon.png`
 - `FEATURE_LOG.md`
+- `agent.md`
+- `tools`
 - `docs/HANDOFF.md`
 - `docs/CHANGELOG.md`
 - `docs/PROJECT_STATUS.md`
@@ -109,5 +112,6 @@ GitHub 仓库根目录不应放置 `CHANGELOG.md` 或 `PROJECT_STATUS.md` 的副
 - 每次修改代码或内容后，更新 `docs/CHANGELOG.md`。
 - 当前状态、测试方式、上传范围或已知限制变化时，更新 `docs/PROJECT_STATUS.md`。
 - 当前正在做的事、下一步、跨电脑同步流程或交接注意事项变化时，更新 `docs/HANDOFF.md`。
+- 同步脚本入口或提交流程变化时，更新 `tools/` 和相关文档说明。
 - 同步更新桌面总工作记录 `C:\Users\OgCloud\Desktop\Codex-Worklog\WORKLOG.md`。
 - 不记录 API Key、密码、Token、Cookie 或任何真实密钥。
