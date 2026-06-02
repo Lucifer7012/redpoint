@@ -5801,11 +5801,11 @@ select {
     height: 146px;
     min-height: 146px;
     max-height: 146px;
-    padding: 10px 14px;
+    padding: 8px 12px;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: auto minmax(0, 1fr);
-    gap: 10px;
+    gap: 8px;
     align-items: stretch;
     overflow: hidden;
     transform: translateX(-50%);
@@ -5824,17 +5824,17 @@ select {
     grid-column: 1 / -1;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
+    gap: 6px;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-mode-tab {
-    min-height: 30px;
+    min-height: 28px;
     border: 1px solid rgba(221, 238, 255, 0.2);
     border-radius: 12px;
     color: rgba(239, 249, 255, 0.78);
     background: rgba(255, 255, 255, 0.09);
     font: inherit;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 900;
     cursor: pointer;
   }
@@ -5861,12 +5861,13 @@ select {
   body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-room-side-stack {
     grid-column: 2;
     grid-row: 2;
-    min-width: 136px;
+    min-width: 132px;
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
-    gap: 8px;
+    gap: 4px;
     align-self: stretch;
     align-content: start;
+    min-height: 0;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .player-options-card.is-friends-mode .lobby-solo-options {
@@ -5881,6 +5882,21 @@ select {
   body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-room-inner {
     min-height: 0;
     height: 100%;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-friend-room-card {
+    overflow: hidden;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-room-inner {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 4px;
+    overflow: hidden;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-room-inner > div:first-child {
+    min-height: 0;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .player-options-card .field-block {
@@ -5903,16 +5919,22 @@ select {
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .dice-inline-row {
     align-self: start;
-    min-height: 34px;
+    min-height: 28px;
     margin: 0;
-    padding: 0 10px;
-    border-radius: 14px;
+    padding: 0 8px;
+    gap: 6px;
+    border-radius: 12px;
     color: rgba(255, 249, 224, 0.86);
     background: rgba(255, 255, 255, 0.09);
   }
 
+  body.is-lobby-setup .setup-panel.is-lobby-mode .dice-inline-row input {
+    width: 14px;
+    height: 14px;
+  }
+
   body.is-lobby-setup .setup-panel.is-lobby-mode .dice-inline-row span {
-    font-size: 11px;
+    font-size: 10px;
     white-space: nowrap;
   }
 
@@ -5920,6 +5942,7 @@ select {
     min-height: 0;
     display: grid;
     align-content: start;
+    overflow: hidden;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-room-side-actions.hidden {
@@ -5927,12 +5950,13 @@ select {
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-room-side-actions-inner {
-    gap: 6px;
+    gap: 4px;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-room-side-actions-inner .ghost-btn {
-    min-height: 30px;
-    font-size: 10px;
+    min-height: 24px;
+    padding: 0 6px;
+    font-size: 9px;
     white-space: nowrap;
   }
 
@@ -6091,8 +6115,8 @@ select {
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-room-inner,
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-item {
     min-height: 0;
-    padding: 7px 8px;
-    gap: 6px;
+    padding: 6px 7px;
+    gap: 4px;
     border-radius: 12px;
     color: #f6fbff;
     border-color: rgba(221, 238, 255, 0.14);
@@ -6101,26 +6125,37 @@ select {
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-room-inner {
     height: 100%;
-    display: grid;
-    align-content: start;
+    align-content: stretch;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-room-inner strong,
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-item strong {
-    font-size: 12px;
+    font-size: 11px;
+    line-height: 1.2;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-room-inner p,
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-item p {
     color: rgba(238, 249, 255, 0.72);
-    font-size: 10px;
-    line-height: 1.35;
+    font-size: 9px;
+    line-height: 1.2;
+    margin-top: 2px;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .social-room-details {
+    min-width: 0;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-room-inner .social-room-details p:last-child {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-inline-actions {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 5px;
+    gap: 4px;
     width: 100%;
   }
 
@@ -6131,22 +6166,23 @@ select {
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-inline-actions .ghost-btn,
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-item .ghost-btn {
     width: 100%;
-    min-height: 28px;
-    padding: 0 7px;
+    min-height: 24px;
+    padding: 0 6px;
     border-radius: 10px;
     color: #fff8d6;
     border-color: rgba(255, 229, 150, 0.28);
     background: rgba(255, 255, 255, 0.1);
-    font-size: 10px;
+    font-size: 9px;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .social-room-create .social-inline-actions .ghost-btn {
     min-width: 0;
-    padding: 0 3px;
+    min-height: 22px;
+    padding: 0 2px;
     overflow: hidden;
     white-space: nowrap;
-    text-overflow: clip;
-    font-size: 9px;
+    text-overflow: ellipsis;
+    font-size: 8px;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .empty-state {
