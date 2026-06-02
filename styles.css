@@ -2614,6 +2614,19 @@ select {
   width: min(720px, calc(100vw - 32px));
 }
 
+.rules-modal__card {
+  width: min(660px, calc(100vw - 32px));
+  max-height: min(76vh, 680px);
+  padding: 18px 18px 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 229, 150, 0.3);
+  background:
+    radial-gradient(circle at top center, rgba(236, 190, 94, 0.14), transparent 32%),
+    linear-gradient(180deg, rgba(20, 55, 74, 0.97), rgba(9, 28, 43, 0.97));
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.42);
+  color: #f6f2e7;
+}
+
 .beans-modal__head,
 .rules-modal__head,
 .rules-modal__foot {
@@ -2631,8 +2644,48 @@ select {
 }
 
 .rules-modal__body {
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.rules-modal__head {
+  align-items: flex-start;
+}
+
+.rules-modal__head .eyebrow {
+  margin: 0 0 4px;
+  color: rgba(245, 208, 126, 0.84);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.rules-modal__head h2 {
+  margin: 0;
+  color: #fff8de;
+  font-size: 26px;
+}
+
+.rules-modal__head .ghost-btn {
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border-color: rgba(255, 229, 150, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff4d0;
+}
+
+.rules-modal__foot {
+  justify-content: center;
+  padding-top: 4px;
+}
+
+.rules-modal__foot .primary-btn {
+  min-width: 156px;
+  min-height: 38px;
+  border-radius: 999px;
+  font-size: 14px;
 }
 
 .beans-summary {
@@ -2827,11 +2880,11 @@ select {
 }
 
 .rules-block {
-  padding: 18px;
-  border-radius: 18px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 10px 24px rgba(52, 40, 28, 0.06);
+  padding: 12px 13px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 229, 150, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
 }
 
 .rules-block h3,
@@ -2839,10 +2892,16 @@ select {
   margin: 0;
 }
 
+.rules-block h3 {
+  color: #f6d07e;
+  font-size: 13px;
+}
+
 .rules-block p {
-  margin-top: 8px;
-  color: var(--muted);
-  line-height: 1.7;
+  margin-top: 6px;
+  color: rgba(239, 246, 251, 0.82);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 @keyframes panel-rise {
