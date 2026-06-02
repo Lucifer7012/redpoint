@@ -27,6 +27,8 @@
 
 对应的本地脚本入口：
 
+- `start-dev.cmd`
+- `finish-dev.cmd`
 - `tools\sync-start.cmd`
 - `tools\sync-finish.cmd`
 
@@ -36,6 +38,11 @@
 .\tools\sync-start.ps1
 .\tools\sync-finish.ps1 -Message "简短说明这次改动"
 ```
+
+如果你不想敲命令，直接在项目根目录双击：
+
+- `start-dev.cmd`
+- `finish-dev.cmd`
 
 ## 跨电脑同步流程
 
@@ -49,13 +56,13 @@ cd redpoint
 平时优先使用脚本入口。每次开始工作前：
 
 ```powershell
-.\tools\sync-start.ps1
+.\start-dev.cmd
 ```
 
 每次结束工作前：
 
 ```powershell
-.\tools\sync-finish.ps1 -Message "简短说明这次改动"
+.\finish-dev.cmd
 ```
 
 脚本会自动兼容两种结构：
