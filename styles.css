@@ -5713,7 +5713,7 @@ select {
     grid-template-columns: 48px minmax(0, 1fr);
     grid-template-rows: auto auto;
     column-gap: 9px;
-    width: 220px;
+    width: 214px;
     min-height: 54px;
     margin: 0;
     padding: 5px 9px 6px 5px;
@@ -5766,7 +5766,7 @@ select {
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .bean-balance-card {
     position: absolute;
-    left: 244px;
+    left: 238px;
     top: 9px;
     z-index: 6;
     width: 148px;
