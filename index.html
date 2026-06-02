@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>钓红点</title>
   <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="stylesheet" href="styles.css?v=20260528-lobby-mode-fixed">
+  <link rel="stylesheet" href="styles.css?v=20260602-lobby-room-actions">
 </head>
 <body>
   <main class="app-shell">
@@ -79,10 +79,13 @@
           <div class="lobby-friend-options" id="lobby-friend-options">
             <div id="lobby-friend-room-card" class="lobby-friend-room-card"></div>
           </div>
-          <label class="dice-inline-row">
-            <input type="checkbox" id="use-dice" checked>
-            <span>启用摇骰子定先手</span>
-          </label>
+          <div class="lobby-room-side-stack">
+            <label class="dice-inline-row">
+              <input type="checkbox" id="use-dice" checked>
+              <span>启用摇骰子定先手</span>
+            </label>
+            <div id="lobby-room-side-actions" class="lobby-room-side-actions hidden"></div>
+          </div>
         </div>
         <label>
           <span>游戏 ID</span>
@@ -395,6 +398,6 @@
   <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=20260602-lobby-invite-gate"></script>
+  <script src="app.js?v=20260602-lobby-room-actions"></script>
 </body>
 </html>

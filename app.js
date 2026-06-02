@@ -92,6 +92,7 @@ const ui = {
   lobbySoloOptions: document.getElementById("lobby-solo-options"),
   lobbyFriendOptions: document.getElementById("lobby-friend-options"),
   lobbyFriendRoomCard: document.getElementById("lobby-friend-room-card"),
+  lobbyRoomSideActions: document.getElementById("lobby-room-side-actions"),
   authEmail: document.getElementById("auth-email"),
   authPassword: document.getElementById("auth-password"),
   authRemember: document.getElementById("auth-remember"),
@@ -2337,6 +2338,10 @@ function renderLobbyFriendRoomCard() {
   const signedIn = Boolean(state.authUser);
   const room = state.socialActiveRoom;
   ui.lobbyFriendRoomCard.innerHTML = "";
+  if (ui.lobbyRoomSideActions) {
+    ui.lobbyRoomSideActions.innerHTML = "";
+    ui.lobbyRoomSideActions.classList.add("hidden");
+  }
 
   if (!signedIn) {
     ui.lobbyFriendRoomCard.appendChild(createEmptyState("登录后可以创建好友房。"));
@@ -2388,7 +2393,7 @@ function renderLobbyFriendRoomCard() {
     </div>
   `;
   const actions = document.createElement("div");
-  actions.className = "social-inline-actions";
+  actions.className = "social-inline-actions lobby-room-side-actions-inner";
 
   if (room.status === "playing") {
     const resumeButton = document.createElement("button");
@@ -2418,8 +2423,11 @@ function renderLobbyFriendRoomCard() {
   leaveButton.addEventListener("click", handleLeaveRoom);
   actions.appendChild(leaveButton);
 
-  card.appendChild(actions);
   ui.lobbyFriendRoomCard.appendChild(card);
+  if (ui.lobbyRoomSideActions && actions.childElementCount) {
+    ui.lobbyRoomSideActions.appendChild(actions);
+    ui.lobbyRoomSideActions.classList.remove("hidden");
+  }
 }
 
 function handleDocumentClick(event) {

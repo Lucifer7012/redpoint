@@ -5858,6 +5858,17 @@ select {
     display: none;
   }
 
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-room-side-stack {
+    grid-column: 2;
+    grid-row: 2;
+    min-width: 136px;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 8px;
+    align-self: stretch;
+    align-content: start;
+  }
+
   body.is-lobby-setup .setup-panel.is-lobby-mode .player-options-card.is-friends-mode .lobby-solo-options {
     display: none;
   }
@@ -5891,9 +5902,7 @@ select {
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .dice-inline-row {
-    grid-column: 2;
-    grid-row: 2;
-    align-self: center;
+    align-self: start;
     min-height: 34px;
     margin: 0;
     padding: 0 10px;
@@ -5904,6 +5913,26 @@ select {
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .dice-inline-row span {
     font-size: 11px;
+    white-space: nowrap;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-room-side-actions {
+    min-height: 0;
+    display: grid;
+    align-content: start;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-room-side-actions.hidden {
+    display: none !important;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-room-side-actions-inner {
+    gap: 6px;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-room-side-actions-inner .ghost-btn {
+    min-height: 30px;
+    font-size: 10px;
     white-space: nowrap;
   }
 
