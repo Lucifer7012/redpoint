@@ -347,6 +347,12 @@ function init() {
   ui.authFormCancel?.addEventListener("click", handleCloseEmailAuthForm);
   ui.authLogout.addEventListener("click", handleAuthLogout);
   ui.entryLogout?.addEventListener("click", handleAuthLogout);
+  ui.lobbyAccountId?.addEventListener("click", togglePlayerStatsPopover);
+  ui.lobbyAccountId?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      togglePlayerStatsPopover(event);
+    }
+  });
   ui.authEmail.addEventListener("input", handleAuthEmailInput);
   ui.authRemember?.addEventListener("change", handleAuthRememberChange);
   ui.rechargeBeans?.addEventListener("click", handleRechargeBeans);
@@ -2295,6 +2301,9 @@ function renderPlayerIdHint() {
 function togglePlayerStatsPopover(event) {
   event?.preventDefault();
   event?.stopPropagation();
+  if (!state.authUser || !state.hasBoundGameId || !state.currentPlayerId) {
+    return;
+  }
   state.playerStatsOpen = !state.playerStatsOpen;
   renderAuthControls();
   renderPlayerStatsDashboard();
@@ -2577,6 +2586,11 @@ function renderAuthControls() {
   if (ui.lobbyAccountId) {
     const lobbyId = state.currentPlayerId || (state.hasBoundGameId ? "读取中" : "未创建 ID");
     ui.lobbyAccountId.textContent = signedIn ? `ID: ${lobbyId}` : "ID: 未登录";
+    const canOpenLobbyStats = signedIn && state.hasBoundGameId && state.currentPlayerId;
+    ui.lobbyAccountId.classList.toggle("is-clickable", Boolean(canOpenLobbyStats));
+    ui.lobbyAccountId.setAttribute("aria-expanded", String(state.playerStatsOpen));
+    ui.lobbyAccountId.setAttribute("role", canOpenLobbyStats ? "button" : "text");
+    ui.lobbyAccountId.tabIndex = canOpenLobbyStats ? 0 : -1;
   }
   if (ui.entryLogout) {
     ui.entryLogout.disabled = state.authBusy || !signedIn;
