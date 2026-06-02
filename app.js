@@ -708,64 +708,51 @@ async function refundCurrentUserClosedRoomTicket(room) {
   const profileRef = db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid);
   let refundedAmount = 0;
   let nextBeans = state.currentBeans;
+  const beansRound = room.beansRound || room.gameState?.beansRound || null;
+  const paidUids = Array.isArray(beansRound?.paidUids) ? [...beansRound.paidUids] : [];
+  const refundedUids = Array.isArray(beansRound?.refundedUids) ? [...beansRound.refundedUids] : [];
+  if (!paidUids.includes(state.authUser.uid) || refundedUids.includes(state.authUser.uid)) {
+    return 0;
+  }
 
-  await db.runTransaction(async (transaction) => {
-    const roomSnap = await transaction.get(roomRef);
-    if (!roomSnap.exists) {
-      return;
-    }
-    const data = roomSnap.data();
-    if (data.status !== "closed") {
-      return;
-    }
+  const ticket = Number(beansRound?.ticket || room.ticket || getTicketCost(room.mode));
+  if (!ticket) {
+    return 0;
+  }
 
-    const beansRound = data.beansRound || data.gameState?.beansRound || null;
-    const paidUids = Array.isArray(beansRound?.paidUids) ? [...beansRound.paidUids] : [];
-    const refundedUids = Array.isArray(beansRound?.refundedUids) ? [...beansRound.refundedUids] : [];
-    if (!paidUids.includes(state.authUser.uid) || refundedUids.includes(state.authUser.uid)) {
-      return;
-    }
+  refundedAmount = ticket;
+  nextBeans = normalizeBeans(state.currentBeans, INITIAL_BEANS) + ticket;
+  const nextRound = {
+    ...beansRound,
+    ticket,
+    paidUids: paidUids.filter((uid) => uid !== state.authUser.uid),
+    refundedUids: [...refundedUids, state.authUser.uid],
+  };
+  const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+  const batch = db.batch();
+  const leavingMember = (room.members || []).find((member) => member.uid === state.authUser.uid) || null;
 
-    const ticket = Number(beansRound.ticket || data.ticket || getTicketCost(data.mode));
-    if (!ticket) {
-      return;
-    }
+  batch.set(profileRef, {
+    uid: state.authUser.uid,
+    beans: firebase.firestore.FieldValue.increment(ticket),
+    lastBeansAwardReason: "closed-room-ticket-refund",
+    updatedAt: timestamp,
+    createdAt: timestamp,
+  }, { merge: true });
 
-    const profileSnap = await transaction.get(profileRef);
-    const profileData = profileSnap.exists ? profileSnap.data() : {};
-    const currentBeans = normalizeBeans(profileData.beans, INITIAL_BEANS);
-    const hasStoredBeans = Number.isFinite(Number(profileData.beans));
-    nextBeans = currentBeans + ticket;
-    refundedAmount = ticket;
-
-    const nextRound = {
-      ...beansRound,
-      ticket,
-      paidUids: paidUids.filter((uid) => uid !== state.authUser.uid),
-      refundedUids: [...refundedUids, state.authUser.uid],
-    };
-    const memberUids = (data.memberUids || []).filter((uid) => uid !== state.authUser.uid);
-    const members = (data.members || []).filter((member) => member.uid !== state.authUser.uid);
-    const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-
-    transaction.set(profileRef, {
-      uid: state.authUser.uid,
-      beans: hasStoredBeans ? firebase.firestore.FieldValue.increment(ticket) : nextBeans,
-      lastBeansAwardReason: "closed-room-ticket-refund",
-      updatedAt: timestamp,
-      ...(profileSnap.exists ? {} : { createdAt: timestamp }),
-    }, { merge: true });
-    const roomPatch = {
-      memberUids,
-      members,
-      beansRound: nextRound,
-      updatedAt: timestamp,
-    };
-    if (data.gameState) {
-      roomPatch.gameState = { ...data.gameState, beansRound: nextRound };
-    }
-    transaction.set(roomRef, roomPatch, { merge: true });
-  });
+  const roomPatch = {
+    beansRound: nextRound,
+    updatedAt: timestamp,
+    memberUids: firebase.firestore.FieldValue.arrayRemove(state.authUser.uid),
+  };
+  if (leavingMember) {
+    roomPatch.members = firebase.firestore.FieldValue.arrayRemove(leavingMember);
+  }
+  if (room.gameState) {
+    roomPatch.gameState = { ...room.gameState, beansRound: nextRound };
+  }
+  batch.set(roomRef, roomPatch, { merge: true });
+  await batch.commit();
 
   if (refundedAmount > 0) {
     state.currentBeans = nextBeans;
@@ -1415,72 +1402,63 @@ async function handleLeaveRoom() {
   state.socialBusy = true;
   renderSocialPanel();
   try {
-    await db.runTransaction(async (transaction) => {
-      const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(room.id);
-      const profileRef = db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid);
-      const roomSnap = await transaction.get(roomRef);
-      if (!roomSnap.exists) {
-        return;
-      }
-      const data = roomSnap.data();
-      const memberUids = (data.memberUids || []).filter((uid) => uid !== state.authUser.uid);
-      const members = (data.members || []).filter((member) => member.uid !== state.authUser.uid);
-      const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-      const beansRound = data.beansRound || data.gameState?.beansRound || null;
-      const paidUids = Array.isArray(beansRound?.paidUids) ? [...beansRound.paidUids] : [];
-      const refundedUids = Array.isArray(beansRound?.refundedUids) ? [...beansRound.refundedUids] : [];
-      const shouldRefund = data.status === "waiting"
-        && paidUids.includes(state.authUser.uid)
-        && !refundedUids.includes(state.authUser.uid);
-      let nextRound = beansRound;
+    const roomRef = db.collection(FIRESTORE_COLLECTIONS.rooms).doc(room.id);
+    const profileRef = db.collection(FIRESTORE_COLLECTIONS.profiles).doc(state.authUser.uid);
+    const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+    const batch = db.batch();
+    const beansRound = room.beansRound || room.gameState?.beansRound || null;
+    const paidUids = Array.isArray(beansRound?.paidUids) ? [...beansRound.paidUids] : [];
+    const refundedUids = Array.isArray(beansRound?.refundedUids) ? [...beansRound.refundedUids] : [];
+    const shouldRefund = room.status === "waiting"
+      && paidUids.includes(state.authUser.uid)
+      && !refundedUids.includes(state.authUser.uid);
+    let nextRound = beansRound;
 
-      if (shouldRefund) {
-        const ticket = Number(beansRound.ticket || data.ticket || getTicketCost(data.mode));
-        if (ticket > 0) {
-          const profileSnap = await transaction.get(profileRef);
-          const profileData = profileSnap.exists ? profileSnap.data() : {};
-          const currentBeans = normalizeBeans(profileData.beans, INITIAL_BEANS);
-          const hasStoredBeans = Number.isFinite(Number(profileData.beans));
-          nextBeans = currentBeans + ticket;
-          refundedAmount = ticket;
-          nextRound = {
-            ...beansRound,
-            ticket,
-            paidUids: paidUids.filter((uid) => uid !== state.authUser.uid),
-            refundedUids: [...refundedUids, state.authUser.uid],
-          };
-          transaction.set(profileRef, {
-            uid: state.authUser.uid,
-            beans: hasStoredBeans ? firebase.firestore.FieldValue.increment(ticket) : nextBeans,
-            lastBeansAwardReason: data.hostUid === state.authUser.uid ? "room-close-ticket-refund" : "room-leave-ticket-refund",
-            updatedAt: timestamp,
-            ...(profileSnap.exists ? {} : { createdAt: timestamp }),
-          }, { merge: true });
-        }
-      }
-
-      const roomPatch = {
-        memberUids,
-        members,
-        updatedAt: timestamp,
-      };
-      if (nextRound && nextRound !== beansRound) {
-        roomPatch.beansRound = nextRound;
-        if (data.gameState) {
-          roomPatch.gameState = { ...data.gameState, beansRound: nextRound };
-        }
-      }
-
-      if (!memberUids.length || data.hostUid === state.authUser.uid) {
-        transaction.set(roomRef, {
-          ...roomPatch,
-          status: "closed",
+    if (shouldRefund) {
+      const ticket = Number(beansRound?.ticket || room.ticket || getTicketCost(room.mode));
+      if (ticket > 0) {
+        refundedAmount = ticket;
+        nextBeans = normalizeBeans(state.currentBeans, INITIAL_BEANS) + ticket;
+        nextRound = {
+          ...beansRound,
+          ticket,
+          paidUids: paidUids.filter((uid) => uid !== state.authUser.uid),
+          refundedUids: [...refundedUids, state.authUser.uid],
+        };
+        batch.set(profileRef, {
+          uid: state.authUser.uid,
+          beans: firebase.firestore.FieldValue.increment(ticket),
+          lastBeansAwardReason: room.hostUid === state.authUser.uid ? "room-close-ticket-refund" : "room-leave-ticket-refund",
+          updatedAt: timestamp,
+          createdAt: timestamp,
         }, { merge: true });
-        return;
       }
+    }
 
-      transaction.set(roomRef, roomPatch, { merge: true });
-    });
+    const roomPatch = {
+      updatedAt: timestamp,
+    };
+    if (nextRound && nextRound !== beansRound) {
+      roomPatch.beansRound = nextRound;
+      if (room.gameState) {
+        roomPatch.gameState = { ...room.gameState, beansRound: nextRound };
+      }
+    }
+
+    const currentMemberCount = Array.isArray(room.memberUids) ? room.memberUids.length : 0;
+    const closingRoom = room.hostUid === state.authUser.uid || currentMemberCount <= 1;
+    if (closingRoom) {
+      roomPatch.status = "closed";
+    } else {
+      roomPatch.memberUids = firebase.firestore.FieldValue.arrayRemove(state.authUser.uid);
+      const leavingMember = (room.members || []).find((member) => member.uid === state.authUser.uid) || null;
+      if (leavingMember) {
+        roomPatch.members = firebase.firestore.FieldValue.arrayRemove(leavingMember);
+      }
+    }
+
+    batch.set(roomRef, roomPatch, { merge: true });
+    await batch.commit();
     if (refundedAmount > 0) {
       state.currentBeans = nextBeans;
       await loadCurrentUserProfile();
@@ -1488,7 +1466,8 @@ async function handleLeaveRoom() {
     const refundText = refundedAmount > 0 ? `，已退回门票 ${formatBeans(refundedAmount)}` : "";
     setSocialStatus(room.hostUid === state.authUser.uid ? `已关闭房间${refundText}。` : `已离开房间${refundText}。`);
   } catch (error) {
-    setSocialStatus(`离开房间失败：${formatAuthError(error)}`);
+    const extra = error?.code === "permission-denied" ? " 当前更像是 Firestore 规则拦住了这次写入。" : "";
+    setSocialStatus(`离开房间失败：${formatAuthError(error)}${extra}`);
   } finally {
     state.socialBusy = false;
     await refreshSocialData();
