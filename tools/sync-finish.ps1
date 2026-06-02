@@ -68,6 +68,8 @@ $trackedPaths = @(
   "favicon.png",
   "FEATURE_LOG.md",
   "agent.md",
+  "start-dev.cmd",
+  "finish-dev.cmd",
   "tools",
   "docs"
 )

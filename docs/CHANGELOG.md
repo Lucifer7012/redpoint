@@ -18,6 +18,7 @@
 - 新增项目根目录一键入口 `start-dev.cmd`、`finish-dev.cmd`，可直接双击运行，不需要再手动 `cd` 到项目目录或进入 `tools/`。
 - 文档内记录了新会话必读文件、固定口令、GitHub 跨电脑同步流程、脚本入口、当前项目快照、可继续方向和测试方式。
 - 更新 `docs/PROJECT_STATUS.md`，把 `docs/HANDOFF.md`、`tools/` 和 `agent.md` 纳入上传范围和后续记录规则；同时把固定口令写进 `agent.md` 顶部，作为项目内协作约定。
+- `tools/sync-finish.ps1` 的提交清单已补充 `start-dev.cmd`、`finish-dev.cmd`，确保根目录一键入口本身也会跟着自动同步到 GitHub。
 验证：
 - `node --check app.js` 通过。
 - `tools/sync-start.ps1` 实际执行 `git pull --ff-only` 通过。
