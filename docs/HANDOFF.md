@@ -100,7 +100,7 @@ cd redpoint
 - GitHub：`https://github.com/Lucifer7012/redpoint`
 - 线上测试链接：`https://lucifer7012.github.io/redpoint/`
 - 本地测试地址：`http://127.0.0.1:4173/`
-- 当前缓存版本：`styles.css?v=20260602-lobby-room-actions`，`app.js?v=20260602-lobby-room-actions`
+- 当前缓存版本：`styles.css?v=20260602-lobby-room-actions`，`app.js?v=20260602-room-close-fix`
 - 最近主要改动：手机横屏大厅已改为“单机 / 好友联机”切换；中间模式卡已固定为好友联机高度，切换时不再跳动；好友联机模式卡右侧新增竖向操作区，用来承载“关闭房间 / 离开房间 / 开始联机 / 返回对局”等按钮，避免按钮挤出房间卡边界；关闭房间、离开房间和关闭后当前用户退票已改为基于大厅当前房间快照直接批量写回，绕开部分 Firestore 规则下 `doc.get()` 被拒的问题；右侧好友列表 / 排行榜共用固定外框并滚动；房间邀请弹窗改为进入游戏大厅后才显示。
 
 ## 当前接力状态
