@@ -1088,7 +1088,7 @@ async function refreshSocialData() {
 
   state.socialActiveRoom = normalizedActiveRoom;
   await refreshFriendsList();
-  if (normalizedActiveRoom?.status === "playing" && normalizedActiveRoom.gameState) {
+  if (normalizedActiveRoom?.status === "playing" && normalizedActiveRoom.gameState && canAutoResumePlayingRoom()) {
     if (!(await ensureBeansPaidForRoom(normalizedActiveRoom))) {
       renderSocialPanel();
       renderRoomInviteModal();
@@ -2240,6 +2240,14 @@ function canShowLobbyInviteModal() {
     && Boolean(state.authUser)
     && !state.authEntryActive
     && !needsInitialPlayerIdSetup();
+}
+
+function canAutoResumePlayingRoom() {
+  return Boolean(
+    state.authUser
+    && state.multiplayer.active
+    && state.phase !== "setup"
+  );
 }
 
 function handleOpenEmailAuthForm() {
