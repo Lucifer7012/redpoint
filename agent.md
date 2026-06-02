@@ -1,3 +1,23 @@
+# 项目协作口令
+
+这个项目在不同电脑、不同 Codex 会话之间协作时，默认使用下面两句固定口令：
+
+- `开始前帮我同步最新代码`
+- `改完了，帮我检查并同步到 GitHub`
+
+对应动作：
+
+- 前者对应 `tools\sync-start.cmd` 或 `.\tools\sync-start.ps1`
+- 后者对应 `tools\sync-finish.cmd` 或 `.\tools\sync-finish.ps1 -Message "简短说明这次改动"`
+
+如果是新会话，先读取：
+
+- `docs/HANDOFF.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/CHANGELOG.md`
+- `FEATURE_LOG.md`
+- `agent.md`
+
 # 钓红点扑克游戏设计
 
 “钓红点”也叫“捡红点”，是潮汕、闽南地区一款老少皆宜的经典扑克游戏。它的核心就是“凑十”，用自己手里的牌，去“钓”台面上能凑成十点的牌，最后比谁赢到的红色牌（红桃、方块）总分多。
