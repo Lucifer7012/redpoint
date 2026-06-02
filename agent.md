@@ -9,6 +9,7 @@
 
 - 前者对应 `tools\sync-start.cmd` 或 `.\tools\sync-start.ps1`
 - 后者对应 `tools\sync-finish.cmd` 或 `.\tools\sync-finish.ps1 -Message "简短说明这次改动"`
+- 如果希望 Windows 登录后自动执行“开始前同步”，可在每台电脑各运行一次 `enable-auto-start-sync.cmd`
 
 如果是新会话，先读取：
 

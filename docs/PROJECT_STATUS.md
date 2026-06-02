@@ -4,6 +4,7 @@
 - 新增 `docs/HANDOFF.md`，作为跨电脑开发和新 Codex 会话继续项目时的固定交接入口；新会话应先读 `docs/HANDOFF.md`、`docs/PROJECT_STATUS.md`、`docs/CHANGELOG.md`、`FEATURE_LOG.md` 和 `agent.md`。
 - 新增 `tools/sync-start.ps1`、`tools/sync-finish.ps1` 及对应 `.cmd` 包装器；“开始前帮我同步最新代码 / 改完了，帮我检查并同步到 GitHub”已经固化成项目内固定脚本入口。
 - 项目根目录新增 `start-dev.cmd`、`finish-dev.cmd`，可直接双击作为一键入口。
+- 项目根目录新增 `enable-auto-start-sync.cmd`、`disable-auto-start-sync.cmd`；可把“开始前同步”安装为 Windows 登录后的自动启动动作。
 - `tools/sync-finish.ps1` 已将 `start-dev.cmd`、`finish-dev.cmd` 纳入自动提交清单，后续这两个入口会随项目一起同步。
 - `agent.md` 顶部已加入固定口令和新会话必读文件说明，作为项目内协作约定的一部分。
 - 手机横屏大厅中间“单机 / 好友联机”模式卡已固定为同一高度，按好友联机状态锁定，切换时不再变高或变矮。
@@ -93,6 +94,8 @@ http://127.0.0.1:4173/
 - `favicon.png`
 - `FEATURE_LOG.md`
 - `agent.md`
+- `enable-auto-start-sync.cmd`
+- `disable-auto-start-sync.cmd`
 - `start-dev.cmd`
 - `finish-dev.cmd`
 - `tools`

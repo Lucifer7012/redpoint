@@ -27,6 +27,8 @@
 
 对应的本地脚本入口：
 
+- `enable-auto-start-sync.cmd`
+- `disable-auto-start-sync.cmd`
 - `start-dev.cmd`
 - `finish-dev.cmd`
 - `tools\sync-start.cmd`
@@ -44,6 +46,14 @@
 - `start-dev.cmd`
 - `finish-dev.cmd`
 
+如果你希望 Windows 登录后自动执行“开始前同步”，每台电脑各运行一次：
+
+- `enable-auto-start-sync.cmd`
+
+如果想取消自动开始同步：
+
+- `disable-auto-start-sync.cmd`
+
 ## 跨电脑同步流程
 
 推荐把 GitHub 仓库作为两台电脑之间的唯一同步源：
@@ -59,11 +69,15 @@ cd redpoint
 .\start-dev.cmd
 ```
 
+如果已经运行过 `enable-auto-start-sync.cmd`，那么每次 Windows 登录后会自动执行这一动作，不需要你手动点。
+
 每次结束工作前：
 
 ```powershell
 .\finish-dev.cmd
 ```
+
+结束同步仍建议手动触发，不默认做成开机或关机自动执行。原因很简单：自动 `commit` / `push` 很容易把半完成状态也推上去。
 
 脚本会自动兼容两种结构：
 

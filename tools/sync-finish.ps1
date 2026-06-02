@@ -68,6 +68,8 @@ $trackedPaths = @(
   "favicon.png",
   "FEATURE_LOG.md",
   "agent.md",
+  "enable-auto-start-sync.cmd",
+  "disable-auto-start-sync.cmd",
   "start-dev.cmd",
   "finish-dev.cmd",
   "tools",
