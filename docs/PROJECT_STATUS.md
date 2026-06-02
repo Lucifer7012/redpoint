@@ -1,6 +1,7 @@
 # Project Status
 
-最新状态补充（2026-06-01）：
+最新状态补充（2026-06-02）：
+- 房间邀请弹窗已改为只在真正进入游戏大厅后显示；登录成功但还停留在开始游戏/创建 ID 阶段时，不再提前弹出邀请。
 - 新增 `docs/HANDOFF.md`，作为跨电脑开发和新 Codex 会话继续项目时的固定交接入口；新会话应先读 `docs/HANDOFF.md`、`docs/PROJECT_STATUS.md`、`docs/CHANGELOG.md`、`FEATURE_LOG.md` 和 `agent.md`。
 - 新增 `tools/sync-start.ps1`、`tools/sync-finish.ps1` 及对应 `.cmd` 包装器；“开始前帮我同步最新代码 / 改完了，帮我检查并同步到 GitHub”已经固化成项目内固定脚本入口。
 - 项目根目录新增 `start-dev.cmd`、`finish-dev.cmd`，可直接双击作为一键入口。
@@ -11,9 +12,9 @@
 - 手机横屏大厅中间主入口已改为“单机 / 好友联机”切换；单机显示玩家人数和摇骰子，好友联机显示创建 2 / 3 / 4 人好友房卡片和摇骰子。
 - 右侧“好友列表 / 排行榜”固定外框再次向下延长，手机横屏下可显示更多列表内容。
 - 右侧“好友列表 / 排行榜”切换框已做二次固定高度修正，小屏和手机横屏大厅点击排行榜时不再撑高外框；排行榜和好友列表都在同一外框内滚动。
-- 当前缓存版本：`styles.css?v=20260528-lobby-mode-fixed`，`app.js?v=20260528-lobby-mode-fixed`。
+- 当前缓存版本：`styles.css?v=20260528-lobby-mode-fixed`，`app.js?v=20260602-lobby-invite-gate`。
 
-更新时间：2026-06-01
+更新时间：2026-06-02
 
 项目：钓红点 / redpoint
 

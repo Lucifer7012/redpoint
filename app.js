@@ -2255,6 +2255,13 @@ function isLoginEntryViewActive() {
   return state.phase === "setup" && (!state.authUser || state.authEntryActive);
 }
 
+function canShowLobbyInviteModal() {
+  return state.phase === "setup"
+    && Boolean(state.authUser)
+    && !state.authEntryActive
+    && !needsInitialPlayerIdSetup();
+}
+
 function handleOpenEmailAuthForm() {
   state.authFormOpen = true;
   state.authStatusMessage = ui.authEmail.value.trim()
@@ -6038,6 +6045,12 @@ function renderRoomInviteRejectReasons() {
 
 function renderRoomInviteModal() {
   if (!ui.roomInviteModal) {
+    return;
+  }
+
+  if (!canShowLobbyInviteModal()) {
+    ui.roomInviteModal.classList.add("hidden");
+    ui.roomInviteModal.setAttribute("aria-hidden", "true");
     return;
   }
 
