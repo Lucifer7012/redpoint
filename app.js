@@ -58,6 +58,7 @@ const BEANS_BENEFITS = {
   adAmount: 80,
   adDailyLimit: 5,
 };
+const SOCIAL_REFRESH_INTERVAL_MS = 10000;
 const ROOM_INVITE_REJECT_REASONS = [
   "我现在没空",
   "欢乐豆不够",
@@ -69,6 +70,8 @@ let firebaseApp = null;
 let auth = null;
 let db = null;
 let socialSideResizeObserver = null;
+let socialRefreshInFlight = null;
+let socialRefreshRequested = false;
 
 const ui = {
   heroSection: document.getElementById("hero-section"),
@@ -279,6 +282,8 @@ const state = {
   roomInviteRejectPanelOpen: false,
   socialActiveRoom: null,
   socialUnsubs: [],
+  socialRefreshTimer: null,
+  socialLastRefreshAt: 0,
   multiplayer: {
     active: false,
     roomId: "",
@@ -327,6 +332,8 @@ const state = {
 
 function init() {
   restoreRememberedAuthEmail();
+  document.addEventListener("visibilitychange", handleVisibilitySocialRefresh);
+  window.addEventListener("focus", handleWindowSocialRefresh);
   ui.heroToggle?.addEventListener("click", toggleHeroIntro);
   ui.rulesTriggers.forEach((button) => button.addEventListener("click", openRulesModal));
   ui.rulesBackdrop.addEventListener("click", closeRulesModal);
@@ -776,6 +783,7 @@ function resetSocialState() {
 }
 
 function clearSocialListeners() {
+  stopSocialRefreshLoop();
   state.socialUnsubs.forEach((unsubscribe) => {
     try {
       unsubscribe();
@@ -784,6 +792,43 @@ function clearSocialListeners() {
     }
   });
   state.socialUnsubs = [];
+}
+
+function stopSocialRefreshLoop() {
+  if (state.socialRefreshTimer) {
+    clearInterval(state.socialRefreshTimer);
+    state.socialRefreshTimer = null;
+  }
+}
+
+function startSocialRefreshLoop() {
+  stopSocialRefreshLoop();
+  if (!db || !state.authUser) {
+    return;
+  }
+
+  state.socialRefreshTimer = setInterval(() => {
+    if (!state.authUser || document.hidden) {
+      return;
+    }
+    const staleFor = Date.now() - Number(state.socialLastRefreshAt || 0);
+    if (staleFor < SOCIAL_REFRESH_INTERVAL_MS - 1500) {
+      return;
+    }
+    refreshSocialData().catch(() => {});
+  }, SOCIAL_REFRESH_INTERVAL_MS);
+}
+
+function handleVisibilitySocialRefresh() {
+  if (!document.hidden && state.authUser) {
+    refreshSocialData().catch(() => {});
+  }
+}
+
+function handleWindowSocialRefresh() {
+  if (state.authUser) {
+    refreshSocialData().catch(() => {});
+  }
 }
 
 function clearMultiplayerState() {
@@ -1017,90 +1062,109 @@ async function filterOpenRoomInvites(invites, currentUid) {
 }
 
 async function refreshSocialData() {
-  if (!db || !state.authUser) {
-    resetSocialState();
-    renderSocialPanel();
-    renderRoomInviteModal();
-    return;
+  if (socialRefreshInFlight) {
+    socialRefreshRequested = true;
+    return socialRefreshInFlight;
   }
 
-  const currentUid = state.authUser.uid;
-  const [friendRequestsSnap, roomInvitesSnap, outgoingRoomInvitesSnap, roomsSnap] = await Promise.all([
-    db.collection(FIRESTORE_COLLECTIONS.friendRequests)
-      .where("toUid", "==", currentUid)
-      .where("status", "==", "pending")
-      .get(),
-    db.collection(FIRESTORE_COLLECTIONS.roomInvites)
-      .where("toUid", "==", currentUid)
-      .where("status", "==", "pending")
-      .get(),
-    db.collection(FIRESTORE_COLLECTIONS.roomInvites)
-      .where("fromUid", "==", currentUid)
-      .get(),
-    db.collection(FIRESTORE_COLLECTIONS.rooms)
-      .where("memberUids", "array-contains", currentUid)
-      .get(),
-  ]);
+  socialRefreshInFlight = (async () => {
+    do {
+      socialRefreshRequested = false;
+      if (!db || !state.authUser) {
+        resetSocialState();
+        renderSocialPanel();
+        renderRoomInviteModal();
+        state.socialLastRefreshAt = Date.now();
+        continue;
+      }
 
-  state.socialFriendRequests = friendRequestsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  const pendingRoomInvites = roomInvitesSnap.docs
-    .map((doc) => ({ id: doc.id, ...doc.data() }))
-    .sort((a, b) => getInviteCreatedTime(b) - getInviteCreatedTime(a));
-  state.socialRoomInvites = await filterOpenRoomInvites(pendingRoomInvites, currentUid);
-  state.socialOutgoingRoomInvites = outgoingRoomInvitesSnap.docs
-    .map((doc) => ({ id: doc.id, ...doc.data() }))
-    .sort((a, b) => getInviteCreatedTime(b) - getInviteCreatedTime(a));
+      const currentUid = state.authUser.uid;
+      const [friendRequestsSnap, roomInvitesSnap, outgoingRoomInvitesSnap, roomsSnap] = await Promise.all([
+        db.collection(FIRESTORE_COLLECTIONS.friendRequests)
+          .where("toUid", "==", currentUid)
+          .where("status", "==", "pending")
+          .get(),
+        db.collection(FIRESTORE_COLLECTIONS.roomInvites)
+          .where("toUid", "==", currentUid)
+          .where("status", "==", "pending")
+          .get(),
+        db.collection(FIRESTORE_COLLECTIONS.roomInvites)
+          .where("fromUid", "==", currentUid)
+          .get(),
+        db.collection(FIRESTORE_COLLECTIONS.rooms)
+          .where("memberUids", "array-contains", currentUid)
+          .get(),
+      ]);
 
-  const memberRooms = roomsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  let refundedClosedRoomTicket = 0;
-  for (const room of memberRooms.filter((item) => item.status === "closed")) {
-    refundedClosedRoomTicket += await refundCurrentUserClosedRoomTicket(room);
-  }
-  if (refundedClosedRoomTicket > 0) {
-    await loadCurrentUserProfile();
-    state.socialStatusMessage = `已退回关闭房间门票 ${formatBeans(refundedClosedRoomTicket)}。`;
-    state.socialStatusTone = "success";
-  }
+      state.socialFriendRequests = friendRequestsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const pendingRoomInvites = roomInvitesSnap.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => getInviteCreatedTime(b) - getInviteCreatedTime(a));
+      state.socialRoomInvites = await filterOpenRoomInvites(pendingRoomInvites, currentUid);
+      state.socialOutgoingRoomInvites = outgoingRoomInvitesSnap.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => getInviteCreatedTime(b) - getInviteCreatedTime(a));
 
-  const activeRoom = memberRooms
-    .filter((room) => room.status === "waiting" || room.status === "playing")
-    .sort((a, b) => {
-      const aTime = a.updatedAt?.toMillis ? a.updatedAt.toMillis() : 0;
-      const bTime = b.updatedAt?.toMillis ? b.updatedAt.toMillis() : 0;
-      return bTime - aTime;
-    })[0] || null;
+      const memberRooms = roomsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      let refundedClosedRoomTicket = 0;
+      for (const room of memberRooms.filter((item) => item.status === "closed")) {
+        refundedClosedRoomTicket += await refundCurrentUserClosedRoomTicket(room);
+      }
+      if (refundedClosedRoomTicket > 0) {
+        await loadCurrentUserProfile();
+        state.socialStatusMessage = `已退回关闭房间门票 ${formatBeans(refundedClosedRoomTicket)}。`;
+        state.socialStatusTone = "success";
+      }
 
-  let normalizedActiveRoom = activeRoom;
-  if (activeRoom) {
-    try {
-      const pendingInviteUids = state.socialOutgoingRoomInvites
-        .filter((invite) => invite.roomId === activeRoom.id && invite.status === "pending")
-        .map((invite) => invite.toUid)
-        .filter(Boolean);
-      normalizedActiveRoom = {
-        ...activeRoom,
-        invitedUids: pendingInviteUids,
-      };
-    } catch (error) {
-      normalizedActiveRoom = activeRoom;
-    }
-  }
+      const activeRoom = memberRooms
+        .filter((room) => room.status === "waiting" || room.status === "playing")
+        .sort((a, b) => {
+          const aTime = a.updatedAt?.toMillis ? a.updatedAt.toMillis() : 0;
+          const bTime = b.updatedAt?.toMillis ? b.updatedAt.toMillis() : 0;
+          return bTime - aTime;
+        })[0] || null;
 
-  state.socialActiveRoom = normalizedActiveRoom;
-  await refreshFriendsList();
-  if (normalizedActiveRoom?.status === "playing" && normalizedActiveRoom.gameState && canAutoResumePlayingRoom()) {
-    if (!(await ensureBeansPaidForRoom(normalizedActiveRoom))) {
+      let normalizedActiveRoom = activeRoom;
+      if (activeRoom) {
+        try {
+          const pendingInviteUids = state.socialOutgoingRoomInvites
+            .filter((invite) => invite.roomId === activeRoom.id && invite.status === "pending")
+            .map((invite) => invite.toUid)
+            .filter(Boolean);
+          normalizedActiveRoom = {
+            ...activeRoom,
+            invitedUids: pendingInviteUids,
+          };
+        } catch (error) {
+          normalizedActiveRoom = activeRoom;
+        }
+      }
+
+      state.socialActiveRoom = normalizedActiveRoom;
+      await refreshFriendsList();
+      if (normalizedActiveRoom?.status === "playing" && normalizedActiveRoom.gameState && canAutoResumePlayingRoom()) {
+        if (!(await ensureBeansPaidForRoom(normalizedActiveRoom))) {
+          renderSocialPanel();
+          renderRoomInviteModal();
+          state.socialLastRefreshAt = Date.now();
+          continue;
+        }
+        const localHand = await loadCurrentRoomHand(normalizedActiveRoom.id);
+        applyMultiplayerRoomState(normalizedActiveRoom, localHand);
+      } else if (!normalizedActiveRoom && state.multiplayer.active) {
+        clearMultiplayerState();
+      }
       renderSocialPanel();
       renderRoomInviteModal();
-      return;
-    }
-    const localHand = await loadCurrentRoomHand(normalizedActiveRoom.id);
-    applyMultiplayerRoomState(normalizedActiveRoom, localHand);
-  } else if (!normalizedActiveRoom && state.multiplayer.active) {
-    clearMultiplayerState();
+      state.socialLastRefreshAt = Date.now();
+    } while (socialRefreshRequested);
+  })();
+
+  try {
+    await socialRefreshInFlight;
+  } finally {
+    socialRefreshInFlight = null;
   }
-  renderSocialPanel();
-  renderRoomInviteModal();
 }
 
 function startSocialSync() {
@@ -1124,15 +1188,20 @@ function startSocialSync() {
   ];
 
   listenerConfigs.forEach((query) => {
-    const unsubscribe = query.onSnapshot(async () => {
-      await refreshSocialData();
+    const unsubscribe = query.onSnapshot(() => {
+      refreshSocialData().catch((error) => {
+        setSocialStatus(`同步好友/房间失败：${formatAuthError(error)}`);
+      });
     }, (error) => {
       setSocialStatus(`同步好友/房间失败：${formatAuthError(error)}`);
     });
     state.socialUnsubs.push(unsubscribe);
   });
 
-  refreshSocialData();
+  startSocialRefreshLoop();
+  refreshSocialData().catch((error) => {
+    setSocialStatus(`同步好友/房间失败：${formatAuthError(error)}`);
+  });
 }
 
 async function handleSocialSearch() {
@@ -2278,7 +2347,7 @@ function handleCloseEmailAuthForm() {
   render();
 }
 
-function handleEntryStartGame() {
+async function handleEntryStartGame() {
   if (!state.authUser) {
     handleOpenEmailAuthForm();
     return;
@@ -2290,6 +2359,7 @@ function handleEntryStartGame() {
     : "已进入游戏大厅，可以开始单机或好友房。";
   renderAuthControls();
   render();
+  await refreshSocialData();
 }
 
 function setLobbyPlayMode(mode) {
