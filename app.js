@@ -5340,6 +5340,18 @@ function renderPlayerStatsDashboard() {
         <p>输入一个新的 ID 后开始游戏，成绩会分别记入 2 / 3 / 4 人模式排行榜。</p>
       `;
     } else {
+      const modeStatsRows = LEADERBOARD_MODES.map((modeKey) => {
+        const stats = getModeStats(currentProfile, modeKey);
+        return `
+          <div class="player-stats-mode-row">
+            <strong>${modeKey} 人模式</strong>
+            <span>累计 ${stats.totalScore} 分</span>
+            <span>${stats.rounds} 局</span>
+            <span>胜 ${stats.wins}</span>
+            <span>最高 ${stats.bestScore}</span>
+          </div>
+        `;
+      }).join("");
       ui.playerStatsCard.innerHTML = `
         <div class="player-stats-card__head">
           <strong>账号信息</strong>
@@ -5347,9 +5359,8 @@ function renderPlayerStatsDashboard() {
         </div>
         ${savedProfile ? "" : '<p class="player-stats-card__note">战绩同步中或暂未产生正式战绩，先显示当前账号信息。</p>'}
         <p>当前 ID：${escapeHtml(currentProfile.id)}</p>
-        <p>联机门票：2 人 ${formatBeans(ROOM_TICKETS[2])} · 3 人 ${formatBeans(ROOM_TICKETS[3])} · 4 人 ${formatBeans(ROOM_TICKETS[4])}</p>
-        <p>${mode} 人模式 · 累计积分：${currentModeStats.totalScore} 分 · 局数：${currentModeStats.rounds} 局</p>
-        <p>胜场：${currentModeStats.wins} 局 · 单局最高：${currentModeStats.bestScore} 分 · 上一局：${currentModeStats.lastScore} 分</p>
+        <div class="player-stats-modes">${modeStatsRows}</div>
+        <p>当前榜单：${mode} 人模式 · 上一局：${currentModeStats.lastScore} 分</p>
       `;
       ui.playerStatsCard.querySelector("#player-stats-close")?.addEventListener("click", (event) => {
         event.stopPropagation();
