@@ -11,6 +11,12 @@
 - 后者对应 `tools\sync-finish.cmd` 或 `.\tools\sync-finish.ps1 -Message "简短说明这次改动"`
 - 如果希望 Windows 登录后自动执行“开始前同步”，可在每台电脑各运行一次 `enable-auto-start-sync.cmd`
 
+当前协作收尾约定：
+
+- Codex 每次改完代码或文档后，按公司电脑的格式补齐 `docs/CHANGELOG.md`、`docs/PROJECT_STATUS.md`、`docs/HANDOFF.md` 和 `FEATURE_LOG.md` 等应记录内容。
+- 改完后自动执行检查、提交并同步到 GitHub；优先使用 `tools\sync-finish.cmd` 或 `.\tools\sync-finish.ps1 -Message "本次改动说明"`。
+- 不记录 API Key、密码、Token、Cookie 或任何真实密钥。
+
 如果是新会话，先读取：
 
 - `docs/HANDOFF.md`

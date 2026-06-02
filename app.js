@@ -105,6 +105,7 @@ const ui = {
   authRegister: document.getElementById("auth-register"),
   authFormCancel: document.getElementById("auth-form-cancel"),
   authLogout: document.getElementById("auth-logout"),
+  lobbyAccountId: document.getElementById("lobby-account-id"),
   authStatus: document.getElementById("auth-status"),
   currentBeansBalance: document.getElementById("current-beans-balance"),
   rechargeBeans: document.getElementById("recharge-beans"),
@@ -2528,7 +2529,7 @@ function renderAuthControls() {
       : needsIdSetup
       ? "这是朋友搜索、邀请和排行榜展示用的名字；创建后进入大厅。"
       : signedIn
-        ? "选择单机开局、创建好友房或处理邀请，结束后回到这里继续下一局。"
+        ? state.authStatusMessage || "已进入游戏大厅，可以开始单机或好友房。"
         : "选择邮箱或 Google 账号登录，进入后再开始游戏。";
   }
 
@@ -2560,6 +2561,10 @@ function renderAuthControls() {
   if (ui.entryGameId) {
     const entryId = state.currentPlayerId || (state.hasBoundGameId ? "读取中" : "未创建 ID");
     ui.entryGameId.textContent = `ID: ${entryId}`;
+  }
+  if (ui.lobbyAccountId) {
+    const lobbyId = state.currentPlayerId || (state.hasBoundGameId ? "读取中" : "未创建 ID");
+    ui.lobbyAccountId.textContent = signedIn ? `ID: ${lobbyId}` : "ID: 未登录";
   }
   if (ui.entryLogout) {
     ui.entryLogout.disabled = state.authBusy || !signedIn;
