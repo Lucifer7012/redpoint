@@ -2529,7 +2529,7 @@ function renderAuthControls() {
       : needsIdSetup
       ? "这是朋友搜索、邀请和排行榜展示用的名字；创建后进入大厅。"
       : signedIn
-        ? state.authStatusMessage || "已进入游戏大厅，可以开始单机或好友房。"
+        ? "可开始单机或好友房"
         : "选择邮箱或 Google 账号登录，进入后再开始游戏。";
   }
 

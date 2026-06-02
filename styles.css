@@ -5713,8 +5713,8 @@ select {
     grid-template-columns: 48px minmax(0, 1fr);
     grid-template-rows: auto auto;
     column-gap: 9px;
-    width: 230px;
-    min-height: 62px;
+    width: 220px;
+    min-height: 54px;
     margin: 0;
     padding: 5px 9px 6px 5px;
     border-radius: 18px;
@@ -5753,12 +5753,10 @@ select {
     color: rgba(246, 251, 255, 0.9);
     font-size: 10.5px;
     font-weight: 700;
-    line-height: 1.25;
-    white-space: normal;
+    line-height: 1.18;
+    white-space: nowrap;
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .setup-grid {
@@ -5768,7 +5766,7 @@ select {
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .bean-balance-card {
     position: absolute;
-    left: 254px;
+    left: 244px;
     top: 9px;
     z-index: 6;
     width: 148px;
