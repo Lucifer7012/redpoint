@@ -1951,6 +1951,18 @@ function formatBeans(value) {
   return `${normalizeBeans(value, 0).toLocaleString("zh-CN")} 欢乐豆`;
 }
 
+function formatBeanAmount(value) {
+  const normalized = normalizeBeans(value, 0);
+  if (normalized >= 10000) {
+    const compact = normalized / 10000;
+    const text = compact >= 10 || Number.isInteger(compact)
+      ? Math.round(compact).toLocaleString("zh-CN")
+      : compact.toFixed(1);
+    return `${text}万`;
+  }
+  return normalized.toLocaleString("zh-CN");
+}
+
 function getProfileBeans(profile) {
   return normalizeBeans(profile?.beans, INITIAL_BEANS);
 }
@@ -2570,7 +2582,7 @@ function renderAuthControls() {
     ui.entryLogout.disabled = state.authBusy || !signedIn;
   }
   if (ui.currentBeansBalance) {
-    ui.currentBeansBalance.textContent = signedIn ? formatBeans(shownBeans) : "登录后显示";
+    ui.currentBeansBalance.textContent = signedIn ? formatBeanAmount(shownBeans) : "--";
   }
   if (ui.rechargeBeans) {
     ui.rechargeBeans.disabled = state.authBusy || state.beansBenefitBusy || !signedIn;
@@ -2633,7 +2645,7 @@ function renderBeansCenter() {
   const adLeft = Math.max(0, BEANS_BENEFITS.adDailyLimit - adCount);
   const busy = state.authBusy || state.beansBenefitBusy;
 
-  ui.beansModalBalance.textContent = signedIn ? formatBeans(state.currentBeans) : "登录后显示";
+  ui.beansModalBalance.textContent = signedIn ? formatBeanAmount(state.currentBeans) : "登录后显示";
   if (ui.beansDailyStatus) {
     ui.beansDailyStatus.textContent = signedIn
       ? dailyClaimed
