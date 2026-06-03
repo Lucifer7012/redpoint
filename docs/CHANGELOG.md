@@ -9,6 +9,17 @@
 - 如当前状态、测试方式或后续注意点发生变化，同时更新 `docs/PROJECT_STATUS.md`。
 - 桌面总工作记录同步更新：`C:\Users\OgCloud\Desktop\Codex-Worklog\WORKLOG.md`。
 
+## 2026-06-03
+
+### 开始同步脚本补上工作目录回铺
+
+- 修正旧结构跨电脑协作里 `start-dev.cmd` / `tools/sync-start.ps1` 只会对 `_github_repo` 执行 `git pull --ff-only`、却不会把最新文件同步回当前工作目录的问题。
+- 现在在 legacy 模式下，开始同步除了拉取 GitHub 最新提交，还会把跟踪文件从 `_github_repo` 回铺到项目根目录，并同步刷新 `_github_upload`，避免“看起来已经同步，其实工作目录仍是旧版本”。
+- 这次同步后，本机工作目录已确认和 `_github_repo` 一致，可直接继续在根目录开发。
+验证：
+- 运行 `start-dev.cmd` 后，`_github_repo` 已从 `46d4f2b` 快进到 `849d1fc`。
+- 对比 `app.js`、`styles.css`、`index.html`、`docs/`、`FEATURE_LOG.md` 的文件摘要，项目根目录与 `_github_repo` 已一致。
+
 ## 2026-06-01
 
 ### 跨电脑开发交接文档

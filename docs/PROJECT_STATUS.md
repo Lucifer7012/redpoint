@@ -1,6 +1,7 @@
 # Project Status
 
-最新状态补充（2026-06-02）：
+最新状态补充（2026-06-03）：
+- 跨电脑开始同步脚本已补上旧结构回铺：legacy 模式下执行 `start-dev.cmd` / `tools/sync-start.ps1` 时，不仅会对 `_github_repo` 执行 `git pull --ff-only`，还会把跟踪文件同步回项目根目录和 `_github_upload`，避免工作目录停在旧版本。
 - 手机横屏大厅右上角 `ID: 当前游戏ID` 已恢复账户信息入口；点击顶部 ID 会打开账号信息浮层，显示当前 ID 和三种模式战绩。
 - 账号信息浮层已去掉联机门票说明，改为展示 2 / 3 / 4 人模式的累计积分、局数、胜场和单局最高。
 - 邮箱登录 / 注册表单已改为深色半透明游戏面板，输入框、记住邮箱和登录/注册/收起按钮统一贴近大厅与欢乐豆中心画风。
@@ -27,7 +28,7 @@
 - 右侧“好友列表 / 排行榜”切换框已做二次固定高度修正，小屏和手机横屏大厅点击排行榜时不再撑高外框；排行榜和好友列表都在同一外框内滚动。
 - 当前缓存版本：`styles.css?v=20260602-id-stats-modes`，`app.js?v=20260602-id-stats-modes`。
 
-更新时间：2026-06-02
+更新时间：2026-06-03
 
 项目：钓红点 / redpoint
 
@@ -35,13 +36,14 @@
 
 GitHub：`https://github.com/Lucifer7012/redpoint`
 
-最近同步提交：以 GitHub `main` 最新提交为准。
+最近同步提交：`849d1fc Show all mode stats in ID popover`。
 
 ## 当前状态
 
 - 项目是静态前端游戏，核心文件为 `index.html`、`app.js`、`styles.css`、`favicon.png`。
 - 当前可通过本地 HTTP 服务测试：`http://127.0.0.1:4173/`。
 - 上传 GitHub 的暂存目录为 `_github_upload`。
+- 本机当前工作目录已和 `_github_repo` 同步一致，可直接在项目根目录继续开发。
 - 详细功能记录保留在 `FEATURE_LOG.md`，跨电脑和跨会话交接入口为 `docs/HANDOFF.md`，本目录下 `CHANGELOG.md` 只写摘要。
 
 ## 当前功能
