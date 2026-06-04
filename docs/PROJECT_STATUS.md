@@ -166,3 +166,15 @@ Testing used this round:
 - `node --check app.js`
 - Local static server: `http://127.0.0.1:4173/`
 - Real touch/mobile emulation for Android-like landscape viewports (`844 x 390`, `915 x 412`)
+
+## 2026-06-04 Mobile Side Box Cleanup
+
+- Current cache version: `styles.css?v=20260604-mobile-side-box-fix`, `app.js?v=20260604-mobile-side-box-fix`
+- Latest mobile-landscape bottom structure:
+  - left side box = status prompt + draw pile
+  - center = action buttons + hand cards
+  - right side box = recent action only
+- Mobile landscape `selection-metrics` is intentionally hidden in this mode to avoid the right-side box being clipped again.
+- Latest preview screenshots refreshed:
+  - `artifacts/layout-check/mobile-layout-844x390.png`
+  - `artifacts/layout-check/mobile-layout-915x412.png`

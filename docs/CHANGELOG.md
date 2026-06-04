@@ -627,3 +627,19 @@ Verification:
 - Refreshed preview screenshots:
   - `artifacts/layout-check/mobile-layout-844x390.png`
   - `artifacts/layout-check/mobile-layout-915x412.png`
+
+### 2026-06-04 Mobile Side Box Cleanup
+
+- Followed up on the touch-landscape in-game layout again after the user confirmed the previous version still looked wrong on the real `915 x 412` Android landscape viewport.
+- Simplified the bottom side regions to better match the requested structure:
+  - left bottom box now focuses only on status prompt + draw pile
+  - right bottom box now focuses only on recent action
+  - mobile landscape `selection-metrics` is hidden instead of being squeezed into the right box
+- Reworked the left box from two stacked mini-cards into one combined region so the status text and draw pile stop fighting for vertical space.
+- Compressed the left-box typography and draw-pile visuals, brightened the status text, and adjusted spacing so the side boxes no longer look cut off.
+- Bumped cache references to `20260604-mobile-side-box-fix` in `index.html` and the preview helper page.
+
+Verification:
+
+- `node --check app.js` passed.
+- Re-exported mobile landscape preview screenshots for `844 x 390` and `915 x 412` under real touch/mobile emulation.

@@ -6734,16 +6734,16 @@ select {
 
   body.is-game-view .play-stage {
     --game-side-inset: clamp(88px, 10.8vw, 102px);
-    --game-side-slot-width: clamp(124px, 15.8vw, 146px);
+    --game-side-slot-width: clamp(136px, 16.6vw, 154px);
     --game-side-gap: 6px;
-    --game-hand-panel-height: calc(110px + env(safe-area-inset-bottom, 0px));
+    --game-hand-panel-height: calc(108px + env(safe-area-inset-bottom, 0px));
     --game-public-card-width: clamp(38px, 4.6vw, 43px);
-    --game-action-card-width: clamp(36px, 3.9vw, 40px);
-    --game-hand-card-width: clamp(46px, 4.9vw, 52px);
+    --game-action-card-width: clamp(36px, 4vw, 42px);
+    --game-hand-card-width: clamp(44px, 4.7vw, 50px);
     --game-card-ratio: 18 / 25;
     --game-panel-side-padding: 6px;
     --game-panel-vertical-padding: 5px;
-    --game-button-row-height: 27px;
+    --game-button-row-height: 26px;
     position: relative;
     height: 100%;
     min-height: 0;
@@ -6957,10 +6957,8 @@ select {
     padding: 0;
     display: grid;
     grid-template-columns: var(--game-side-slot-width) minmax(0, 1fr) var(--game-side-slot-width);
-    grid-template-rows: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "draw . stage"
-      "draw . metrics";
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: "draw . stage";
     gap: var(--game-side-gap);
     overflow: hidden;
     background: none;
@@ -6982,16 +6980,23 @@ select {
 
   body.is-game-view .feedback-banner {
     grid-area: draw;
-    align-self: end;
+    align-self: start;
     min-width: 0;
-    margin: 0;
-    max-height: 38px;
-    padding: 6px 8px;
+    margin: 5px 7px 0;
+    min-height: 0;
+    max-height: none;
+    padding: 0;
     overflow: hidden;
-    border-radius: 10px;
-    font-size: 10px;
+    border: 0;
+    background: none;
+    font-size: 8px;
     font-weight: 800;
     line-height: 1.2;
+    color: #eef9f3;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.24);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     white-space: normal;
     text-overflow: clip;
   }
@@ -7001,11 +7006,13 @@ select {
     align-self: stretch;
     min-height: 0;
     height: 100%;
-    padding: 6px 8px;
+    padding: 6px 7px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 8px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    align-content: start;
+    justify-items: center;
+    gap: 5px;
     overflow: hidden;
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.12);
@@ -7014,9 +7021,10 @@ select {
   }
 
   body.is-game-view .action-stage__meta {
+    width: 100%;
     min-width: 0;
     display: grid;
-    gap: 2px;
+    gap: 1px;
   }
 
   body.is-game-view .action-stage__meta .status-label {
@@ -7031,28 +7039,25 @@ select {
     display: -webkit-box;
     overflow: hidden;
     color: #fff8ec;
-    font-size: 11.5px;
+    font-size: 10.5px;
     line-height: 1.15;
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
   }
 
   body.is-game-view .action-stage__meta p:not(.status-label) {
-    display: -webkit-box;
-    overflow: hidden;
-    font-size: 9px;
-    line-height: 1.1;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
+    display: none;
   }
 
   body.is-game-view .action-stage__cards {
     min-height: 0;
-    max-width: calc((var(--game-action-card-width) * 2) + 6px);
+    width: 100%;
+    max-width: none;
     display: flex;
     flex-wrap: nowrap;
     gap: 4px;
-    justify-content: flex-end;
+    justify-content: center;
+    align-items: center;
     overflow: hidden;
   }
 
@@ -7070,18 +7075,21 @@ select {
     grid-area: draw;
     margin: 0;
     min-height: 0;
-    padding-bottom: 42px;
+    display: flex;
+    align-items: stretch;
+    padding-bottom: 0;
     pointer-events: auto;
   }
 
   body.is-game-view .draw-pile {
     min-height: 0;
+    width: 100%;
     height: 100%;
-    padding: 10px 8px 8px;
+    padding: 16px 6px 4px;
     display: grid;
     justify-items: center;
     align-content: center;
-    gap: 6px;
+    gap: 2px;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     background:
@@ -7091,8 +7099,8 @@ select {
 
   body.is-game-view .draw-pile__stack {
     display: block;
-    width: 34px;
-    height: 46px;
+    width: 26px;
+    height: 36px;
   }
 
   body.is-game-view .draw-pile__card {
@@ -7108,48 +7116,16 @@ select {
 
   body.is-game-view .draw-pile__meta span,
   body.is-game-view .draw-pile__meta strong {
-    font-size: 10px;
-    line-height: 1.1;
-  }
-
-  body.is-game-view .draw-pile__meta strong {
-    font-size: 15px;
-  }
-
-  body.is-game-view .selection-metrics {
-    grid-area: metrics;
-    margin: 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 4px;
-    pointer-events: auto;
-  }
-
-  body.is-game-view .selection-metrics > div {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-    padding: 4px 6px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.14);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-  }
-
-  body.is-game-view .selection-metrics span {
-    display: block;
-    min-width: 0;
     font-size: 8px;
     line-height: 1.1;
   }
 
-  body.is-game-view .selection-metrics strong {
-    display: block;
-    margin-top: 0;
-    font-size: 10px;
-    line-height: 1.1;
-    color: #fff8ec;
-    text-align: right;
+  body.is-game-view .draw-pile__meta strong {
+    font-size: 11px;
+  }
+
+  body.is-game-view .selection-metrics {
+    display: none !important;
   }
 
   body.is-game-view .table-board .card-rank,
@@ -7221,7 +7197,7 @@ select {
   body.is-game-view .human-panel .ghost-btn {
     min-height: var(--game-button-row-height);
     padding: 0 6px;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 800;
     white-space: nowrap;
   }

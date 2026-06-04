@@ -171,3 +171,13 @@ http://127.0.0.1:4173/
 Suggested next step if the user keeps iterating on this area:
 
 - Use the new screenshots as the visual baseline and only micro-adjust spacing, text density, and box balance instead of changing the three-part bottom structure again.
+
+## 2026-06-04 Mobile Side Box Cleanup
+
+- The prior mobile landscape version was still unacceptable in the real online viewport: the left and right bottom boxes looked clipped and overloaded.
+- The current direction is now intentionally simpler and closer to the user request:
+  - left box only handles status + draw pile
+  - right box only handles recent action
+  - no extra rule/selection metrics are shown in the right box on touch-landscape mode
+- Cache version for this follow-up is `20260604-mobile-side-box-fix`.
+- If more tweaks are needed next, keep working from the current three-part bottom structure and only adjust spacing, typography, and box sizing.
