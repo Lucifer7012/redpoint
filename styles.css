@@ -4828,416 +4828,6 @@ select {
   }
 }
 
-@media (max-width: 960px) and (orientation: landscape) {
-  body.is-game-view .center-stage {
-    z-index: 42 !important;
-  }
-
-  body.is-game-view .action-stage {
-    position: absolute !important;
-    right: 0 !important;
-    bottom: 70px !important;
-    z-index: 45 !important;
-    width: var(--game-right-slot-width, clamp(244px, 26vw, 278px)) !important;
-    height: calc(var(--game-bottom-band-height, 184px) - 72px) !important;
-    min-height: 0 !important;
-    padding: 9px 10px !important;
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) 48px !important;
-    grid-template-rows: minmax(0, 1fr) !important;
-    align-items: center !important;
-    column-gap: 8px !important;
-    overflow: hidden !important;
-    color: #fff8ec !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    transform: none !important;
-    pointer-events: auto !important;
-  }
-
-  body.is-game-view .action-stage__meta,
-  body.is-game-view .action-stage__cards {
-    opacity: 1 !important;
-    visibility: visible !important;
-    transform: none !important;
-  }
-
-  body.is-game-view .action-stage__meta {
-    grid-column: 1 !important;
-    grid-row: 1 !important;
-    display: grid !important;
-    min-width: 0 !important;
-    gap: 3px !important;
-    justify-items: start !important;
-    align-self: start !important;
-    color: #fff8ec !important;
-    text-align: left !important;
-  }
-
-  body.is-game-view .action-stage__meta .status-label,
-  body.is-game-view .action-stage__meta h3,
-  body.is-game-view .action-stage__meta p {
-    display: block !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    overflow: hidden !important;
-    color: #fff8ec !important;
-    text-overflow: ellipsis !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.26) !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-
-  body.is-game-view .action-stage__meta .status-label {
-    font-size: 8px !important;
-    line-height: 1 !important;
-    white-space: nowrap !important;
-  }
-
-  body.is-game-view .action-stage__meta h3 {
-    font-size: 11px !important;
-    line-height: 1.15 !important;
-    white-space: normal !important;
-  }
-
-  body.is-game-view .action-stage__meta p:not(.status-label) {
-    font-size: 8px !important;
-    line-height: 1.15 !important;
-    white-space: normal !important;
-  }
-
-  body.is-game-view .action-stage__cards {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-    width: 48px !important;
-    min-width: 48px !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    overflow: hidden !important;
-  }
-
-  body.is-game-view .action-stage__cards .card-btn {
-    flex: 0 0 auto !important;
-    width: 40px !important;
-    min-width: 40px !important;
-    min-height: auto !important;
-    aspect-ratio: var(--game-card-ratio, 18 / 25) !important;
-    padding: 4px !important;
-    border-radius: 9px !important;
-  }
-}
-
-@media (max-width: 960px) and (orientation: landscape) {
-  body.is-game-view {
-    width: 100vw !important;
-    height: 100dvh !important;
-    overflow: hidden !important;
-  }
-
-  body.is-game-view .app-shell {
-    width: 100vw !important;
-    height: 100dvh !important;
-    margin: 0 !important;
-    padding: 4px 6px 0 !important;
-    overflow: hidden !important;
-  }
-
-  body.is-game-view .game-layout {
-    height: 100% !important;
-    min-height: 0 !important;
-    gap: 0 !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-rows: minmax(0, 1fr) !important;
-    overflow: hidden !important;
-  }
-
-  body.is-game-view .play-stage {
-    --game-side-inset: clamp(88px, 10.8vw, 102px);
-    --game-left-slot-width: clamp(180px, 20vw, 208px);
-    --game-right-slot-width: clamp(244px, 26vw, 278px);
-    --game-side-gap: 6px;
-    --game-bottom-band-height: calc(184px + env(safe-area-inset-bottom, 0px));
-    --game-hand-panel-height: var(--game-bottom-band-height);
-    --game-public-card-width: clamp(36px, 4.2vw, 40px);
-    --game-hand-card-width: clamp(44px, 4.7vw, 50px);
-    --game-card-ratio: 18 / 25;
-    --game-panel-side-padding: 6px;
-    --game-panel-vertical-padding: 5px;
-    --game-button-row-height: 26px;
-    position: relative !important;
-    height: 100% !important;
-    min-height: 0 !important;
-    display: grid !important;
-    grid-template-rows: 28px minmax(0, 1fr) !important;
-    gap: 4px !important;
-    overflow: hidden !important;
-  }
-
-  body.is-game-view .table-topbar {
-    min-height: 0 !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    padding: 0 !important;
-    position: relative !important;
-    z-index: 50 !important;
-  }
-
-  body.is-game-view .table-topbar > div:first-child,
-  body.is-game-view .status-strip {
-    display: none !important;
-  }
-
-  body.is-game-view .topbar-actions {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    justify-content: flex-end !important;
-    gap: 5px !important;
-    width: 100% !important;
-    height: 100% !important;
-  }
-
-  body.is-game-view .topbar-actions .ghost-btn {
-    width: auto !important;
-    min-height: 26px !important;
-    padding: 0 8px !important;
-    font-size: 10px !important;
-    white-space: nowrap !important;
-  }
-
-  body.is-game-view .table-board {
-    position: relative !important;
-    display: block !important;
-    min-height: 0 !important;
-    height: 100% !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-  }
-
-  body.is-game-view .table-public-area {
-    position: absolute !important;
-    top: 52px !important;
-    right: var(--game-side-inset) !important;
-    bottom: calc(var(--game-bottom-band-height) + 14px) !important;
-    left: var(--game-side-inset) !important;
-    transform: none !important;
-    width: auto !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    padding: 6px 8px !important;
-    overflow: hidden !important;
-  }
-
-  body.is-game-view .table-public-head {
-    display: none !important;
-  }
-
-  body.is-game-view .table-public-slot {
-    height: 100% !important;
-    min-height: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 0 !important;
-  }
-
-  body.is-game-view .table-cards {
-    width: 100% !important;
-    max-width: calc((var(--game-public-card-width) * 6) + 24px) !important;
-    height: 100% !important;
-    min-height: 0 !important;
-    display: flex !important;
-    flex-wrap: wrap !important;
-    align-content: center !important;
-    justify-content: center !important;
-    gap: 4px !important;
-    padding: 0 !important;
-    overflow-y: auto !important;
-  }
-
-  body.is-game-view .table-cards .card-btn {
-    flex: 0 0 auto !important;
-    width: var(--game-public-card-width) !important;
-    min-width: var(--game-public-card-width) !important;
-    min-height: auto !important;
-    aspect-ratio: var(--game-card-ratio) !important;
-    padding: 4px 5px !important;
-  }
-
-  body.is-game-view .center-stage {
-    position: absolute !important;
-    left: calc(6px + var(--game-panel-side-padding)) !important;
-    right: calc(6px + var(--game-panel-side-padding)) !important;
-    bottom: 4px !important;
-    width: auto !important;
-    height: var(--game-bottom-band-height) !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    display: grid !important;
-    grid-template-columns: var(--game-left-slot-width) minmax(0, 1fr) var(--game-right-slot-width) !important;
-    grid-template-rows: auto minmax(0, 1fr) !important;
-    grid-template-areas:
-      "feedback . stage"
-      "draw . stage" !important;
-    gap: var(--game-side-gap) !important;
-    overflow: hidden !important;
-    background: none !important;
-    border: none !important;
-    z-index: 30 !important;
-    pointer-events: none !important;
-  }
-
-  body.is-game-view .center-stage .compact-head,
-  body.is-game-view .draw-preview {
-    display: none !important;
-  }
-
-  body.is-game-view .feedback-banner {
-    grid-area: feedback !important;
-    display: -webkit-box !important;
-    margin: 0 !important;
-    padding: 6px 10px 4px !important;
-    font-size: 10px !important;
-    line-height: 1.2 !important;
-    -webkit-line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-  }
-
-  body.is-game-view .draw-zone {
-    grid-area: draw !important;
-    display: flex !important;
-    align-items: stretch !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    pointer-events: auto !important;
-  }
-
-  body.is-game-view .selection-metrics {
-    position: absolute !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: var(--game-right-slot-width) !important;
-    height: 62px !important;
-    margin: 0 !important;
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 7px !important;
-    pointer-events: auto !important;
-    z-index: 41 !important;
-  }
-
-  body.is-game-view .human-panel {
-    position: absolute !important;
-    left: calc(6px + var(--game-panel-side-padding) + var(--game-left-slot-width) + var(--game-side-gap)) !important;
-    right: calc(6px + var(--game-panel-side-padding) + var(--game-right-slot-width) + var(--game-side-gap)) !important;
-    bottom: 4px !important;
-    z-index: 26 !important;
-    height: var(--game-bottom-band-height) !important;
-    padding: var(--game-panel-vertical-padding) calc(var(--game-panel-side-padding) + 2px) !important;
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-rows: var(--game-button-row-height) minmax(0, 1fr) !important;
-    gap: 4px !important;
-    overflow: hidden !important;
-  }
-
-  body.is-game-view .action-stage {
-    position: absolute !important;
-    right: 0 !important;
-    bottom: 70px !important;
-    z-index: 40 !important;
-    width: var(--game-right-slot-width, clamp(244px, 26vw, 278px)) !important;
-    height: calc(var(--game-bottom-band-height, 184px) - 72px) !important;
-    min-height: 0 !important;
-    padding: 9px 10px !important;
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) 48px !important;
-    grid-template-rows: minmax(0, 1fr) !important;
-    align-items: center !important;
-    column-gap: 8px !important;
-    overflow: hidden !important;
-    color: #fff8ec !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    transform: none !important;
-  }
-
-  body.is-game-view .action-stage__meta,
-  body.is-game-view .action-stage__cards {
-    opacity: 1 !important;
-    visibility: visible !important;
-    transform: none !important;
-  }
-
-  body.is-game-view .action-stage__meta {
-    grid-column: 1 !important;
-    grid-row: 1 !important;
-    display: grid !important;
-    min-width: 0 !important;
-    gap: 3px !important;
-    justify-items: start !important;
-    align-self: start !important;
-    color: #fff8ec !important;
-    text-align: left !important;
-  }
-
-  body.is-game-view .action-stage__meta .status-label,
-  body.is-game-view .action-stage__meta h3,
-  body.is-game-view .action-stage__meta p {
-    display: block !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    overflow: hidden !important;
-    color: #fff8ec !important;
-    text-overflow: ellipsis !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.26) !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-
-  body.is-game-view .action-stage__meta .status-label {
-    font-size: 8px !important;
-    line-height: 1 !important;
-    white-space: nowrap !important;
-  }
-
-  body.is-game-view .action-stage__meta h3 {
-    font-size: 11px !important;
-    line-height: 1.15 !important;
-    white-space: normal !important;
-  }
-
-  body.is-game-view .action-stage__meta p:not(.status-label) {
-    font-size: 8px !important;
-    line-height: 1.15 !important;
-    white-space: normal !important;
-  }
-
-  body.is-game-view .action-stage__cards {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-    width: 48px !important;
-    min-width: 48px !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    overflow: hidden !important;
-  }
-
-  body.is-game-view .action-stage__cards .card-btn {
-    flex: 0 0 auto !important;
-    width: 40px !important;
-    min-width: 40px !important;
-    min-height: auto !important;
-    aspect-ratio: var(--game-card-ratio, 18 / 25) !important;
-    padding: 4px !important;
-    border-radius: 9px !important;
-  }
-}
-
 @media (max-width: 380px) {
   body.is-game-view .app-shell {
     padding-bottom: calc(212px + env(safe-area-inset-bottom, 0px));
@@ -7842,5 +7432,105 @@ select {
   body.is-game-view .events-panel,
   body.is-game-view .result-panel {
     display: none !important;
+  }
+}
+
+@media (max-width: 960px) and (orientation: landscape) {
+  body.is-game-view .center-stage {
+    z-index: 42 !important;
+  }
+
+  body.is-game-view .action-stage {
+    position: absolute !important;
+    right: 0 !important;
+    bottom: 70px !important;
+    z-index: 45 !important;
+    width: var(--game-right-slot-width, clamp(244px, 26vw, 278px)) !important;
+    height: calc(var(--game-bottom-band-height, 184px) - 72px) !important;
+    min-height: 0 !important;
+    padding: 9px 10px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 48px !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    align-items: center !important;
+    column-gap: 8px !important;
+    overflow: hidden !important;
+    color: #fff8ec !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    pointer-events: auto !important;
+  }
+
+  body.is-game-view .action-stage__meta,
+  body.is-game-view .action-stage__cards {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+  }
+
+  body.is-game-view .action-stage__meta {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    display: grid !important;
+    min-width: 0 !important;
+    gap: 3px !important;
+    justify-items: start !important;
+    align-self: start !important;
+    color: #fff8ec !important;
+    text-align: left !important;
+  }
+
+  body.is-game-view .action-stage__meta .status-label,
+  body.is-game-view .action-stage__meta h3,
+  body.is-game-view .action-stage__meta p {
+    display: block !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    color: #fff8ec !important;
+    text-overflow: ellipsis !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.26) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  body.is-game-view .action-stage__meta .status-label {
+    font-size: 8px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  body.is-game-view .action-stage__meta h3 {
+    font-size: 11px !important;
+    line-height: 1.15 !important;
+    white-space: normal !important;
+  }
+
+  body.is-game-view .action-stage__meta p:not(.status-label) {
+    font-size: 8px !important;
+    line-height: 1.15 !important;
+    white-space: normal !important;
+  }
+
+  body.is-game-view .action-stage__cards {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: 48px !important;
+    min-width: 48px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+  }
+
+  body.is-game-view .action-stage__cards .card-btn {
+    flex: 0 0 auto !important;
+    width: 40px !important;
+    min-width: 40px !important;
+    min-height: auto !important;
+    aspect-ratio: var(--game-card-ratio, 18 / 25) !important;
+    padding: 4px !important;
+    border-radius: 9px !important;
   }
 }

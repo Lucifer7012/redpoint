@@ -15,10 +15,11 @@
 
 - 确认上一轮兜底规则仍放在后续触屏横屏规则之前，导致在 `915 x 412` 这类预览尺寸里继续被后面的 `.action-stage` 规则覆盖；这是实现顺序问题，不是用户设备或操作问题。
 - 将最终覆盖规则补到 `styles.css` 文件末尾，确保普通横屏和触屏横屏都不会再覆盖右侧最近动作显示。
-- 缓存版本更新为 `20260604-landscape-final-override`。
+- 清理掉此前误加的整套横屏强制布局，避免预览图里公共牌和对手区被压坏；只保留文件末尾针对右侧最近动作的最小覆盖。
+- 缓存版本更新为 `20260604-landscape-preview-verified`。
 验证：
 - `node --check app.js` 通过。
-- 使用本机 Chrome headless 生成并检查 `artifacts/layout-check/chrome-final-915x412.png` 与 `artifacts/layout-check/chrome-final-844x390.png`，两张图里右侧最近动作文字和动作牌均可见。
+- 使用本机 Chrome + Playwright 系统浏览器、`isMobile: true`、`hasTouch: true` 生成并检查 `artifacts/layout-check/chrome-final-915x412.png` 与 `artifacts/layout-check/chrome-final-844x390.png`，两张图里右侧最近动作文字和动作牌均可见，公共牌区未被压坏。
 
 ### 横屏预览模式兜底显示右侧最近动作
 

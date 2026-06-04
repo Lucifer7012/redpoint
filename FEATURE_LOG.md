@@ -10,14 +10,15 @@
 - 改动：
   - 将最终右侧最近动作覆盖规则补到 `styles.css` 文件末尾。
   - 普通横屏和触屏横屏都强制保留右侧最近动作文字区、动作牌区和三张指标卡。
-  - 缓存版本更新为 `20260604-landscape-final-override`。
+  - 清理此前误加的整套横屏强制布局，只保留右侧最近动作最小覆盖。
+  - 缓存版本更新为 `20260604-landscape-preview-verified`。
 - 涉及文件：
   - `index.html`
   - `styles.css`
   - `artifacts/layout-check/public-area-preview.html`
 - 验证：
   - `node --check app.js` 通过。
-  - 本机 Chrome headless 生成 `artifacts/layout-check/chrome-final-915x412.png` 和 `artifacts/layout-check/chrome-final-844x390.png`，两张图均确认右侧最近动作和动作牌可见。
+  - 本机 Chrome + Playwright 系统浏览器、`isMobile: true`、`hasTouch: true` 生成 `artifacts/layout-check/chrome-final-915x412.png` 和 `artifacts/layout-check/chrome-final-844x390.png`，两张图均确认右侧最近动作和动作牌可见，公共牌区未被压坏。
 
 ### 横屏响应式预览兜底规则
 
