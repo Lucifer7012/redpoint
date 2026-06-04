@@ -4,6 +4,21 @@
 
 ## 2026-06-04
 
+### 横屏最终覆盖顺序修正
+
+- 背景：用户再次用 `915 x 412` 截图确认右侧最近动作仍不见；排查后确认上一轮兜底规则位置仍早于后续触屏横屏规则，所以被覆盖。
+- 改动：
+  - 将最终右侧最近动作覆盖规则补到 `styles.css` 文件末尾。
+  - 普通横屏和触屏横屏都强制保留右侧最近动作文字区、动作牌区和三张指标卡。
+  - 缓存版本更新为 `20260604-landscape-final-override`。
+- 涉及文件：
+  - `index.html`
+  - `styles.css`
+  - `artifacts/layout-check/public-area-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 本机 Chrome headless 生成 `artifacts/layout-check/chrome-final-915x412.png` 和 `artifacts/layout-check/chrome-final-844x390.png`，两张图均确认右侧最近动作和动作牌可见。
+
 ### 横屏响应式预览兜底规则
 
 - 背景：用户使用电脑 Chrome DevTools 的 `844 x 390` 响应式预览时，命中的媒体条件和此前主要修改的触屏专用分支不同，导致线上看起来没变化。

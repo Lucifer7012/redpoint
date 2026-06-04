@@ -11,6 +11,15 @@
 
 ## 2026-06-04
 
+### 横屏右侧最近动作最终覆盖顺序修正
+
+- 确认上一轮兜底规则仍放在后续触屏横屏规则之前，导致在 `915 x 412` 这类预览尺寸里继续被后面的 `.action-stage` 规则覆盖；这是实现顺序问题，不是用户设备或操作问题。
+- 将最终覆盖规则补到 `styles.css` 文件末尾，确保普通横屏和触屏横屏都不会再覆盖右侧最近动作显示。
+- 缓存版本更新为 `20260604-landscape-final-override`。
+验证：
+- `node --check app.js` 通过。
+- 使用本机 Chrome headless 生成并检查 `artifacts/layout-check/chrome-final-915x412.png` 与 `artifacts/layout-check/chrome-final-844x390.png`，两张图里右侧最近动作文字和动作牌均可见。
+
 ### 横屏预览模式兜底显示右侧最近动作
 
 - 确认 Chrome 响应式预览和真实触屏横屏会命中不同媒体条件；之前主要改了触屏专用分支，导致用户当前电脑 DevTools 的 `844 x 390` 响应式预览看起来几乎没变化。
