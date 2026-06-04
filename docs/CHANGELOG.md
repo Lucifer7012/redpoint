@@ -643,3 +643,17 @@ Verification:
 
 - `node --check app.js` passed.
 - Re-exported mobile landscape preview screenshots for `844 x 390` and `915 x 412` under real touch/mobile emulation.
+
+### 2026-06-04 Mobile Side Panels Expanded
+
+- Reworked the touch-landscape in-game side regions again based on the desktop/web layout structure instead of continuing to compress them.
+- The left side region is now intentionally larger and restores the desktop-style split of status prompt above and draw pile below.
+- The right side region is also enlarged and restores the desktop-style composition of recent action above plus three compact metric cards below.
+- The center hand area now yields more width to the two side regions so they can exist as real panels instead of clipped slivers.
+- Rebuilt `artifacts/layout-check/public-area-preview.html` with clean preview content so layout verification is no longer distorted by broken placeholder text.
+- Bumped cache references to `20260604-mobile-side-panels-expanded`.
+
+Verification:
+
+- `node --check app.js` passed.
+- Re-exported landscape touch previews for `844 x 390` and `915 x 412`.

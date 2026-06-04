@@ -181,3 +181,10 @@ Suggested next step if the user keeps iterating on this area:
   - no extra rule/selection metrics are shown in the right box on touch-landscape mode
 - Cache version for this follow-up is `20260604-mobile-side-box-fix`.
 - If more tweaks are needed next, keep working from the current three-part bottom structure and only adjust spacing, typography, and box sizing.
+
+## 2026-06-04 Mobile Side Panels Expanded
+
+- Latest direction for the mobile landscape in-game layout is no longer “compress side boxes until they fit”. It now explicitly follows the older web layout structure and gives both side panels dedicated space.
+- Left panel is enlarged for status + draw pile. Right panel is enlarged for recent action + metric cards. The center hand area is narrowed accordingly.
+- `artifacts/layout-check/public-area-preview.html` was rebuilt cleanly so future layout checks are easier to trust.
+- Latest cache version is `20260604-mobile-side-panels-expanded`.

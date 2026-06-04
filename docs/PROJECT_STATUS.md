@@ -178,3 +178,14 @@ Testing used this round:
 - Latest preview screenshots refreshed:
   - `artifacts/layout-check/mobile-layout-844x390.png`
   - `artifacts/layout-check/mobile-layout-915x412.png`
+
+## 2026-06-04 Mobile Side Panels Expanded
+
+- Current cache version: `styles.css?v=20260604-mobile-side-panels-expanded`, `app.js?v=20260604-mobile-side-panels-expanded`
+- Landscape touch layout now uses enlarged side panels modeled after the desktop/web structure:
+  - left panel = status prompt + draw pile
+  - center = action buttons + hand cards
+  - right panel = recent action + three metric cards
+- Preview helper was rebuilt with clean content and refreshed screenshots:
+  - `artifacts/layout-check/mobile-layout-844x390.png`
+  - `artifacts/layout-check/mobile-layout-915x412.png`

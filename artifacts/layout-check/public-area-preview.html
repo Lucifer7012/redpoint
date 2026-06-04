@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Public Area Preview</title>
-  <link rel="stylesheet" href="../../styles.css?v=20260604-mobile-side-box-fix">
+  <link rel="stylesheet" href="../../styles.css?v=20260604-mobile-side-panels-expanded">
   <style>
     body {
       margin: 0;
@@ -36,7 +36,7 @@
         <div class="table-topbar">
           <div>
             <p class="eyebrow">Table View</p>
-            <h2 class="table-title">红点牌桌</h2>
+            <h2 class="table-title">钓红点</h2>
           </div>
           <div class="topbar-actions">
             <button class="ghost-btn" type="button">回到大厅</button>
@@ -85,17 +85,8 @@
           </div>
 
           <div class="center-stage">
-            <div class="feedback-banner">wilson2 正在操作，等待对方开始发牌</div>
-            <div class="action-stage">
-              <div class="action-stage__meta">
-                <p class="status-label">最近动作</p>
-                <h3>展开发牌的动作</h3>
-                <p>正在逐张翻开桌面公共牌</p>
-              </div>
-              <div class="action-stage__cards">
-                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">7</span><span class="card-value">♠</span></span></button>
-              </div>
-            </div>
+            <div class="feedback-banner">你摸到了方块9，现在可以继续补抢。</div>
+
             <div class="draw-zone">
               <div class="draw-pile">
                 <div class="draw-pile__stack" aria-hidden="true">
@@ -109,18 +100,30 @@
                 </div>
               </div>
             </div>
+
+            <div class="action-stage">
+              <div class="action-stage__meta">
+                <p class="status-label">最近动作</p>
+                <h3>展开发牌的动作</h3>
+                <p>正在逐张翻开桌面公共牌</p>
+              </div>
+              <div class="action-stage__cards">
+                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">7</span><span class="card-value">♠</span></span></button>
+              </div>
+            </div>
+
             <div class="selection-metrics">
               <div>
-                <span>褰撳墠鍑虹墝</span>
-                <strong>8 鈾?/strong>
+                <span>当前出牌</span>
+                <strong>9 方块</strong>
               </div>
               <div>
-                <span>宸查€夊彴闈㈢墝</span>
-                <strong>2 寮?/strong>
+                <span>已选台面牌</span>
+                <strong>0 张</strong>
               </div>
               <div>
-                <span>鍒ゅ畾鐩爣</span>
-                <strong>鍑戝崄</strong>
+                <span>判定目标</span>
+                <strong>需要找 A</strong>
               </div>
             </div>
           </div>
