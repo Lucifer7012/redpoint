@@ -4,6 +4,22 @@
 
 ## 2026-06-04
 
+### 横屏响应式预览兜底规则
+
+- 背景：用户使用电脑 Chrome DevTools 的 `844 x 390` 响应式预览时，命中的媒体条件和此前主要修改的触屏专用分支不同，导致线上看起来没变化。
+- 改动：
+  - 在 CSS 末尾新增 `body.is-game-view` 横屏兜底规则。
+  - 普通横屏和触屏横屏都强制使用底部三栏牌桌结构。
+  - 右侧最近动作固定显示为左文字、右动作牌，下方保留三张指标卡。
+  - 缓存版本更新为 `20260604-landscape-action-visible`。
+- 涉及文件：
+  - `index.html`
+  - `styles.css`
+  - `artifacts/layout-check/public-area-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 本机 Chrome headless 生成 `artifacts/layout-check/chrome-after-landscape-fallback-844x390.png`，右侧最近动作和动作牌可见。
+
 ### 手机横屏对局右侧最近动作内容锁定
 
 - 背景：右侧最近动作外框已固定到右栏，但实机截图显示框内文字和动作牌仍不可见。
