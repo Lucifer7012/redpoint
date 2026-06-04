@@ -6737,7 +6737,7 @@ select {
     --game-left-slot-width: clamp(180px, 20vw, 208px);
     --game-right-slot-width: clamp(228px, 24vw, 262px);
     --game-side-gap: 6px;
-    --game-bottom-band-height: calc(182px + env(safe-area-inset-bottom, 0px));
+    --game-bottom-band-height: calc(184px + env(safe-area-inset-bottom, 0px));
     --game-hand-panel-height: var(--game-bottom-band-height);
     --game-side-panel-height: var(--game-bottom-band-height);
     --game-public-card-width: clamp(36px, 4.2vw, 40px);
@@ -7003,16 +7003,18 @@ select {
 
   body.is-game-view .action-stage {
     grid-area: stage;
-    align-self: stretch;
+    align-self: start;
+    justify-self: stretch;
     min-height: 0;
-    height: calc(100% - 76px);
-    padding: 8px 10px;
+    width: var(--game-right-slot-width);
+    height: calc(var(--game-bottom-band-height) - 64px);
+    padding: 9px 10px;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
     align-content: start;
     justify-items: center;
-    gap: 5px;
+    gap: 6px;
     overflow: hidden;
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.12);
@@ -7107,6 +7109,7 @@ select {
     display: block;
     width: 48px;
     height: 64px;
+    transform: translateY(8px);
   }
 
   body.is-game-view .draw-pile__card {
@@ -7118,6 +7121,7 @@ select {
     justify-content: center;
     gap: 2px;
     text-align: center;
+    transform: translateY(8px);
   }
 
   body.is-game-view .draw-pile__meta span,
@@ -7135,6 +7139,7 @@ select {
     right: 0;
     bottom: 0;
     width: var(--game-right-slot-width);
+    height: 58px;
     margin: 0;
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -7146,6 +7151,7 @@ select {
   body.is-game-view .selection-metrics > div {
     display: grid;
     min-width: 0;
+    min-height: 0;
     gap: 3px;
     padding: 7px 7px 6px;
     border-radius: 12px;
