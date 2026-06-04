@@ -657,3 +657,18 @@ Verification:
 
 - `node --check app.js` passed.
 - Re-exported landscape touch previews for `844 x 390` and `915 x 412`.
+
+### 2026-06-04 Mobile Bottom Band Alignment
+
+- Tuned the touch-landscape in-game layout again so the public-card area no longer dominates the viewport.
+- Introduced a shared `--game-bottom-band-height` and bound the left info rail, center hand panel, and right info rail to the same bottom height so the three lower regions align cleanly.
+- Raised the bottom edge of `.table-public-area`, reduced its padding, and slightly tightened public-card sizing so the center board reads shorter and less swollen.
+- Bumped cache references to `20260604-mobile-bottom-band-aligned` in `index.html` and the preview helper page.
+
+Verification:
+
+- `node --check app.js` passed.
+- Verified under real touch/mobile emulation that `(hover: none)`, `(pointer: coarse)`, landscape orientation, and `max-width: 960px` all matched.
+- Refreshed mobile preview screenshots:
+  - `artifacts/layout-check/mobile-layout-844x390.png`
+  - `artifacts/layout-check/mobile-layout-915x412.png`

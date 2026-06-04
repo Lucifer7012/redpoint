@@ -188,3 +188,17 @@ Suggested next step if the user keeps iterating on this area:
 - Left panel is enlarged for status + draw pile. Right panel is enlarged for recent action + metric cards. The center hand area is narrowed accordingly.
 - `artifacts/layout-check/public-area-preview.html` was rebuilt cleanly so future layout checks are easier to trust.
 - Latest cache version is `20260604-mobile-side-panels-expanded`.
+
+## 2026-06-04 Mobile Bottom Band Alignment
+
+- Latest user request: make the public-card area smaller and make the three lower regions align in height.
+- Implemented by introducing `--game-bottom-band-height` in the touch-landscape game CSS and using it for `.center-stage`, `.human-panel`, and the public-area clearance.
+- The public-card container now sits higher, uses slightly tighter padding, and uses slightly smaller public cards so the table center no longer looks oversized.
+- Latest cache version: `20260604-mobile-bottom-band-aligned`
+- Latest verification:
+  - `node --check app.js`
+  - real touch/mobile emulation confirmed `(hover: none)`, `(pointer: coarse)`, landscape orientation, and `max-width: 960px`
+  - refreshed screenshots:
+    - `artifacts/layout-check/mobile-layout-844x390.png`
+    - `artifacts/layout-check/mobile-layout-915x412.png`
+- If the user keeps iterating here, stay on the current three-region structure and only micro-tune spacing, card density, or typography.

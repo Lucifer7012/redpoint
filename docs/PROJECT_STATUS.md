@@ -189,3 +189,15 @@ Testing used this round:
 - Preview helper was rebuilt with clean content and refreshed screenshots:
   - `artifacts/layout-check/mobile-layout-844x390.png`
   - `artifacts/layout-check/mobile-layout-915x412.png`
+
+## 2026-06-04 Mobile Bottom Band Alignment
+
+- Current cache version: `styles.css?v=20260604-mobile-bottom-band-aligned`, `app.js?v=20260604-mobile-bottom-band-aligned`
+- The touch-landscape in-game table now uses one shared bottom-band height so the three lower regions line up:
+  - left = status prompt + draw pile
+  - center = action buttons + hand cards
+  - right = recent action + three metric cards
+- The public-card area has been reduced vertically and tightened slightly so it no longer feels oversized against the lower panels.
+- Latest preview screenshots refreshed:
+  - `artifacts/layout-check/mobile-layout-844x390.png`
+  - `artifacts/layout-check/mobile-layout-915x412.png`
