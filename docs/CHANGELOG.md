@@ -11,6 +11,18 @@
 
 ## 2026-06-04
 
+### 横屏小视口对局改为“四区牌桌”并恢复正常牌型比例
+
+- 按最新要求重做了 `max-width: 960px`、横屏、触屏场景下的对局布局，不再沿用“公共牌区 + 右侧长条信息栏”的挤压结构。
+- 现在手机横屏对局改成四块更明确的区域：中间大框只放公共牌区；最下方整条面板放手牌和 3 个操作按钮；左下小框承载状态提示和牌堆；右下小框承载最近动作。
+- 同时把公共牌、最近动作展示牌和手牌都改回接近正常扑克牌比例，不再出现“又矮又胖”的卡面；公共牌区标题在该模式下隐藏，让中间大框优先让给牌面本身。
+- 底部手牌区同步补了一轮高度回收，确保 `915 x 412` 和 `844 x 390` 这类安卓横屏视口下，三按钮和整排手牌都能完整出现在一屏里，不再出现下半截被裁掉。
+- 更新 `index.html` 中 `styles.css` / `app.js` 缓存版本为 `20260604-game-four-box`，并同步更新 `artifacts/layout-check/public-area-preview.html` 的样式引用，避免继续命中旧缓存。
+验证：
+- `node --check app.js` 通过。
+- 使用 Chromium DevTools Protocol 真移动端仿真验证 `matchMedia('(hover: none)')`、`matchMedia('(pointer: coarse)')`、`(orientation: landscape)`、`(max-width: 960px)` 均命中。
+- 导出并检查了 `artifacts/layout-check/mobile-layout-915x412.png` 和 `artifacts/layout-check/mobile-layout-844x390.png`。
+
 ### 横屏小视口公共牌区改为内容自适应牌阵
 
 - 在继续看实机截图后，确认“畸形感”的核心不是公共牌区单纯偏大，而是横屏小视口里公共牌网格被写成了 `1fr` 式的整块拉伸，两排牌被硬拽到上下两层，中间空出大块无意义留白。
@@ -596,3 +608,22 @@
 
 - 完成账号区、云端排行榜、欢乐豆余额、联机门票、领奖确认等多项基础调整。
 - 详细记录见 `FEATURE_LOG.md` 的 `2026-05-18` 章节。
+
+## 2026-06-04
+
+### Mobile Landscape Layout Follow-up
+
+- Reworked the small-screen landscape in-game layout again to match the latest request: keep the hand area in the middle, and reserve one region on each side of the hand area.
+- Left-side bottom region now carries the draw pile plus status prompt, while the right-side bottom region carries recent action plus selection/rule info.
+- Fixed the root cause where `.play-stage` was not stretching to the full mobile viewport, which had been collapsing the public-card area and pinning the bottom layout halfway up the screen.
+- Kept the public-card area as the large middle table zone, restored more normal card proportions, and reduced the bottom hand panel height so the lower composition fits better in one landscape screen.
+- Added the missing right-side metrics block to `artifacts/layout-check/public-area-preview.html` so preview screenshots reflect the intended three-part bottom composition.
+- Bumped cache references to `20260604-game-bottom-side-panels` in `index.html` and the preview helper page.
+
+Verification:
+
+- `node --check app.js` passed.
+- Verified under real mobile emulation where `(hover: none)`, `(pointer: coarse)`, landscape orientation, and the `max-width: 960px` media query all matched.
+- Refreshed preview screenshots:
+  - `artifacts/layout-check/mobile-layout-844x390.png`
+  - `artifacts/layout-check/mobile-layout-915x412.png`

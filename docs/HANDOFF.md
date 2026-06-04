@@ -104,13 +104,13 @@ cd redpoint
 - GitHub：`https://github.com/Lucifer7012/redpoint`
 - 线上测试链接：`https://lucifer7012.github.io/redpoint/`
 - 本地测试地址：`http://127.0.0.1:4173/`
-- 当前缓存版本：`styles.css?v=20260604-game-public-grid`，`app.js?v=20260604-game-public-grid`
-- 最近主要改动：横屏小视口公共牌区已进一步改成内容自适应牌阵，直接处理“布局一看就很畸形”的问题：公共牌区内部不再使用会把两排牌硬撑开的整块 `1fr` 网格，而是改为 `auto + 1fr` 结构，公共牌主体使用居中容器，公共牌网格改回固定 `44px` 行高并 `align-content: center`，让两排牌自然聚在桌面中部；同时右侧动作区继续放宽到 `clamp(220px, 25vw, 236px)`，公共牌区底边上收、两栏间距扩大到 `14px`。此前横屏小视口牌桌也已做过一轮定向修正，直接改到 `max-width: 960px` 横屏游戏布局本身：公共牌区会为右侧动作栏预留固定间距，右侧 `center-stage` 从固定 `174px` 放大为弹性宽度，公共牌区本身同步缩窄，公共牌头部字号、网格行高和内边距也一并收紧；右侧反馈条、最近动作卡和摸牌区的字体、padding 与动作卡尺寸也同步压缩，减少右侧中文提示堆叠重叠。此前桌面牌桌公共牌区也已进一步收紧：宽度上限从 `560px` 压到 `520px`，同时把保留给右侧 `center-stage` 的空间从 `680px` 放宽到 `720px`，并同步收紧公共牌区 padding、高度和桌面公共牌网格间距，减少公共牌区与右侧“桌面中央 / 最近动作 / 判定目标”区域贴边或视觉重叠；此前桌面浏览器在较窄横向窗口下，对局页也已不再误切到手机横屏专用牌桌，而是继续使用完整桌面牌桌并做整桌等比例缩放，视觉更接近原桌面布局；手机横屏触控场景仍保持原紧凑牌桌，没有被这次桌面缩放一起带坏；此前手机横屏大厅右上角 `ID: 当前游戏ID` 已恢复账户信息入口，点击顶部 ID 会打开账号信息浮层；账号信息浮层已去掉联机门票说明，改为展示 2 / 3 / 4 人模式的累计积分、局数、胜场和单局最高；邮箱登录 / 注册表单已改为深色半透明游戏面板，输入框、记住邮箱和登录/注册/收起按钮统一贴近大厅与欢乐豆中心画风；顶部欢乐豆资源条已改成金豆图标 + 小 `+` + 紧凑数字的游戏资源样式，欢乐豆中心弹窗也已统一为深色半透明大厅风格；手机横屏大厅顶部账号区已调整为左上角“头像圆徽 + 游戏大厅 + 状态白字”，右上角改为 `ID: 当前游戏ID` + “退出登录”的账号操作区；左上角标题块已恢复到更早的紧凑宽度，状态文案改为“可开始单机或好友联机”，保持单行显示且不压住下方搜索框；844 x 390 下中间模式卡和底部操作条已改为在左侧流程列与右侧好友/排行榜栏之间定位，避免好友房状态下向右重叠到好友列表；手机横屏大厅已改为“单机 / 好友联机”切换；中间模式卡已固定为好友联机高度，切换时不再跳动；好友联机模式卡右侧新增竖向操作区，用来承载“关闭房间 / 离开房间 / 开始联机 / 返回对局”等按钮，避免按钮挤出房间卡边界；随后又对这张模式卡做了一轮整体越界排查，收紧标签、左侧房间卡、创建房间按钮、右侧骰子框和右侧操作按钮，并补上文本省略与内部 `overflow` 约束；规则弹窗也已改为更紧凑的深色半透明面板，统一靠近大厅和房间邀请的画风；当前进行中的联机对局现已和邀请弹窗一样收口到大厅流程，刚登录或刚刷新时不再自动跳进对局，而是先进入大厅再手动点“返回对局”；社交同步补上了兜底刷新，进入大厅、回到前台或窗口重新聚焦时都会主动补刷一次邀请与房间状态，并加了轻量周期补刷，减少邀请慢半拍；关闭房间、离开房间和关闭后当前用户退票已改为基于大厅当前房间快照直接批量写回，绕开部分 Firestore 规则下 `doc.get()` 被拒的问题；右侧好友列表 / 排行榜共用固定外框并滚动；房间邀请弹窗改为进入游戏大厅后才显示；跨电脑开始同步脚本现已补上 legacy 模式回铺，执行后会把最新文件同步回项目根目录和 `_github_upload`。
+- 当前缓存版本：`styles.css?v=20260604-game-four-box`，`app.js?v=20260604-game-four-box`
+- 最近主要改动：横屏小视口对局这轮已经从“公共牌区 + 右侧长条信息栏”的结构，改成更接近真实手游牌桌的四区布局：中间大框只放公共牌区，底部整条只放手牌和 3 个操作按钮，左下小框放牌堆和状态提示，右下小框放最近动作；同时把公共牌、动作展示牌和手牌都改回接近正常扑克牌比例，不再是扁胖卡面，并补了一轮底部手牌区高度，确保 `915 x 412` 和 `844 x 390` 这类安卓横屏视口里，底部按钮和整排手牌都能完整留在一屏内。为避免继续命中旧缓存，`index.html` 与预览页的资源版本都已提升到 `20260604-game-four-box`。本轮另外保留了此前已经做完的修正：公共牌区内容自适应牌阵、桌面窄窗口继续走整桌等比缩放、手机横屏大厅的“单机 / 好友联机”切换与固定右侧好友/排行榜框、账号 ID 浮层、邀请大厅门槛与社交补刷等。
 
 ## 当前接力状态
 
-- 上次做到哪里：已继续把横屏小视口牌桌的公共牌区改成内容自适应牌阵，目标就是处理你这次 `915 x 412` 一类视口下“公共牌区像一个畸形大空盒子”的问题；现在公共牌区内部不再把两排牌硬拉开，而是改成固定行高、整体居中显示，同时右侧动作区继续加宽到 `220px - 236px`，公共牌区底边上收并让出更明显的右侧间距。此前也已把横屏小视口的右侧 `center-stage` 从固定 `174px` 扩到弹性宽度，公共牌区同步缩窄并留出固定间距，右侧反馈条 / 最近动作 / 摸牌区字号和 padding 也一并压缩。此前也已微调桌面牌桌，把公共牌区进一步缩小一档，并给右侧 `center-stage` 额外让出固定空间，减少公共牌区与“桌面中央 / 最近动作 / 判定目标”区域贴边或视觉重叠；此前也已修正桌面浏览器较窄横向窗口下，对局页会误切到手机横屏专用牌桌的问题，现在桌面窄窗口继续使用完整桌面牌桌，并通过整桌等比例缩放收进视口，视觉更接近原桌面布局；手机横屏触控场景仍保持原紧凑牌桌，没有被这次桌面缩放一起带坏。此前已按截图调整手机横屏大厅顶部账号区，左上角承载“游戏大厅”和紧凑状态白字，右上角显示 `ID: 当前游戏ID` 与“退出登录”，并恢复顶部 ID 点击打开账号信息浮层；账号信息浮层现展示 2 / 3 / 4 人三种模式战绩，不再显示联机门票；随后修正 844 x 390 下左上角状态区压住搜索框、中间模式卡和底部操作条向右重叠到好友列表的问题，并把状态文案定为“可开始单机或好友联机”；本轮又把顶部欢乐豆资源条换成金豆短数字样式，统一了欢乐豆中心弹窗画风，并把邮箱登录 / 注册表单改成深色游戏面板；此前已补上“邀请同步慢半拍”的兜底刷新，进入大厅、页面回到前台或窗口重新聚焦时都会主动刷新社交数据，并增加轻量周期补刷；同时之前已修正“登录成功但还没进入大厅就弹出房间邀请”、好友联机模式卡按钮越界、关闭房间依赖 `rooms/{roomId}` 单读、规则弹窗画风不统一，以及“当前对局只在大厅后再手动进入”的门槛；另外已补上跨电脑开始同步在 legacy 结构下不会回铺工作目录的问题。
-- 下一步准备做什么：继续按你实机截图逐块收横屏牌桌，优先盯公共牌区和右侧动作区的观感；如果这轮还不顺眼，下一步就直接缩公共牌单卡的宽高比例，而不再只是调容器。
+- 上次做到哪里：横屏小视口对局已经完成一轮结构性重排，不再是“右侧动作长条 + 中间被压扁公共牌区”的旧布局，而是改成你指定的四块：中间大框公共牌区、底部整条手牌区、左下状态/牌堆小框、右下最近动作小框；底部手牌裁切也已经修掉，`915 x 412` 和 `844 x 390` 预览图里都能完整看到三按钮和整排手牌。
+- 下一步准备做什么：如果你继续拿实机图回来，我们下一步就按真实截图继续抠细节，优先看公共牌区纵向留白、底部按钮宽度和左右小框文案密度；如果还嫌牌偏小，再单独放大公共牌与手牌，不再改整体分区。
 - 当前先别动什么：跨电脑同步脚本、自动开始同步入口和邀请弹窗展示时机，除非本轮任务明确要求调整。
 
 ## 当前可继续方向
@@ -152,3 +152,22 @@ http://127.0.0.1:4173/
 - `docs/CHANGELOG.md` 和 `docs/PROJECT_STATUS.md` 应保留在 `docs/` 目录，不要传到仓库根目录。
 - `tools/` 和 `agent.md` 也应随 GitHub 同步，这样两台电脑上的固定口令和项目上下文才一致。
 - 当前 `app.js` 是较大的单文件，实现新功能前尽量小步修改，避免顺手大重构。
+
+## 2026-06-04 Mobile Layout Follow-up
+
+- Latest user correction for the in-game mobile landscape layout was very specific: do not place the status/action blocks above the hand area. Keep the hand area in the middle, and place the two small information zones on the left and right sides of that hand area.
+- This has now been implemented at the CSS level in the touch-landscape game media query. The current structure is:
+  - large middle public-card area
+  - center-bottom hand panel with 3 action buttons
+  - left-bottom side box for draw pile + status prompt
+  - right-bottom side box for recent action + selection/rule info
+- The main bug discovered during verification was not only styling: `.play-stage` was failing to stretch to the full viewport height in the preview/mobile scenario, which collapsed the public-card area. That stretching bug is now fixed.
+- Preview helper also now includes the right-side metrics block so screenshots are closer to the real layout.
+- Latest cache version is `20260604-game-bottom-side-panels`.
+- Latest verification screenshots:
+  - `artifacts/layout-check/mobile-layout-844x390.png`
+  - `artifacts/layout-check/mobile-layout-915x412.png`
+
+Suggested next step if the user keeps iterating on this area:
+
+- Use the new screenshots as the visual baseline and only micro-adjust spacing, text density, and box balance instead of changing the three-part bottom structure again.

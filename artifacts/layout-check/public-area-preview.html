@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Public Area Preview</title>
+  <link rel="stylesheet" href="../../styles.css?v=20260604-game-bottom-side-panels">
+  <style>
+    body {
+      margin: 0;
+    }
+
+    .card-btn {
+      display: grid;
+      gap: 2px;
+      align-content: space-between;
+    }
+
+    .card-label {
+      font-size: 12px;
+      line-height: 1.1;
+      color: #2a211c;
+      font-weight: 700;
+    }
+
+    .action-stage .card-label,
+    .hand-grid .card-label {
+      display: none;
+    }
+  </style>
+</head>
+<body class="is-game-view">
+  <main class="app-shell">
+    <section class="game-layout">
+      <div class="play-stage" id="play-stage">
+        <div class="table-topbar">
+          <div>
+            <p class="eyebrow">Table View</p>
+            <h2 class="table-title">红点牌桌</h2>
+          </div>
+          <div class="topbar-actions">
+            <button class="ghost-btn" type="button">回到大厅</button>
+            <button class="ghost-btn" type="button">返回对局</button>
+            <button class="ghost-btn" type="button">再来一局</button>
+            <button class="ghost-btn" type="button">规则说明</button>
+          </div>
+        </div>
+
+        <div class="status-strip">
+          <div>
+            <p class="status-label">当前状态</p>
+            <p class="status-value">等待操作</p>
+          </div>
+        </div>
+
+        <section class="table-board">
+          <div class="seat-slot seat-top">
+            <div class="seat-card active">
+              <h3>wilson2（好友）</h3>
+              <p class="seat-meta">手牌 10 红牌 0</p>
+            </div>
+          </div>
+
+          <div class="table-public-area">
+            <div class="table-public-head">
+              <h3>公共牌区</h3>
+              <p>台面上的公共明牌</p>
+            </div>
+            <div class="table-public-slot">
+              <div class="table-cards" id="table-cards">
+                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">J</span><span class="card-value">♣</span></span><span class="card-label">梅花</span></button>
+                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">2</span><span class="card-value">♠</span></span><span class="card-label">黑桃</span></button>
+                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">Q</span><span class="card-value">♥</span></span><span class="card-label">红桃</span></button>
+                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">9</span><span class="card-value">♥</span></span><span class="card-label">红桃</span></button>
+                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">K</span><span class="card-value">♠</span></span><span class="card-label">黑桃</span></button>
+                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">10</span><span class="card-value">♠</span></span><span class="card-label">黑桃</span></button>
+                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">Q</span><span class="card-value">♣</span></span><span class="card-label">梅花</span></button>
+                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">4</span><span class="card-value">♣</span></span><span class="card-label">梅花</span></button>
+                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">7</span><span class="card-value">♥</span></span><span class="card-label">红桃</span></button>
+                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">9</span><span class="card-value">♠</span></span><span class="card-label">黑桃</span></button>
+                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">A</span><span class="card-value">♦</span></span><span class="card-label">方块</span></button>
+                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">3</span><span class="card-value">♦</span></span><span class="card-label">方块</span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="center-stage">
+            <div class="feedback-banner">wilson2 正在操作，等待对方开始发牌</div>
+            <div class="action-stage">
+              <div class="action-stage__meta">
+                <p class="status-label">最近动作</p>
+                <h3>展开发牌的动作</h3>
+                <p>正在逐张翻开桌面公共牌</p>
+              </div>
+              <div class="action-stage__cards">
+                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">7</span><span class="card-value">♠</span></span></button>
+              </div>
+            </div>
+            <div class="draw-zone">
+              <div class="draw-pile">
+                <div class="draw-pile__stack" aria-hidden="true">
+                  <span class="draw-pile__card"></span>
+                  <span class="draw-pile__card"></span>
+                  <span class="draw-pile__card"></span>
+                </div>
+                <div class="draw-pile__meta">
+                  <span>牌堆</span>
+                  <strong>24 张</strong>
+                </div>
+              </div>
+            </div>
+            <div class="selection-metrics">
+              <div>
+                <span>褰撳墠鍑虹墝</span>
+                <strong>8 鈾?/strong>
+              </div>
+              <div>
+                <span>宸查€夊彴闈㈢墝</span>
+                <strong>2 寮?/strong>
+              </div>
+              <div>
+                <span>鍒ゅ畾鐩爣</span>
+                <strong>鍑戝崄</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="human-panel">
+          <div class="controls">
+            <div class="button-row">
+              <button class="primary-btn" type="button">尝试钓牌</button>
+              <button class="ghost-btn" type="button">弃到台面</button>
+              <button class="ghost-btn" type="button">清空选择</button>
+            </div>
+          </div>
+          <div class="card-grid hand-grid">
+            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">6</span><span class="card-value">♦</span></span></button>
+            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">4</span><span class="card-value">♥</span></span></button>
+            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">9</span><span class="card-value">♣</span></span></button>
+            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">4</span><span class="card-value">♠</span></span></button>
+            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">J</span><span class="card-value">♦</span></span></button>
+            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">2</span><span class="card-value">♣</span></span></button>
+            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">8</span><span class="card-value">♥</span></span></button>
+            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">8</span><span class="card-value">♠</span></span></button>
+            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">Q</span><span class="card-value">♦</span></span></button>
+            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">7</span><span class="card-value">♣</span></span></button>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
