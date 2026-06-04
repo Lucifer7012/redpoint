@@ -987,9 +987,9 @@ select {
   left: 50%;
   top: 220px;
   transform: translateX(-50%);
-  width: min(560px, calc(100% - 680px));
-  min-width: 400px;
-  padding: 12px 14px 14px;
+  width: min(520px, calc(100% - 720px));
+  min-width: 360px;
+  padding: 10px 12px 12px;
   border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background:
@@ -1016,7 +1016,7 @@ select {
 }
 
 .table-public-slot {
-  min-height: 248px;
+  min-height: 232px;
 }
 
 .seat-card h3,
@@ -1376,19 +1376,19 @@ select {
   }
 
   .table-public-area {
-    min-height: 432px;
+    min-height: 408px;
   }
 
   .table-public-slot,
   .table-cards {
-    min-height: 344px;
+    min-height: 320px;
   }
 
   .table-cards {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-auto-rows: minmax(92px, auto);
-    gap: 12px;
+    grid-auto-rows: minmax(84px, auto);
+    gap: 10px;
   }
 
   .table-cards .card-btn {
