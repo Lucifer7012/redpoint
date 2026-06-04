@@ -384,6 +384,7 @@ function init() {
   document.addEventListener("keydown", handleKeyDown);
   document.addEventListener("click", handleDocumentClick);
   window.addEventListener("resize", updateGameLayoutScale);
+  window.addEventListener("resize", () => requestAnimationFrame(syncLandscapeActionPanel));
   window.addEventListener("resize", syncSocialSideHeight);
 
   const legacyIdLabel = ui.playerIdSelect?.closest("label");
@@ -5506,10 +5507,149 @@ function render() {
   renderLog();
   renderResults();
   updateGameLayoutScale();
+  requestAnimationFrame(syncLandscapeActionPanel);
 }
 
 function shouldUseCompactLandscapeGameLayout() {
   return window.matchMedia("(max-width: 960px) and (orientation: landscape) and (hover: none) and (pointer: coarse)").matches;
+}
+
+function shouldPinLandscapeActionPanel() {
+  return document.body.classList.contains("is-game-view")
+    && window.matchMedia("(max-width: 960px) and (orientation: landscape)").matches;
+}
+
+function setImportantStyle(element, property, value) {
+  if (element) {
+    element.style.setProperty(property, value, "important");
+  }
+}
+
+function clearLandscapeActionPanelStyles() {
+  const actionTargets = [
+    ui.actionStage,
+    ui.actionStage?.querySelector(".action-stage__meta"),
+    ui.actionCards,
+    ...Array.from(ui.actionCards?.querySelectorAll(".card-btn") || []),
+  ];
+  const properties = [
+    "position",
+    "left",
+    "top",
+    "right",
+    "bottom",
+    "z-index",
+    "width",
+    "height",
+    "min-width",
+    "min-height",
+    "padding",
+    "display",
+    "grid-template-columns",
+    "grid-template-rows",
+    "grid-column",
+    "grid-row",
+    "align-items",
+    "align-self",
+    "justify-content",
+    "justify-items",
+    "justify-self",
+    "column-gap",
+    "gap",
+    "overflow",
+    "color",
+    "opacity",
+    "visibility",
+    "transform",
+    "pointer-events",
+    "aspect-ratio",
+    "border-radius",
+  ];
+  actionTargets.filter(Boolean).forEach((element) => {
+    properties.forEach((property) => element.style.removeProperty(property));
+  });
+}
+
+function syncLandscapeActionPanel() {
+  if (!ui.actionStage) {
+    return;
+  }
+
+  if (!shouldPinLandscapeActionPanel()) {
+    clearLandscapeActionPanelStyles();
+    return;
+  }
+
+  const metrics = document.querySelector(".selection-metrics");
+  const actionMeta = ui.actionStage.querySelector(".action-stage__meta");
+  if (!metrics || !actionMeta || !ui.actionCards) {
+    return;
+  }
+
+  const metricsRect = metrics.getBoundingClientRect();
+  if (!metricsRect.width || !metricsRect.height) {
+    return;
+  }
+
+  const width = Math.round(metricsRect.width);
+  const left = Math.round(metricsRect.left);
+  const height = Math.min(118, Math.max(86, Math.round(metricsRect.height + 48)));
+  const top = Math.max(4, Math.round(metricsRect.top - height - 8));
+
+  setImportantStyle(ui.actionStage, "position", "fixed");
+  setImportantStyle(ui.actionStage, "left", `${left}px`);
+  setImportantStyle(ui.actionStage, "top", `${top}px`);
+  setImportantStyle(ui.actionStage, "right", "auto");
+  setImportantStyle(ui.actionStage, "bottom", "auto");
+  setImportantStyle(ui.actionStage, "z-index", "999");
+  setImportantStyle(ui.actionStage, "width", `${width}px`);
+  setImportantStyle(ui.actionStage, "height", `${height}px`);
+  setImportantStyle(ui.actionStage, "min-height", "0");
+  setImportantStyle(ui.actionStage, "padding", "9px 10px");
+  setImportantStyle(ui.actionStage, "display", "grid");
+  setImportantStyle(ui.actionStage, "grid-template-columns", "minmax(0, 1fr) 48px");
+  setImportantStyle(ui.actionStage, "grid-template-rows", "minmax(0, 1fr)");
+  setImportantStyle(ui.actionStage, "align-items", "center");
+  setImportantStyle(ui.actionStage, "column-gap", "8px");
+  setImportantStyle(ui.actionStage, "overflow", "hidden");
+  setImportantStyle(ui.actionStage, "color", "#fff8ec");
+  setImportantStyle(ui.actionStage, "opacity", "1");
+  setImportantStyle(ui.actionStage, "visibility", "visible");
+  setImportantStyle(ui.actionStage, "transform", "none");
+  setImportantStyle(ui.actionStage, "pointer-events", "auto");
+
+  setImportantStyle(actionMeta, "grid-column", "1");
+  setImportantStyle(actionMeta, "grid-row", "1");
+  setImportantStyle(actionMeta, "display", "grid");
+  setImportantStyle(actionMeta, "min-width", "0");
+  setImportantStyle(actionMeta, "gap", "3px");
+  setImportantStyle(actionMeta, "justify-items", "start");
+  setImportantStyle(actionMeta, "align-self", "start");
+  setImportantStyle(actionMeta, "color", "#fff8ec");
+  setImportantStyle(actionMeta, "opacity", "1");
+  setImportantStyle(actionMeta, "visibility", "visible");
+  setImportantStyle(actionMeta, "transform", "none");
+
+  setImportantStyle(ui.actionCards, "grid-column", "2");
+  setImportantStyle(ui.actionCards, "grid-row", "1");
+  setImportantStyle(ui.actionCards, "width", "48px");
+  setImportantStyle(ui.actionCards, "min-width", "48px");
+  setImportantStyle(ui.actionCards, "display", "flex");
+  setImportantStyle(ui.actionCards, "justify-content", "center");
+  setImportantStyle(ui.actionCards, "align-items", "center");
+  setImportantStyle(ui.actionCards, "overflow", "hidden");
+  setImportantStyle(ui.actionCards, "opacity", "1");
+  setImportantStyle(ui.actionCards, "visibility", "visible");
+  setImportantStyle(ui.actionCards, "transform", "none");
+
+  Array.from(ui.actionCards.querySelectorAll(".card-btn")).forEach((card) => {
+    setImportantStyle(card, "width", "40px");
+    setImportantStyle(card, "min-width", "40px");
+    setImportantStyle(card, "min-height", "auto");
+    setImportantStyle(card, "aspect-ratio", "18 / 25");
+    setImportantStyle(card, "padding", "4px");
+    setImportantStyle(card, "border-radius", "9px");
+  });
 }
 
 function updateGameLayoutScale() {

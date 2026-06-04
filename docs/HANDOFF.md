@@ -104,12 +104,12 @@ cd redpoint
 - GitHub：`https://github.com/Lucifer7012/redpoint`
 - 线上测试链接：`https://lucifer7012.github.io/redpoint/`
 - 本地测试地址：`http://127.0.0.1:4173/`
-- 当前缓存版本：`styles.css?v=20260604-landscape-preview-verified`，`app.js?v=20260604-landscape-preview-verified`
-- 最近主要改动：横屏小视口对局继续按真实截图修正右侧最近动作。已确认上一轮兜底规则仍被后续触屏横屏规则覆盖，属于 CSS 顺序问题，不是用户设备或尺寸设置问题。本轮把最终覆盖规则放到 `styles.css` 文件末尾，并清理掉此前误加的整套横屏强制布局，只保留右侧最近动作最小覆盖。已用本机 Chrome + Playwright 系统浏览器、`isMobile: true`、`hasTouch: true` 生成 `artifacts/layout-check/chrome-final-915x412.png` 和 `artifacts/layout-check/chrome-final-844x390.png`，两张图里右侧最近动作文字和动作牌均可见，公共牌区未被压坏。
+- 当前缓存版本：`styles.css?v=20260604-landscape-js-pin`，`app.js?v=20260604-landscape-js-pin`
+- 最近主要改动：真实 `index.html` 对局页右侧最近动作已改为 JS 固定。用户清空缓存后线上仍没变化，本轮确认直接原因是修复当时还停在本地、未提交推送；此前只靠 CSS 和 `public-area-preview.html` 验证也不够可靠。现在 `render()` 结束后会调用 `syncLandscapeActionPanel()`，按右下三张指标卡实际位置，把 `.action-stage` 以内联 important 样式固定到指标卡上方。该修正只影响最近动作框、文字区和动作牌区，不再强制改公共牌、手牌、对手区等整体布局。
 
 ## 当前接力状态
 
-- 上次做到哪里：横屏小视口对局已经完成结构性重排，并把最终覆盖规则放到 CSS 末尾；`915 x 412` 和 `844 x 390` 触屏预览图均确认右侧最近动作和动作牌可见，公共牌区正常。底部手牌裁切此前已修掉。
+- 上次做到哪里：横屏小视口对局已经完成结构性重排，并新增真实对局页 JS 固定右侧最近动作；已用真实 `index.html` 在 `915 x 412` 与 `844 x 390` 正式回合生成 `artifacts/layout-check/real-index-js-pin-active-915x412.png`、`artifacts/layout-check/real-index-js-pin-active-844x390.png`，确认右侧最近动作位于三张指标卡上方。下一步应继续以真实页面截图为准，不再只用 `public-area-preview.html` 判断。
 - 下一步准备做什么：如果你继续拿实机图回来，我们下一步就按真实截图继续抠细节，优先看公共牌区纵向留白、底部按钮宽度和左右小框文案密度；如果还嫌牌偏小，再单独放大公共牌与手牌，不再改整体分区。
 - 当前先别动什么：跨电脑同步脚本、自动开始同步入口和邀请弹窗展示时机，除非本轮任务明确要求调整。
 

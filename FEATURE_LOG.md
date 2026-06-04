@@ -4,6 +4,24 @@
 
 ## 2026-06-04
 
+### 真实对局页右侧最近动作 JS 固定
+
+- 背景：用户在真实 `index.html` 对局页清空缓存后仍看不到右侧最近动作，说明此前只基于 `public-area-preview.html` 的截图验证不足。
+- 改动：
+  - 新增 `syncLandscapeActionPanel()`。
+  - 每次 `render()` 后和窗口尺寸变化后，按 `.selection-metrics` 的实际位置，将 `.action-stage` 固定到三张指标卡上方。
+  - 使用内联 important 样式修正最近动作框、文字区和动作牌区，不再强制改公共牌、手牌或对手区。
+  - 缓存版本更新为 `20260604-landscape-js-pin`。
+- 涉及文件：
+  - `index.html`
+  - `app.js`
+  - `artifacts/layout-check/public-area-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 使用真实 `index.html`、本机 Chrome + Playwright、`isMobile: true`、`hasTouch: true` 分别验证 `915 x 412` 与 `844 x 390`。
+  - 正式回合截图 `artifacts/layout-check/real-index-js-pin-active-915x412.png`、`artifacts/layout-check/real-index-js-pin-active-844x390.png` 均确认右侧最近动作固定在三张指标卡上方，公共牌区和手牌区仍可见。
+  - 内置浏览器打开本地真实页面，确认当前加载 `styles.css?v=20260604-landscape-js-pin` 与 `app.js?v=20260604-landscape-js-pin`。
+
 ### 横屏最终覆盖顺序修正
 
 - 背景：用户再次用 `915 x 412` 截图确认右侧最近动作仍不见；排查后确认上一轮兜底规则位置仍早于后续触屏横屏规则，所以被覆盖。

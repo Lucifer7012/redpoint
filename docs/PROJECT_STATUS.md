@@ -1,6 +1,8 @@
 # Project Status
 
 最新状态补充（2026-06-04）：
+- 真实 `index.html` 对局页右侧最近动作已改为 JS 固定：每次渲染后按右下三张指标卡位置，将 `.action-stage` 以内联 important 样式固定到指标卡上方；这次不再动公共牌、手牌、对手区等整体布局。
+- 已补真实 `index.html` 正式回合验证：本机 Chrome + Playwright 触屏横屏 `915 x 412` 与 `844 x 390` 生成 `artifacts/layout-check/real-index-js-pin-active-915x412.png`、`artifacts/layout-check/real-index-js-pin-active-844x390.png`，两张图均确认右侧最近动作位于三张指标卡上方。内置浏览器也确认本地真实页面加载 `20260604-landscape-js-pin` 缓存版本。
 - 已修正横屏兜底规则的最终覆盖顺序：上一版仍被后续触屏横屏规则覆盖，问题属于实现顺序，不是用户设备或尺寸设置；最终规则已放到 `styles.css` 文件末尾。
 - 已清理此前误加的整套横屏强制布局，只保留右侧最近动作最小覆盖，避免预览图里公共牌和对手区被压坏。
 - `915 x 412` 与 `844 x 390` 本机 Chrome + Playwright 触屏预览图已生成：`artifacts/layout-check/chrome-final-915x412.png`、`artifacts/layout-check/chrome-final-844x390.png`，两张图均确认右侧最近动作文字和动作牌可见，公共牌区正常。
@@ -42,7 +44,7 @@
 - 手机横屏大厅中间主入口已改为“单机 / 好友联机”切换；单机显示玩家人数和摇骰子，好友联机显示创建 2 / 3 / 4 人好友房卡片和摇骰子。
 - 右侧“好友列表 / 排行榜”固定外框再次向下延长，手机横屏下可显示更多列表内容。
 - 右侧“好友列表 / 排行榜”切换框已做二次固定高度修正，小屏和手机横屏大厅点击排行榜时不再撑高外框；排行榜和好友列表都在同一外框内滚动。
-- 当前缓存版本：`styles.css?v=20260604-landscape-preview-verified`，`app.js?v=20260604-landscape-preview-verified`。
+- 当前缓存版本：`styles.css?v=20260604-landscape-js-pin`，`app.js?v=20260604-landscape-js-pin`。
 
 更新时间：2026-06-04
 
