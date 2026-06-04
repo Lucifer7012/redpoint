@@ -7002,14 +7002,13 @@ select {
   }
 
   body.is-game-view .action-stage {
-    grid-area: stage;
-    align-self: start;
-    justify-self: stretch;
-    position: relative;
-    z-index: 3;
+    position: absolute;
+    right: 0;
+    bottom: 70px;
+    z-index: 4;
     min-height: 0;
-    width: 100%;
-    height: calc(var(--game-bottom-band-height) - 68px);
+    width: var(--game-right-slot-width);
+    height: calc(var(--game-bottom-band-height) - 72px);
     padding: 10px 12px;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
