@@ -6698,7 +6698,7 @@ select {
   }
 }
 
-@media (max-width: 960px) and (orientation: landscape) {
+@media (max-width: 960px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
   body.is-game-view {
     width: 100vw;
     height: 100dvh;

@@ -5508,6 +5508,10 @@ function render() {
   updateGameLayoutScale();
 }
 
+function shouldUseCompactLandscapeGameLayout() {
+  return window.matchMedia("(max-width: 960px) and (orientation: landscape) and (hover: none) and (pointer: coarse)").matches;
+}
+
 function updateGameLayoutScale() {
   if (!ui.gameLayout || !ui.playStage) {
     return;
@@ -5522,7 +5526,7 @@ function updateGameLayoutScale() {
     return;
   }
 
-  if (window.innerWidth <= 1100) {
+  if (shouldUseCompactLandscapeGameLayout()) {
     state.layoutMetrics.stableWidth = 0;
     state.layoutMetrics.stableHeight = 0;
     state.layoutMetrics.viewportKey = "";
