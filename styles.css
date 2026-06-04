@@ -7009,13 +7009,13 @@ select {
     min-height: 0;
     width: var(--game-right-slot-width);
     height: calc(var(--game-bottom-band-height) - 72px);
-    padding: 10px 12px;
+    padding: 9px 10px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr);
-    align-content: start;
-    justify-items: center;
-    gap: 5px;
+    grid-template-columns: minmax(0, 1fr) 46px;
+    grid-template-rows: minmax(0, 1fr);
+    align-items: center;
+    justify-items: stretch;
+    column-gap: 8px;
     overflow: hidden;
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.12);
@@ -7026,10 +7026,17 @@ select {
   body.is-game-view .action-stage__meta {
     width: 100%;
     min-width: 0;
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
     display: grid;
     gap: 3px;
     justify-items: start;
     text-align: left;
+    color: #fff8ec;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
   }
 
   body.is-game-view .action-stage__meta .status-label {
@@ -7062,14 +7069,21 @@ select {
 
   body.is-game-view .action-stage__cards {
     min-height: 0;
-    width: 100%;
+    width: 46px;
     max-width: none;
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    justify-self: center;
     display: flex;
     flex-wrap: nowrap;
     gap: 3px;
     justify-content: center;
     align-items: center;
     overflow: hidden;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
   }
 
   body.is-game-view .action-stage__cards .card-btn {

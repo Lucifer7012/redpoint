@@ -4,6 +4,21 @@
 
 ## 2026-06-04
 
+### 手机横屏对局右侧最近动作内容锁定
+
+- 背景：右侧最近动作外框已固定到右栏，但实机截图显示框内文字和动作牌仍不可见。
+- 改动：
+  - `action-stage` 内部改为左侧文字、右侧动作牌的固定两列。
+  - 显式恢复 `action-stage__meta` 和 `action-stage__cards` 的可见性、透明度和 transform。
+  - 牌区固定为 46px 右列，避免被自动网格压到不可见区域。
+  - 缓存版本更新为 `20260604-right-panel-content-locked`。
+- 涉及文件：
+  - `index.html`
+  - `styles.css`
+  - `artifacts/layout-check/public-area-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+
 ### 手机横屏对局右侧最近动作锁定
 
 - 背景：再次实机截图显示，仅提高层级和加宽右栏仍不够，最近动作文字会错位到手牌面板上方。
