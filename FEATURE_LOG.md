@@ -4,6 +4,24 @@
 
 ## 2026-06-07
 
+### 手机横屏公共牌外框收窄
+
+- 背景：用户确认上方大红框是公共牌大外框，并提醒 4 人模式左右会增加玩家座位，所以公共牌外框不能继续横向铺太开。
+- 改动：
+  - 将触屏横屏对局的 `--game-side-inset` 从 `clamp(88px, 10.8vw, 102px)` 调整为 `clamp(144px, 17vw, 170px)`。
+  - 只收窄 `.table-public-area` 的大背景框，公共牌本体 `.table-cards` 仍在框内居中显示。
+  - 缓存版本更新为 `20260607-public-frame-narrow`。
+- 涉及文件：
+  - `index.html`
+  - `styles.css`
+  - `artifacts/layout-check/public-area-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 真实 `index.html` 在本机 Chrome + Playwright 触屏横屏下截图验证：
+    - `artifacts/layout-check/real-index-public-frame-narrow-2p-915x412.png`
+    - `artifacts/layout-check/real-index-public-frame-narrow-4p-915x412.png`
+    - `artifacts/layout-check/real-index-public-frame-narrow-4p-844x390.png`
+
 ### 手机横屏对局底部整行压缩
 
 - 背景：用户反馈对局页最下面整行高度偏高，中间手牌区上方空白太多，但仍希望左侧牌堆、中间手牌、右侧最近动作/指标保持同高对齐。

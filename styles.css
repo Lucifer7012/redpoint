@@ -6733,7 +6733,7 @@ select {
   }
 
   body.is-game-view .play-stage {
-    --game-side-inset: clamp(88px, 10.8vw, 102px);
+    --game-side-inset: clamp(144px, 17vw, 170px);
     --game-left-slot-width: clamp(180px, 20vw, 208px);
     --game-right-slot-width: clamp(244px, 26vw, 278px);
     --game-side-gap: 6px;

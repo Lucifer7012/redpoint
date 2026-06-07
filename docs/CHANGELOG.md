@@ -11,6 +11,15 @@
 
 ## 2026-06-07
 
+### 手机横屏公共牌外框收窄
+
+- 将手机横屏对局页公共牌大外框的左右安全边距从 `clamp(88px, 10.8vw, 102px)` 加大到 `clamp(144px, 17vw, 170px)`，让 4 人模式左右/上方玩家座位有独立空间，不再被公共牌外框抢占。
+- 公共牌本体 `.table-cards` 仍保持居中排布，只收窄承载背景大框，不改变底部三块对齐结构。
+- 缓存版本更新为 `20260607-public-frame-narrow`。
+验证：
+- `node --check app.js` 通过。
+- 使用真实 `index.html`、本机 Chrome + Playwright、`isMobile: true`、`hasTouch: true` 验证 2 人 `915 x 412`、4 人 `915 x 412`、4 人 `844 x 390`；截图为 `artifacts/layout-check/real-index-public-frame-narrow-2p-915x412.png`、`artifacts/layout-check/real-index-public-frame-narrow-4p-915x412.png`、`artifacts/layout-check/real-index-public-frame-narrow-4p-844x390.png`。
+
 ### 手机横屏对局底部整行压缩
 
 - 将手机横屏真实对局页的底部共同高度从 `184px` 压缩到 `160px`，减少中间手牌区上方空白，同时继续让左侧牌堆区、中间手牌区、右侧最近动作/指标区保持同高对齐。

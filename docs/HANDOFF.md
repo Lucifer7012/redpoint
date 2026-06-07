@@ -104,12 +104,12 @@ cd redpoint
 - GitHub：`https://github.com/Lucifer7012/redpoint`
 - 线上测试链接：`https://lucifer7012.github.io/redpoint/`
 - 本地测试地址：`http://127.0.0.1:4173/`
-- 当前缓存版本：`styles.css?v=20260607-bottom-band-compact`，`app.js?v=20260607-bottom-band-compact`
-- 最近主要改动：手机横屏真实 `index.html` 对局页底部整行已压缩，共同高度从 `184px` 调整到 `160px`，减少中间手牌区上方空白，同时保持左侧牌堆、中间手牌、右侧最近动作/指标三块同高对齐。右侧最近动作的 JS 固定高度现在跟随 `.human-panel` 实际高度计算；三张指标卡也已显式贴底，避免压缩后被旧 `grid-area` 静态位置带偏。
+- 当前缓存版本：`styles.css?v=20260607-public-frame-narrow`，`app.js?v=20260607-public-frame-narrow`
+- 最近主要改动：手机横屏真实 `index.html` 对局页公共牌大外框已收窄，左右安全边距从 `clamp(88px, 10.8vw, 102px)` 调整为 `clamp(144px, 17vw, 170px)`，给 4 人模式左右/上方玩家座位留出空间；公共牌本体仍居中显示。底部整行也保持上一轮 `160px` 高度压缩和三块同高对齐。
 
 ## 当前接力状态
 
-- 上次做到哪里：横屏小视口对局已经完成结构性重排、真实对局页 JS 固定右侧最近动作，以及底部整行高度压缩；已用真实 `index.html` 在 `915 x 412` 与 `844 x 390` 正式回合生成 `artifacts/layout-check/real-index-bottom-band-compact-915x412.png`、`artifacts/layout-check/real-index-bottom-band-compact-844x390.png`，确认底部三块同高且不被裁切。下一步应继续以真实页面截图为准，不再只用 `public-area-preview.html` 判断。
+- 上次做到哪里：横屏小视口对局已经完成结构性重排、真实对局页 JS 固定右侧最近动作、底部整行高度压缩，以及公共牌大外框收窄；已用真实 `index.html` 生成 2 人 `915 x 412`、4 人 `915 x 412`、4 人 `844 x 390` 截图，确认公共牌外框不再抢 4 人模式左右座位空间。下一步应继续以真实页面截图为准，不再只用 `public-area-preview.html` 判断。
 - 下一步准备做什么：如果你继续拿实机图回来，我们下一步就按真实截图继续抠细节，优先看公共牌区纵向留白、底部按钮宽度和左右小框文案密度；如果还嫌牌偏小，再单独放大公共牌与手牌，不再改整体分区。
 - 当前先别动什么：跨电脑同步脚本、自动开始同步入口和邀请弹窗展示时机，除非本轮任务明确要求调整。
 
