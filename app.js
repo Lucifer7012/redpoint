@@ -5607,12 +5607,14 @@ function syncLandscapeActionPanel() {
     return;
   }
 
-  const humanPanel = ui.handCards?.closest(".human-panel");
-  const sideBandRect = humanPanel?.getBoundingClientRect();
-  const sideBandHeight = sideBandRect?.height || metricsRect.height + 48;
+  const handCardRect = ui.handCards?.querySelector(".card-btn")?.getBoundingClientRect();
+  const fallbackActionCardWidth = Math.min(90, Math.max(82, Math.round(window.innerWidth * 0.095)));
+  const actionCardWidth = Math.round(handCardRect?.width || fallbackActionCardWidth);
+  const actionCardHeight = Math.round(handCardRect?.height || actionCardWidth * 1.5);
+  const actionPanelHeight = Math.min(146, Math.max(100, actionCardHeight + 12));
   const width = Math.round(metricsRect.width);
   const left = Math.round(metricsRect.left);
-  const height = Math.min(108, Math.max(82, Math.round(sideBandHeight - metricsRect.height - 8)));
+  const height = actionPanelHeight;
   const top = Math.max(4, Math.round(metricsRect.top - height - 8));
 
   setImportantStyle(ui.actionStage, "position", "fixed");
@@ -5624,9 +5626,9 @@ function syncLandscapeActionPanel() {
   setImportantStyle(ui.actionStage, "width", `${width}px`);
   setImportantStyle(ui.actionStage, "height", `${height}px`);
   setImportantStyle(ui.actionStage, "min-height", "0");
-  setImportantStyle(ui.actionStage, "padding", "9px 10px");
+  setImportantStyle(ui.actionStage, "padding", "6px 8px");
   setImportantStyle(ui.actionStage, "display", "grid");
-  setImportantStyle(ui.actionStage, "grid-template-columns", "minmax(0, 1fr) 56px");
+  setImportantStyle(ui.actionStage, "grid-template-columns", `minmax(0, 1fr) ${actionCardWidth}px`);
   setImportantStyle(ui.actionStage, "grid-template-rows", "minmax(0, 1fr)");
   setImportantStyle(ui.actionStage, "align-items", "center");
   setImportantStyle(ui.actionStage, "column-gap", "8px");
@@ -5651,8 +5653,8 @@ function syncLandscapeActionPanel() {
 
   setImportantStyle(ui.actionCards, "grid-column", "2");
   setImportantStyle(ui.actionCards, "grid-row", "1");
-  setImportantStyle(ui.actionCards, "width", "56px");
-  setImportantStyle(ui.actionCards, "min-width", "56px");
+  setImportantStyle(ui.actionCards, "width", `${actionCardWidth}px`);
+  setImportantStyle(ui.actionCards, "min-width", `${actionCardWidth}px`);
   setImportantStyle(ui.actionCards, "display", "flex");
   setImportantStyle(ui.actionCards, "justify-content", "center");
   setImportantStyle(ui.actionCards, "align-items", "center");
@@ -5662,8 +5664,8 @@ function syncLandscapeActionPanel() {
   setImportantStyle(ui.actionCards, "transform", "none");
 
   Array.from(ui.actionCards.querySelectorAll(".card-btn")).forEach((card) => {
-    setImportantStyle(card, "width", "var(--game-action-card-width)");
-    setImportantStyle(card, "min-width", "var(--game-action-card-width)");
+    setImportantStyle(card, "width", `${actionCardWidth}px`);
+    setImportantStyle(card, "min-width", `${actionCardWidth}px`);
     setImportantStyle(card, "min-height", "auto");
     setImportantStyle(card, "aspect-ratio", "2 / 3");
     setImportantStyle(card, "padding", "0");

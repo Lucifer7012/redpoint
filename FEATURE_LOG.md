@@ -4,6 +4,28 @@
 
 ## 2026-06-07
 
+### 横屏底部左右区域让位
+
+- 背景：用户标注希望缩小左下角牌堆/提示区域，把空间还给中间手牌区；右下三张状态卡太占横向空间，想合并成一个三行文字框；右侧最近动作牌仍偏小，希望和手牌一样大。
+- 改动：
+  - 触屏横屏 `--game-left-slot-width` 从上一版约 `132-150px` 继续收窄到 `clamp(120px, 15vw, 138px)`。
+  - 触屏横屏 `--game-right-slot-width` 从 `232-252px` 收窄到 `220-240px`，合并指标框后把更多横向空间让给手牌。
+  - `.selection-metrics` 从三列独立卡片改为一个浅色状态框，内部三行分别显示当前出牌、已选台面牌和判定目标。
+  - `--game-action-card-width` 改为跟随 `--game-hand-card-width`；`syncLandscapeActionPanel()` 读取当前手牌实际 `.card-btn` 宽高，同步设置右侧最近动作牌和动作框高度，清掉旧的 56px 固定动作牌。
+  - 缓存版本更新为 `20260607-side-panel-space`。
+- 涉及文件：
+  - `index.html`
+  - `app.js`
+  - `styles.css`
+  - `artifacts/layout-check/public-area-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 内置浏览器确认真实页面加载 `styles.css?v=20260607-side-panel-space` 与 `app.js?v=20260607-side-panel-space`。
+  - 真实 `index.html` 在本机 Chrome + Playwright 触屏横屏下截图验证：
+    - `artifacts/layout-check/real-index-side-panel-space-2p-915x412.png`
+    - `artifacts/layout-check/real-index-side-panel-space-4p-844x390.png`
+  - `artifacts/layout-check/side-panel-space-check.json` 记录 2 人 `915 x 412` 下左下区域宽 `137px`、手牌面板宽 `510px`、动作牌 `87 x 131`；4 人 `844 x 390` 下左下区域宽 `127px`、手牌面板宽 `449px`、动作牌 `82 x 123`；动作牌宽度与手牌一致，坏图数均为 0。
+
 ### 手牌遮挡和补枪动作显示清理
 
 - 背景：用户反馈手机横屏对局中，底部手牌的左上角被操作按钮行挡住；同时右侧“最近动作”在补枪相关动作里会出现两张牌，看起来像多补了一张。

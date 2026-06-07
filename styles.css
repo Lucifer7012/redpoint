@@ -6763,15 +6763,15 @@ select {
 
   body.is-game-view .play-stage {
     --game-side-inset: clamp(82px, 9.5vw, 96px);
-    --game-left-slot-width: clamp(180px, 20vw, 208px);
-    --game-right-slot-width: clamp(244px, 26vw, 278px);
+    --game-left-slot-width: clamp(120px, 15vw, 138px);
+    --game-right-slot-width: clamp(220px, 23vw, 240px);
     --game-side-gap: 6px;
     --game-bottom-band-height: calc(172px + env(safe-area-inset-bottom, 0px));
     --game-hand-panel-height: var(--game-bottom-band-height);
     --game-side-panel-height: var(--game-bottom-band-height);
     --game-public-card-width: clamp(80px, 9.8vw, 90px);
-    --game-action-card-width: clamp(56px, 6.2vw, 60px);
     --game-hand-card-width: clamp(82px, 9.5vw, 90px);
+    --game-action-card-width: var(--game-hand-card-width);
     --game-card-ratio: 2 / 3;
     --game-panel-side-padding: 6px;
     --game-panel-vertical-padding: 5px;
@@ -7041,14 +7041,14 @@ select {
   body.is-game-view .action-stage {
     position: absolute;
     right: 0;
-    bottom: 70px;
+    bottom: 56px;
     z-index: 4;
     min-height: 0;
     width: var(--game-right-slot-width);
-    height: calc(var(--game-bottom-band-height) - 70px);
-    padding: 9px 10px;
+    height: calc(var(--game-bottom-band-height) - 58px);
+    padding: 6px 8px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 56px;
+    grid-template-columns: minmax(0, 1fr) var(--game-action-card-width);
     grid-template-rows: minmax(0, 1fr);
     align-items: center;
     justify-items: stretch;
@@ -7106,7 +7106,7 @@ select {
 
   body.is-game-view .action-stage__cards {
     min-height: 0;
-    width: 56px;
+    width: var(--game-action-card-width);
     max-width: none;
     grid-column: 2;
     grid-row: 1;
@@ -7196,26 +7196,40 @@ select {
     bottom: 0;
     left: auto;
     width: var(--game-right-slot-width);
-    height: 62px;
+    height: 50px;
+    padding: 5px 10px;
     margin: 0;
     display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 7px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    gap: 0;
     pointer-events: auto;
     z-index: 2;
+    border-radius: 14px;
+    background: rgba(245, 248, 244, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    overflow: hidden;
   }
 
   body.is-game-view .selection-metrics > div {
     display: grid;
+    grid-template-columns: 58px minmax(0, 1fr);
+    align-items: center;
     min-width: 0;
     min-height: 0;
-    gap: 3px;
-    padding: 7px 8px 6px;
-    border-radius: 12px;
-    background: rgba(245, 248, 244, 0.86);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    gap: 8px;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    border: 0;
+    border-bottom: 1px solid rgba(40, 60, 48, 0.1);
+    box-shadow: none;
     overflow: hidden;
+  }
+
+  body.is-game-view .selection-metrics > div:last-child {
+    border-bottom: 0;
   }
 
   body.is-game-view .selection-metrics span {
@@ -7224,7 +7238,7 @@ select {
     color: #425046;
     font-size: 7px;
     font-weight: 800;
-    line-height: 1.15;
+    line-height: 1;
     overflow: hidden;
     text-overflow: ellipsis;
   }
@@ -7235,7 +7249,8 @@ select {
     margin-top: 0;
     color: #233329;
     font-size: 10px;
-    line-height: 1.15;
+    line-height: 1.05;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
@@ -7541,14 +7556,14 @@ select {
   body.is-game-view .action-stage {
     position: absolute !important;
     right: 0 !important;
-    bottom: 70px !important;
+    bottom: 56px !important;
     z-index: 45 !important;
-    width: var(--game-right-slot-width, clamp(244px, 26vw, 278px)) !important;
-    height: calc(var(--game-bottom-band-height, 160px) - 70px) !important;
+    width: var(--game-right-slot-width, clamp(220px, 23vw, 240px)) !important;
+    height: calc(var(--game-bottom-band-height, 172px) - 58px) !important;
     min-height: 0 !important;
-    padding: 9px 10px !important;
+    padding: 6px 8px !important;
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) 56px !important;
+    grid-template-columns: minmax(0, 1fr) var(--game-action-card-width) !important;
     grid-template-rows: minmax(0, 1fr) !important;
     align-items: center !important;
     column-gap: 8px !important;
@@ -7614,8 +7629,8 @@ select {
   body.is-game-view .action-stage__cards {
     grid-column: 2 !important;
     grid-row: 1 !important;
-    width: 56px !important;
-    min-width: 56px !important;
+    width: var(--game-action-card-width) !important;
+    min-width: var(--game-action-card-width) !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;

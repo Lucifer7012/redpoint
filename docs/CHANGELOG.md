@@ -11,6 +11,18 @@
 
 ## 2026-06-07
 
+### 横屏底部左右区域让位
+
+- 缩小手机横屏对局左下角牌堆/提示区域：左侧栏宽度从约 `180px` 级别收窄到 `120-138px`，给中间手牌区让出更多横向空间。
+- 右下角“当前出牌 / 已选台面牌 / 判定目标”从三个独立小框合并为一个浅色状态框，内部保留三行文字，减少右侧底部横向挤压。
+- 右侧“最近动作”展示牌改为读取手牌区实际牌宽，动作牌和手牌保持同样大小；同时把 JS 固定布局里的旧 `56px` 动作牌宽度清掉。
+- 缓存版本更新为 `20260607-side-panel-space`。
+验证：
+- `node --check app.js` 通过。
+- 内置浏览器打开本地真实页面，确认加载 `styles.css?v=20260607-side-panel-space` 与 `app.js?v=20260607-side-panel-space`。
+- 使用真实 `index.html`、本机 Chrome + Playwright、`isMobile: true`、`hasTouch: true` 验证 2 人 `915 x 412` 与 4 人 `844 x 390`；截图为 `artifacts/layout-check/real-index-side-panel-space-2p-915x412.png`、`artifacts/layout-check/real-index-side-panel-space-4p-844x390.png`，验证记录为 `artifacts/layout-check/side-panel-space-check.json`。
+- 验证记录显示：2 人局手牌面板宽 `510px`、动作牌 `87 x 131`，4 人局手牌面板宽 `449px`、动作牌 `82 x 123`；动作牌宽度与手牌一致，坏图数为 0。
+
 ### 手牌遮挡和补枪动作显示清理
 
 - 将手机横屏对局底部共同高度从压缩后的 `160px` 回调到 `172px`，让操作按钮和手牌之间重新留出间距，避免手牌左上角被按钮行挡住；左侧牌堆区、中间手牌区、右侧最近动作/指标区仍保持同高对齐。
