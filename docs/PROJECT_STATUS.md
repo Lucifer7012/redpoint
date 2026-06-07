@@ -1,6 +1,13 @@
 # Project Status
 
-最新状态补充（2026-06-04）：
+最新状态补充（2026-06-07）：
+- 手机横屏真实对局页底部整行已压缩：共同高度从 `184px` 调整为 `160px`，中间手牌区上方空白减少，左侧牌堆区、中间手牌区、右侧最近动作/指标区仍保持同高对齐。
+- 右侧最近动作的 JS 固定高度现在按 `.human-panel` 实际高度计算，避免底部压缩后动作框继续使用旧高度。
+- 已修正三张指标卡压缩后被旧 `grid-area` 静态位置带偏的问题，指标卡重新贴住底部，不再被视口裁切。
+- 当前缓存版本：`styles.css?v=20260607-bottom-band-compact`，`app.js?v=20260607-bottom-band-compact`。
+- 最新真实页面验证截图：`artifacts/layout-check/real-index-bottom-band-compact-915x412.png`、`artifacts/layout-check/real-index-bottom-band-compact-844x390.png`。
+
+历史状态补充（2026-06-04）：
 - 真实 `index.html` 对局页右侧最近动作已改为 JS 固定：每次渲染后按右下三张指标卡位置，将 `.action-stage` 以内联 important 样式固定到指标卡上方；这次不再动公共牌、手牌、对手区等整体布局。
 - 已补真实 `index.html` 正式回合验证：本机 Chrome + Playwright 触屏横屏 `915 x 412` 与 `844 x 390` 生成 `artifacts/layout-check/real-index-js-pin-active-915x412.png`、`artifacts/layout-check/real-index-js-pin-active-844x390.png`，两张图均确认右侧最近动作位于三张指标卡上方。内置浏览器也确认本地真实页面加载 `20260604-landscape-js-pin` 缓存版本。
 - 已修正横屏兜底规则的最终覆盖顺序：上一版仍被后续触屏横屏规则覆盖，问题属于实现顺序，不是用户设备或尺寸设置；最终规则已放到 `styles.css` 文件末尾。
@@ -44,7 +51,7 @@
 - 手机横屏大厅中间主入口已改为“单机 / 好友联机”切换；单机显示玩家人数和摇骰子，好友联机显示创建 2 / 3 / 4 人好友房卡片和摇骰子。
 - 右侧“好友列表 / 排行榜”固定外框再次向下延长，手机横屏下可显示更多列表内容。
 - 右侧“好友列表 / 排行榜”切换框已做二次固定高度修正，小屏和手机横屏大厅点击排行榜时不再撑高外框；排行榜和好友列表都在同一外框内滚动。
-- 当前缓存版本：`styles.css?v=20260604-landscape-js-pin`，`app.js?v=20260604-landscape-js-pin`。
+- 当前缓存版本：`styles.css?v=20260607-bottom-band-compact`，`app.js?v=20260607-bottom-band-compact`。
 
 更新时间：2026-06-04
 

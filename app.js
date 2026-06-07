@@ -5591,9 +5591,12 @@ function syncLandscapeActionPanel() {
     return;
   }
 
+  const humanPanel = ui.handCards?.closest(".human-panel");
+  const sideBandRect = humanPanel?.getBoundingClientRect();
+  const sideBandHeight = sideBandRect?.height || metricsRect.height + 48;
   const width = Math.round(metricsRect.width);
   const left = Math.round(metricsRect.left);
-  const height = Math.min(118, Math.max(86, Math.round(metricsRect.height + 48)));
+  const height = Math.min(108, Math.max(82, Math.round(sideBandHeight - metricsRect.height - 8)));
   const top = Math.max(4, Math.round(metricsRect.top - height - 8));
 
   setImportantStyle(ui.actionStage, "position", "fixed");

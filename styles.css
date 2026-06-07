@@ -6737,7 +6737,7 @@ select {
     --game-left-slot-width: clamp(180px, 20vw, 208px);
     --game-right-slot-width: clamp(244px, 26vw, 278px);
     --game-side-gap: 6px;
-    --game-bottom-band-height: calc(184px + env(safe-area-inset-bottom, 0px));
+    --game-bottom-band-height: calc(160px + env(safe-area-inset-bottom, 0px));
     --game-hand-panel-height: var(--game-bottom-band-height);
     --game-side-panel-height: var(--game-bottom-band-height);
     --game-public-card-width: clamp(36px, 4.2vw, 40px);
@@ -7008,7 +7008,7 @@ select {
     z-index: 4;
     min-height: 0;
     width: var(--game-right-slot-width);
-    height: calc(var(--game-bottom-band-height) - 72px);
+    height: calc(var(--game-bottom-band-height) - 70px);
     padding: 9px 10px;
     display: grid;
     grid-template-columns: minmax(0, 1fr) 46px;
@@ -7152,9 +7152,12 @@ select {
   }
 
   body.is-game-view .selection-metrics {
+    grid-area: auto;
     position: absolute;
+    top: auto;
     right: 0;
     bottom: 0;
+    left: auto;
     width: var(--game-right-slot-width);
     height: 62px;
     margin: 0;
@@ -7446,7 +7449,7 @@ select {
     bottom: 70px !important;
     z-index: 45 !important;
     width: var(--game-right-slot-width, clamp(244px, 26vw, 278px)) !important;
-    height: calc(var(--game-bottom-band-height, 184px) - 72px) !important;
+    height: calc(var(--game-bottom-band-height, 160px) - 70px) !important;
     min-height: 0 !important;
     padding: 9px 10px !important;
     display: grid !important;

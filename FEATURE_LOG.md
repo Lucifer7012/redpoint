@@ -2,6 +2,29 @@
 
 这个文件从 2026-05-18 开始记录项目后续新增功能和重要规则变更。每次增加新功能时，先写清楚目标、改动范围、验证方式和后续注意点，方便之后继续接手。
 
+## 2026-06-07
+
+### 手机横屏对局底部整行压缩
+
+- 背景：用户反馈对局页最下面整行高度偏高，中间手牌区上方空白太多，但仍希望左侧牌堆、中间手牌、右侧最近动作/指标保持同高对齐。
+- 改动：
+  - 将触屏横屏对局的 `--game-bottom-band-height` 从 `184px` 调整为 `160px`。
+  - 右侧最近动作 CSS 高度公式同步改为跟随新的共同高度。
+  - `syncLandscapeActionPanel()` 改为读取 `.human-panel` 的实际高度，再计算最近动作框高度，避免 JS 固定定位把动作框撑回旧高度。
+  - `.selection-metrics` 在该布局下显式清掉旧 `grid-area` 静态定位影响，固定贴住底部，避免压缩后被裁切。
+  - 缓存版本更新为 `20260607-bottom-band-compact`。
+- 涉及文件：
+  - `index.html`
+  - `app.js`
+  - `styles.css`
+  - `artifacts/layout-check/public-area-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 真实 `index.html` 在本机 Chrome + Playwright 触屏横屏 `915 x 412`、`844 x 390` 下截图验证：
+    - `artifacts/layout-check/real-index-bottom-band-compact-915x412.png`
+    - `artifacts/layout-check/real-index-bottom-band-compact-844x390.png`
+  - 内置浏览器确认本地真实页面加载 `styles.css?v=20260607-bottom-band-compact` 与 `app.js?v=20260607-bottom-band-compact`。
+
 ## 2026-06-04
 
 ### 真实对局页右侧最近动作 JS 固定

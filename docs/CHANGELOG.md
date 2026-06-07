@@ -9,6 +9,19 @@
 - 如当前状态、测试方式或后续注意点发生变化，同时更新 `docs/PROJECT_STATUS.md`。
 - 桌面总工作记录同步更新：`C:\Users\OgCloud\Desktop\Codex-Worklog\WORKLOG.md`。
 
+## 2026-06-07
+
+### 手机横屏对局底部整行压缩
+
+- 将手机横屏真实对局页的底部共同高度从 `184px` 压缩到 `160px`，减少中间手牌区上方空白，同时继续让左侧牌堆区、中间手牌区、右侧最近动作/指标区保持同高对齐。
+- 右侧最近动作的 JS 固定高度改为按实际手牌面板高度计算，不再沿用上一轮较高的动作框高度。
+- 修正三张指标卡在压缩后被旧 `grid-area` 静态位置带偏的问题，显式让它贴住底部，避免被视口裁掉。
+- 缓存版本更新为 `20260607-bottom-band-compact`。
+验证：
+- `node --check app.js` 通过。
+- 使用真实 `index.html`、本机 Chrome + Playwright、`isMobile: true`、`hasTouch: true` 验证 `915 x 412` 与 `844 x 390`；截图为 `artifacts/layout-check/real-index-bottom-band-compact-915x412.png`、`artifacts/layout-check/real-index-bottom-band-compact-844x390.png`。
+- 内置浏览器打开本地真实页面，确认加载 `styles.css?v=20260607-bottom-band-compact` 与 `app.js?v=20260607-bottom-band-compact`。
+
 ## 2026-06-04
 
 ### 真实对局页右侧最近动作改为 JS 固定
