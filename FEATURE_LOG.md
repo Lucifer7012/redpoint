@@ -4,34 +4,35 @@
 
 ## 2026-06-07
 
-### 道风扑克牌图片牌面接入
+### 恢复原本 CSS/文字扑克牌面
 
-- 背景：用户反馈当前牌显示偏大、观感偏粗糙，并提供一套重新设计的扑克牌；要求前 52 张作为正式牌面，显示大小可以调整，但不能改变比例，也不要继续使用没有棱角的大圆角牌 UI。
+- 背景：用户确认当前版本仍在显示其重新设计的扑克牌，但这次实际希望回到使用该牌面之前的原本牌样式。
 - 改动：
-  - 从新牌源图生成 52 张 256 x 384 WebP 资源，放入 `assets/cards/daoist/`，保留 2:3 比例。
-  - 新增牌面路径映射：`hearts -> H`、`diamonds -> D`、`clubs -> C`、`spades -> S`，按 `rank + suit` 加载图片。
-  - `createCardButton()` 从文字牌结构改为 `<img class="card-face">`，保留 `aria-label`、禁用原因、点击回调、选中态、可打牌态、置灰态和发牌动画。
-  - `.card-btn` 改为小边角、零内边距、2:3 图片框，不再用 18px 大圆角和文字牌内部排版。
-  - 触屏横屏下公共牌、最近动作牌、手牌分别缩小一档，避免新牌面在 844 x 390 / 915 x 412 下继续显得过大。
-  - `artifacts/layout-check/public-area-preview.html` 同步换成图片牌。
-  - `tools/sync-start.ps1` / `tools/sync-finish.ps1` 的跟踪清单补上 `assets` 和 `artifacts/layout-check`，确保牌面资源和真实截图能跨电脑同步。
-  - 缓存版本更新为 `20260607-daoist-card-faces`。
+  - 反向撤回 `2f6a179 Add daoist card faces` 中的图牌接入。
+  - 删除 `CARD_FACE_BASE_PATH`、`CARD_FACE_SUIT_SUFFIX`、`getCardFaceSrc()` 等图牌路径逻辑。
+  - `createCardButton()` 恢复为 `.card-top` / `.card-bottom` 的文字牌结构，显示花色符号、点数、钓牌值和计分值。
+  - `.card-btn` 恢复原本的 CSS 牌面尺寸、内边距、圆角、选中态和可钓目标背景，不再使用 `<img class="card-face">`。
+  - `artifacts/layout-check/public-area-preview.html` 恢复为文字牌预览，并更新缓存号。
+  - 删除 `assets/cards/daoist/` 52 张 WebP、道风牌验证 JSON 和道风牌截图，避免当前版本继续引用或同步这套牌。
+  - 同步脚本保留 `artifacts/layout-check` 跟踪，后续预览图仍会随 GitHub 同步；不再把 `assets` 作为当前必传项。
+  - 缓存版本更新为 `20260607-original-card-faces`。
 - 涉及文件：
   - `index.html`
   - `app.js`
   - `styles.css`
-  - `assets/cards/daoist/`
   - `artifacts/layout-check/public-area-preview.html`
   - `tools/sync-start.ps1`
   - `tools/sync-finish.ps1`
+  - `assets/cards/daoist/`（删除）
+  - `artifacts/layout-check/daoist-card-faces-check.json`（删除）
+  - `artifacts/layout-check/real-index-daoist-cards-*.png`（删除）
 - 验证：
   - `node --check app.js` 通过。
-  - 内置浏览器确认真实页面加载 `styles.css?v=20260607-daoist-card-faces` 与 `app.js?v=20260607-daoist-card-faces`。
+  - 内置浏览器确认真实页面加载 `styles.css?v=20260607-original-card-faces` 与 `app.js?v=20260607-original-card-faces`，入口页 `.card-face` 数量为 0。
   - 真实 `index.html` 在本机 Chrome + Playwright 触屏横屏下截图验证：
-    - `artifacts/layout-check/real-index-daoist-cards-4p-915x412.png`
-    - `artifacts/layout-check/real-index-daoist-cards-4p-844x390.png`
-    - `artifacts/layout-check/real-index-daoist-cards-2p-915x412.png`
-  - `artifacts/layout-check/daoist-card-faces-check.json` 记录 3 个视口均命中触屏横屏媒体规则，牌面坏图数为 0。
+    - `artifacts/layout-check/real-index-original-cards-4p-915x412.png`
+    - `artifacts/layout-check/real-index-original-cards-4p-844x390.png`
+  - `artifacts/layout-check/original-card-faces-check.json` 记录两种视口均命中触屏横屏媒体规则，`cardFaceCount` 为 0，`cardButtonCount` 为 17，阶段进入 `human-turn`。
 
 ### 四人横屏骰子布局修正
 

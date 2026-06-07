@@ -13,13 +13,6 @@ const SUITS = [
 
 const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 const TEN_RANKS = new Set(["10", "J", "Q", "K"]);
-const CARD_FACE_BASE_PATH = "assets/cards/daoist";
-const CARD_FACE_SUIT_SUFFIX = {
-  hearts: "H",
-  diamonds: "D",
-  clubs: "C",
-  spades: "S",
-};
 const VALUE_LABELS = {
   1: "A",
   2: "2",
@@ -5239,14 +5232,6 @@ function cardSymbol(card) {
   return SUITS.find((item) => item.key === card.suit)?.symbol || "";
 }
 
-function getCardFaceSrc(card) {
-  const suitSuffix = CARD_FACE_SUIT_SUFFIX[card.suit];
-  if (!suitSuffix || !card.rank) {
-    return "";
-  }
-  return `${CARD_FACE_BASE_PATH}/${card.rank}${suitSuffix}.webp`;
-}
-
 function isRedCard(card) {
   return SUITS.find((item) => item.key === card.suit)?.red || false;
 }
@@ -6501,21 +6486,24 @@ function createCardButton(card, options = {}) {
   button.className = classes.join(" ");
   button.type = "button";
   button.disabled = Boolean(options.disabled);
-  const label = cardLabel(card);
-  const accessibilityLabel = `${label}，钓牌 ${card.playValue}，计分 ${card.scoreValue}`;
-  button.setAttribute("aria-label", options.disabledReason ? `${accessibilityLabel}：${options.disabledReason}` : accessibilityLabel);
   if (options.disabledReason) {
     button.title = options.disabledReason;
+    button.setAttribute("aria-label", `${cardLabel(card)}：${options.disabledReason}`);
   }
   button.style.setProperty("--card-index", String(options.cardIndex ?? 0));
   if (options.onClick) {
     button.addEventListener("click", options.onClick);
   }
 
-  const faceSrc = getCardFaceSrc(card);
   button.innerHTML = `
-    <img class="card-face" src="${escapeHtml(faceSrc)}" alt="${escapeHtml(label)}" loading="lazy" draggable="false">
-    <span class="card-meta sr-only">${escapeHtml(accessibilityLabel)}</span>
+    <div class="card-top">
+      <span>${cardSymbol(card)}</span>
+      <span class="card-value">钓牌 ${card.playValue} / 计分 ${card.scoreValue}</span>
+    </div>
+    <div class="card-bottom">
+      <span class="card-rank">${card.rank}</span>
+      <span>${SUITS.find((item) => item.key === card.suit)?.label || ""}</span>
+    </div>
   `;
 
   return button;

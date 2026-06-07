@@ -64,7 +64,6 @@ $trackedPaths = @(
   "app.js",
   "styles.css",
   "favicon.png",
-  "assets",
   "FEATURE_LOG.md",
   "agent.md",
   "artifacts\\layout-check",

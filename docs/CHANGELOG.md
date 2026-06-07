@@ -11,18 +11,16 @@
 
 ## 2026-06-07
 
-### 道风扑克牌图片牌面接入
+### 恢复原本 CSS/文字扑克牌面
 
-- 将对局中的文字/CSS 扑克牌替换为新设计的 52 张图片牌面，资源放在 `assets/cards/daoist/`，使用 256 x 384 WebP，保持 2:3 比例。
-- `createCardButton()` 改为渲染真实牌面图片，同时保留按钮语义、禁用原因、选中态和可访问文本。
-- 收紧 `.card-btn` 的默认样式：取消大内边距和 18px 大圆角，改为小边角图片卡；触屏横屏下公共牌、动作牌和手牌分别缩小一档，避免牌面继续显得偏大。
-- `public-area-preview.html` 同步改用图片牌，避免后续预览继续显示旧文字牌。
-- 同步脚本跟踪清单补充 `assets` 和 `artifacts/layout-check`，确保新牌资源和真实截图能随 GitHub 同步。
-- 缓存版本更新为 `20260607-daoist-card-faces`。
+- 按用户要求撤回 `2f6a179 Add daoist card faces` 的图片牌接入，当前对局牌面回到原本的 CSS/文字扑克牌样式，不再加载 `assets/cards/daoist/`。
+- `createCardButton()` 已恢复为花色符号、点数、钓牌值和计分值的原结构；`.card-face` 图片元素和对应样式已移除。
+- 删除此前道风图片牌资源、道风牌验证 JSON 和对应截图，避免当前版本继续被误认为使用新设计牌面。
+- 缓存版本更新为 `20260607-original-card-faces`；同步脚本继续跟踪 `artifacts/layout-check`，方便后续预览截图随 GitHub 同步，但不再把 `assets/cards/daoist` 作为当前发布资源。
 验证：
 - `node --check app.js` 通过。
-- 内置浏览器打开本地真实页面，确认加载 `styles.css?v=20260607-daoist-card-faces` 与 `app.js?v=20260607-daoist-card-faces`。
-- 使用真实 `index.html`、本机 Chrome + Playwright、`isMobile: true`、`hasTouch: true` 验证 4 人 `915 x 412`、4 人 `844 x 390`、2 人 `915 x 412`；截图为 `artifacts/layout-check/real-index-daoist-cards-4p-915x412.png`、`artifacts/layout-check/real-index-daoist-cards-4p-844x390.png`、`artifacts/layout-check/real-index-daoist-cards-2p-915x412.png`，图片加载统计见 `artifacts/layout-check/daoist-card-faces-check.json`。
+- 内置浏览器确认真实页面加载 `styles.css?v=20260607-original-card-faces` 与 `app.js?v=20260607-original-card-faces`，且入口页 `.card-face` 数量为 0。
+- 使用真实 `index.html`、本机 Chrome + Playwright、`isMobile: true`、`hasTouch: true` 验证 4 人横屏 `915 x 412` 与 `844 x 390`，两次均为 `cardFaceCount: 0`、`cardButtonCount: 17`、阶段进入 `human-turn`；截图为 `artifacts/layout-check/real-index-original-cards-4p-915x412.png`、`artifacts/layout-check/real-index-original-cards-4p-844x390.png`，记录为 `artifacts/layout-check/original-card-faces-check.json`。
 
 ### 四人横屏骰子布局修正
 
