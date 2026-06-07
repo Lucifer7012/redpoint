@@ -4,6 +4,35 @@
 
 ## 2026-06-07
 
+### 道风扑克牌图片牌面接入
+
+- 背景：用户反馈当前牌显示偏大、观感偏粗糙，并提供一套重新设计的扑克牌；要求前 52 张作为正式牌面，显示大小可以调整，但不能改变比例，也不要继续使用没有棱角的大圆角牌 UI。
+- 改动：
+  - 从新牌源图生成 52 张 256 x 384 WebP 资源，放入 `assets/cards/daoist/`，保留 2:3 比例。
+  - 新增牌面路径映射：`hearts -> H`、`diamonds -> D`、`clubs -> C`、`spades -> S`，按 `rank + suit` 加载图片。
+  - `createCardButton()` 从文字牌结构改为 `<img class="card-face">`，保留 `aria-label`、禁用原因、点击回调、选中态、可打牌态、置灰态和发牌动画。
+  - `.card-btn` 改为小边角、零内边距、2:3 图片框，不再用 18px 大圆角和文字牌内部排版。
+  - 触屏横屏下公共牌、最近动作牌、手牌分别缩小一档，避免新牌面在 844 x 390 / 915 x 412 下继续显得过大。
+  - `artifacts/layout-check/public-area-preview.html` 同步换成图片牌。
+  - `tools/sync-start.ps1` / `tools/sync-finish.ps1` 的跟踪清单补上 `assets` 和 `artifacts/layout-check`，确保牌面资源和真实截图能跨电脑同步。
+  - 缓存版本更新为 `20260607-daoist-card-faces`。
+- 涉及文件：
+  - `index.html`
+  - `app.js`
+  - `styles.css`
+  - `assets/cards/daoist/`
+  - `artifacts/layout-check/public-area-preview.html`
+  - `tools/sync-start.ps1`
+  - `tools/sync-finish.ps1`
+- 验证：
+  - `node --check app.js` 通过。
+  - 内置浏览器确认真实页面加载 `styles.css?v=20260607-daoist-card-faces` 与 `app.js?v=20260607-daoist-card-faces`。
+  - 真实 `index.html` 在本机 Chrome + Playwright 触屏横屏下截图验证：
+    - `artifacts/layout-check/real-index-daoist-cards-4p-915x412.png`
+    - `artifacts/layout-check/real-index-daoist-cards-4p-844x390.png`
+    - `artifacts/layout-check/real-index-daoist-cards-2p-915x412.png`
+  - `artifacts/layout-check/daoist-card-faces-check.json` 记录 3 个视口均命中触屏横屏媒体规则，牌面坏图数为 0。
+
 ### 四人横屏骰子布局修正
 
 - 背景：4 人模式横屏摇骰子结果阶段，顶部三个对手骰子和本地玩家骰子会挤进公共牌区域，中间骰子还会压住“公共牌区暂时没有明牌”；同时底部手牌区在未发牌前显示“你的手牌已经出完”，语义不对。

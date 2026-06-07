@@ -11,6 +11,19 @@
 
 ## 2026-06-07
 
+### 道风扑克牌图片牌面接入
+
+- 将对局中的文字/CSS 扑克牌替换为新设计的 52 张图片牌面，资源放在 `assets/cards/daoist/`，使用 256 x 384 WebP，保持 2:3 比例。
+- `createCardButton()` 改为渲染真实牌面图片，同时保留按钮语义、禁用原因、选中态和可访问文本。
+- 收紧 `.card-btn` 的默认样式：取消大内边距和 18px 大圆角，改为小边角图片卡；触屏横屏下公共牌、动作牌和手牌分别缩小一档，避免牌面继续显得偏大。
+- `public-area-preview.html` 同步改用图片牌，避免后续预览继续显示旧文字牌。
+- 同步脚本跟踪清单补充 `assets` 和 `artifacts/layout-check`，确保新牌资源和真实截图能随 GitHub 同步。
+- 缓存版本更新为 `20260607-daoist-card-faces`。
+验证：
+- `node --check app.js` 通过。
+- 内置浏览器打开本地真实页面，确认加载 `styles.css?v=20260607-daoist-card-faces` 与 `app.js?v=20260607-daoist-card-faces`。
+- 使用真实 `index.html`、本机 Chrome + Playwright、`isMobile: true`、`hasTouch: true` 验证 4 人 `915 x 412`、4 人 `844 x 390`、2 人 `915 x 412`；截图为 `artifacts/layout-check/real-index-daoist-cards-4p-915x412.png`、`artifacts/layout-check/real-index-daoist-cards-4p-844x390.png`、`artifacts/layout-check/real-index-daoist-cards-2p-915x412.png`，图片加载统计见 `artifacts/layout-check/daoist-card-faces-check.json`。
+
 ### 四人横屏骰子布局修正
 
 - 新增 `is-dice-view` 页面状态，只在 `dice-rolling` / `dice-result` 阶段启用骰子专用布局，避免影响发牌后正常牌桌。
