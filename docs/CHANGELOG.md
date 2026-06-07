@@ -11,6 +11,17 @@
 
 ## 2026-06-07
 
+### 扑克牌内部图案分离
+
+- 按用户补充说明修正牌面内部布局：这次重点不是牌与牌之间，而是左上角点数/小花色和右下角大花色不要挤在一起。
+- `.card-corner` 改为绝对定位贴近牌面左上角，`.card-center-suit` 继续固定在右下角；公共牌和手牌尺寸略放大，同时缩小小牌上的点数、角标花色和右下大花色，避免小视口里三组图案互相覆盖。
+- 触屏横屏下公共牌宽度调整为 `clamp(44px, 4.8vw, 48px)`，手牌宽度调整为 `clamp(54px, 5.7vw, 62px)`；2 人局 10 张手牌仍通过横向滚动容纳。
+- 缓存版本更新为 `20260607-card-symbol-spacing`；`artifacts/layout-check/public-area-preview.html` 同步使用新缓存版本。
+验证：
+- `node --check app.js` 通过。
+- 内置浏览器确认真实页面加载 `styles.css?v=20260607-card-symbol-spacing` 与 `app.js?v=20260607-card-symbol-spacing`，`.card-face` 数量为 0。
+- 使用真实 `index.html`、本机 Chrome + Playwright、`isMobile: true`、`hasTouch: true` 验证 4 人 `915 x 412`、4 人 `844 x 390`、2 人 `915 x 412`；三组均为 `tableMetrics.overlap: false`、`handMetrics.overlap: false`、`symbolMetrics.tableOverlap: false`、`symbolMetrics.handOverlap: false`。截图为 `artifacts/layout-check/real-index-card-symbol-spacing-4p-915x412.png`、`artifacts/layout-check/real-index-card-symbol-spacing-4p-844x390.png`、`artifacts/layout-check/real-index-card-symbol-spacing-2p-915x412.png`，记录为 `artifacts/layout-check/card-symbol-spacing-check.json`。
+
 ### 简洁斗地主式 CSS 扑克牌面
 
 - 按用户参考图继续优化原本 CSS 牌面：牌面只保留点数/字母和红黑花色图案，去掉“钓牌 / 计分”等说明文字，说明信息保留在按钮 `aria-label` 中。

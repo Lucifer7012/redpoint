@@ -1,0 +1,1031 @@
+[
+  {
+    "url": "http://127.0.0.1:4173/index.html?verify=card-symbol-spacing-4p-915x412&t=1780840497315",
+    "bodyClass": "is-game-view",
+    "resources": [
+      "http://127.0.0.1:4173/styles.css?v=20260607-card-symbol-spacing",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-app-compat.js",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth-compat.js",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore-compat.js",
+      "http://127.0.0.1:4173/app.js?v=20260607-card-symbol-spacing"
+    ],
+    "cardFaceCount": 0,
+    "cardButtonCount": 17,
+    "phase": "human-turn",
+    "openingStage": null,
+    "media": {
+      "hoverNone": true,
+      "pointerCoarse": true,
+      "landscape": true,
+      "max960": true
+    },
+    "tableMetrics": {
+      "count": 12,
+      "overlap": false,
+      "sample": [
+        {
+          "left": 305.5,
+          "right": 349.5,
+          "top": 97.890625,
+          "bottom": 159,
+          "width": 44,
+          "height": 61.109375
+        },
+        {
+          "left": 357.5013427734375,
+          "right": 401.4986572265625,
+          "top": 97.91865539550781,
+          "bottom": 159.02430725097656,
+          "width": 43.997314453125,
+          "height": 61.10565185546875
+        },
+        {
+          "left": 409.5093078613281,
+          "right": 453.4906921386719,
+          "top": 98.0861587524414,
+          "bottom": 159.16932678222656,
+          "width": 43.98138427734375,
+          "height": 61.083168029785156
+        }
+      ]
+    },
+    "handMetrics": {
+      "count": 5,
+      "overlap": false,
+      "clientWidth": 422,
+      "scrollWidth": 422,
+      "sample": [
+        {
+          "left": 276,
+          "right": 330,
+          "top": 325,
+          "bottom": 400,
+          "width": 54,
+          "height": 75
+        },
+        {
+          "left": 338.00164794921875,
+          "right": 391.99835205078125,
+          "top": 325.02886962890625,
+          "bottom": 400.0242919921875,
+          "width": 53.9967041015625,
+          "height": 74.99542236328125
+        },
+        {
+          "left": 400.01141357421875,
+          "right": 453.98858642578125,
+          "top": 325.2015075683594,
+          "bottom": 400.1693420410156,
+          "width": 53.9771728515625,
+          "height": 74.96783447265625
+        }
+      ]
+    },
+    "actionMetrics": {
+      "count": 0,
+      "overlap": false,
+      "sample": []
+    },
+    "symbolMetrics": {
+      "tableOverlap": false,
+      "handOverlap": false,
+      "actionOverlap": false,
+      "tableOverlapCount": 0,
+      "handOverlapCount": 0,
+      "actionOverlapCount": 0,
+      "tableSample": [
+        {
+          "index": 0,
+          "card": {
+            "left": 305.5,
+            "right": 349.5,
+            "top": 97.890625,
+            "bottom": 159,
+            "width": 44,
+            "height": 61.109375
+          },
+          "text": "A♣♣",
+          "rank": {
+            "left": 312.5,
+            "right": 326.03125,
+            "top": 103.890625,
+            "bottom": 119.9375,
+            "width": 13.53125,
+            "height": 16.046875
+          },
+          "smallSuit": {
+            "left": 312.5,
+            "right": 318.765625,
+            "top": 120.9375,
+            "bottom": 130.09375,
+            "width": 6.265625,
+            "height": 9.15625
+          },
+          "centerSuit": {
+            "left": 330.40625,
+            "right": 344.5,
+            "top": 133.40625,
+            "bottom": 154,
+            "width": 14.09375,
+            "height": 20.59375
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        },
+        {
+          "index": 1,
+          "card": {
+            "left": 357.5013427734375,
+            "right": 401.4986572265625,
+            "top": 97.91865539550781,
+            "bottom": 159.02430725097656,
+            "width": 43.997314453125,
+            "height": 61.10565185546875
+          },
+          "text": "7♥♥",
+          "rank": {
+            "left": 364.50091552734375,
+            "right": 374.39093017578125,
+            "top": 103.91828918457031,
+            "bottom": 119.96418762207031,
+            "width": 9.8900146484375,
+            "height": 16.0458984375
+          },
+          "smallSuit": {
+            "left": 364.50091552734375,
+            "right": 370.76617431640625,
+            "top": 120.96412658691406,
+            "bottom": 130.1198272705078,
+            "width": 6.2652587890625,
+            "height": 9.15570068359375
+          },
+          "centerSuit": {
+            "left": 382.40606689453125,
+            "right": 396.49896240234375,
+            "top": 133.43212890625,
+            "bottom": 154.0246124267578,
+            "width": 14.0928955078125,
+            "height": 20.592483520507812
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        },
+        {
+          "index": 2,
+          "card": {
+            "left": 409.5093078613281,
+            "right": 453.4906921386719,
+            "top": 98.0861587524414,
+            "bottom": 159.16932678222656,
+            "width": 43.98138427734375,
+            "height": 61.083168029785156
+          },
+          "text": "K♠♠",
+          "rank": {
+            "left": 416.50634765625,
+            "right": 431.07830810546875,
+            "top": 104.08358764648438,
+            "bottom": 120.12358093261719,
+            "width": 14.57196044921875,
+            "height": 16.039993286132812
+          },
+          "smallSuit": {
+            "left": 416.50634765625,
+            "right": 422.7693176269531,
+            "top": 121.12315368652344,
+            "bottom": 130.27548217773438,
+            "width": 6.262969970703125,
+            "height": 9.152328491210938
+          },
+          "centerSuit": {
+            "left": 434.405029296875,
+            "right": 448.4927978515625,
+            "top": 133.5865478515625,
+            "bottom": 154.17147827148438,
+            "width": 14.0877685546875,
+            "height": 20.584930419921875
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        }
+      ],
+      "handSample": [
+        {
+          "index": 0,
+          "card": {
+            "left": 276,
+            "right": 330,
+            "top": 325,
+            "bottom": 400,
+            "width": 54,
+            "height": 75
+          },
+          "text": "J♦♦",
+          "rank": {
+            "left": 284,
+            "right": 296.53125,
+            "top": 332,
+            "bottom": 350.9375,
+            "width": 12.53125,
+            "height": 18.9375
+          },
+          "smallSuit": {
+            "left": 284,
+            "right": 291.203125,
+            "top": 351.9375,
+            "bottom": 362.453125,
+            "width": 7.203125,
+            "height": 10.515625
+          },
+          "centerSuit": {
+            "left": 307.140625,
+            "right": 325,
+            "top": 368.921875,
+            "bottom": 395,
+            "width": 17.859375,
+            "height": 26.078125
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        },
+        {
+          "index": 1,
+          "card": {
+            "left": 338.00164794921875,
+            "right": 391.99835205078125,
+            "top": 325.02886962890625,
+            "bottom": 400.0242919921875,
+            "width": 53.9967041015625,
+            "height": 74.99542236328125
+          },
+          "text": "7♦♦",
+          "rank": {
+            "left": 346.00115966796875,
+            "right": 357.67230224609375,
+            "top": 332.0284423828125,
+            "bottom": 350.96478271484375,
+            "width": 11.671142578125,
+            "height": 18.93634033203125
+          },
+          "smallSuit": {
+            "left": 346.00115966796875,
+            "right": 353.203857421875,
+            "top": 351.9647216796875,
+            "bottom": 362.479736328125,
+            "width": 7.20269775390625,
+            "height": 10.5150146484375
+          },
+          "centerSuit": {
+            "left": 369.140380859375,
+            "right": 386.9986572265625,
+            "top": 368.94805908203125,
+            "bottom": 395.02459716796875,
+            "width": 17.8582763671875,
+            "height": 26.0765380859375
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        },
+        {
+          "index": 2,
+          "card": {
+            "left": 400.01141357421875,
+            "right": 453.98858642578125,
+            "top": 325.2015075683594,
+            "bottom": 400.1693420410156,
+            "width": 53.9771728515625,
+            "height": 74.96783447265625
+          },
+          "text": "Q♦♦",
+          "rank": {
+            "left": 408.008056640625,
+            "right": 425.250732421875,
+            "top": 332.198486328125,
+            "bottom": 351.12786865234375,
+            "width": 17.24267578125,
+            "height": 18.92938232421875
+          },
+          "smallSuit": {
+            "left": 408.008056640625,
+            "right": 415.2081298828125,
+            "top": 352.12744140625,
+            "bottom": 362.6385498046875,
+            "width": 7.2000732421875,
+            "height": 10.5111083984375
+          },
+          "centerSuit": {
+            "left": 431.13885498046875,
+            "right": 448.9906921386719,
+            "top": 369.10455322265625,
+            "bottom": 395.1714782714844,
+            "width": 17.851837158203125,
+            "height": 26.066925048828125
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        }
+      ],
+      "actionSample": []
+    },
+    "startResult": {
+      "phase": "human-turn",
+      "playerCount": 4,
+      "handCount": 5,
+      "tableCount": 12
+    },
+    "screenshotPath": "C:/Users/HOUSE/Desktop/redpoint/artifacts/layout-check/real-index-card-symbol-spacing-4p-915x412.png",
+    "logs": []
+  },
+  {
+    "url": "http://127.0.0.1:4173/index.html?verify=card-symbol-spacing-4p-844x390&t=1780840500129",
+    "bodyClass": "is-game-view",
+    "resources": [
+      "http://127.0.0.1:4173/styles.css?v=20260607-card-symbol-spacing",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-app-compat.js",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth-compat.js",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore-compat.js",
+      "http://127.0.0.1:4173/app.js?v=20260607-card-symbol-spacing"
+    ],
+    "cardFaceCount": 0,
+    "cardButtonCount": 17,
+    "phase": "human-turn",
+    "openingStage": null,
+    "media": {
+      "hoverNone": true,
+      "pointerCoarse": true,
+      "landscape": true,
+      "max960": true
+    },
+    "tableMetrics": {
+      "count": 12,
+      "overlap": false,
+      "sample": [
+        {
+          "left": 270.00018310546875,
+          "right": 313.99981689453125,
+          "top": 86.89425659179688,
+          "bottom": 148.00314331054688,
+          "width": 43.9996337890625,
+          "height": 61.10888671875
+        },
+        {
+          "left": 322.0051574707031,
+          "right": 365.9948425292969,
+          "top": 86.99871826171875,
+          "bottom": 148.0936737060547,
+          "width": 43.98968505859375,
+          "height": 61.09495544433594
+        },
+        {
+          "left": 374.0179138183594,
+          "right": 417.98211669921875,
+          "top": 87.26713562011719,
+          "bottom": 148.32553100585938,
+          "width": 43.964202880859375,
+          "height": 61.05839538574219
+        }
+      ]
+    },
+    "handMetrics": {
+      "count": 5,
+      "overlap": false,
+      "clientWidth": 354,
+      "scrollWidth": 354,
+      "sample": [
+        {
+          "left": 239.00021362304688,
+          "right": 292.9997863769531,
+          "top": 303.0037536621094,
+          "bottom": 378.0031433105469,
+          "width": 53.99957275390625,
+          "height": 74.9993896484375
+        },
+        {
+          "left": 301.0063171386719,
+          "right": 354.9936828613281,
+          "top": 303.1113586425781,
+          "bottom": 378.09368896484375,
+          "width": 53.98736572265625,
+          "height": 74.98233032226562
+        },
+        {
+          "left": 363.02197265625,
+          "right": 416.97802734375,
+          "top": 303.3880920410156,
+          "bottom": 378.3255310058594,
+          "width": 53.9560546875,
+          "height": 74.93743896484375
+        }
+      ]
+    },
+    "actionMetrics": {
+      "count": 0,
+      "overlap": false,
+      "sample": []
+    },
+    "symbolMetrics": {
+      "tableOverlap": false,
+      "handOverlap": false,
+      "actionOverlap": false,
+      "tableOverlapCount": 0,
+      "handOverlapCount": 0,
+      "actionOverlapCount": 0,
+      "tableSample": [
+        {
+          "index": 0,
+          "card": {
+            "left": 270.00018310546875,
+            "right": 313.99981689453125,
+            "top": 86.89425659179688,
+            "bottom": 148.00314331054688,
+            "width": 43.9996337890625,
+            "height": 61.10888671875
+          },
+          "text": "8♥♥",
+          "rank": {
+            "left": 277.0001220703125,
+            "right": 288.1250305175781,
+            "top": 92.89420318603516,
+            "bottom": 107.69096374511719,
+            "width": 11.124908447265625,
+            "height": 14.796760559082031
+          },
+          "smallSuit": {
+            "left": 277.0001220703125,
+            "right": 282.78131103515625,
+            "top": 108.69095611572266,
+            "bottom": 117.12838745117188,
+            "width": 5.78118896484375,
+            "height": 8.437431335449219
+          },
+          "centerSuit": {
+            "left": 295.9999694824219,
+            "right": 308.9998779296875,
+            "top": 124.01895904541016,
+            "bottom": 143.00318908691406,
+            "width": 12.999908447265625,
+            "height": 18.984230041503906
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        },
+        {
+          "index": 1,
+          "card": {
+            "left": 322.0051574707031,
+            "right": 365.9948425292969,
+            "top": 86.99871826171875,
+            "bottom": 148.0936737060547,
+            "width": 43.98968505859375,
+            "height": 61.09495544433594
+          },
+          "text": "6♦♦",
+          "rank": {
+            "left": 329.0035095214844,
+            "right": 339.6728820800781,
+            "top": 92.99729919433594,
+            "bottom": 107.79068756103516,
+            "width": 10.66937255859375,
+            "height": 14.793388366699219
+          },
+          "smallSuit": {
+            "left": 329.0035095214844,
+            "right": 334.7834167480469,
+            "top": 108.79045104980469,
+            "bottom": 117.22595977783203,
+            "width": 5.7799072265625,
+            "height": 8.435508728027344
+          },
+          "centerSuit": {
+            "left": 347.9990539550781,
+            "right": 360.99603271484375,
+            "top": 124.11495971679688,
+            "bottom": 143.0948486328125,
+            "width": 12.996978759765625,
+            "height": 18.979888916015625
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        },
+        {
+          "index": 2,
+          "card": {
+            "left": 374.0179138183594,
+            "right": 417.98211669921875,
+            "top": 87.26713562011719,
+            "bottom": 148.32553100585938,
+            "width": 43.964202880859375,
+            "height": 61.05839538574219
+          },
+          "text": "J♦♦",
+          "rank": {
+            "left": 381.01220703125,
+            "right": 390.8011169433594,
+            "top": 93.26213073730469,
+            "bottom": 108.04666137695312,
+            "width": 9.788909912109375,
+            "height": 14.784530639648438
+          },
+          "smallSuit": {
+            "left": 381.01220703125,
+            "right": 386.78875732421875,
+            "top": 109.04582214355469,
+            "bottom": 117.47628784179688,
+            "width": 5.77655029296875,
+            "height": 8.430465698242188
+          },
+          "centerSuit": {
+            "left": 399.99676513671875,
+            "right": 412.98614501953125,
+            "top": 124.36116027832031,
+            "bottom": 143.32969665527344,
+            "width": 12.9893798828125,
+            "height": 18.968536376953125
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        }
+      ],
+      "handSample": [
+        {
+          "index": 0,
+          "card": {
+            "left": 239.00021362304688,
+            "right": 292.9997863769531,
+            "top": 303.0037536621094,
+            "bottom": 378.0031433105469,
+            "width": 53.99957275390625,
+            "height": 74.9993896484375
+          },
+          "text": "2♣♣",
+          "rank": {
+            "left": 247.00015258789062,
+            "right": 259.17193603515625,
+            "top": 310.0036926269531,
+            "bottom": 327.4566650390625,
+            "width": 12.171783447265625,
+            "height": 17.452972412109375
+          },
+          "smallSuit": {
+            "left": 247.00015258789062,
+            "right": 253.64071655273438,
+            "top": 328.4566650390625,
+            "bottom": 338.15972900390625,
+            "width": 6.64056396484375,
+            "height": 9.70306396484375
+          },
+          "centerSuit": {
+            "left": 271.5312194824219,
+            "right": 287.99981689453125,
+            "top": 348.9565124511719,
+            "bottom": 373.003173828125,
+            "width": 16.468597412109375,
+            "height": 24.046661376953125
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        },
+        {
+          "index": 1,
+          "card": {
+            "left": 301.0063171386719,
+            "right": 354.9936828613281,
+            "top": 303.1113586425781,
+            "bottom": 378.09368896484375,
+            "width": 53.98736572265625,
+            "height": 74.98233032226562
+          },
+          "text": "K♦♦",
+          "rank": {
+            "left": 309.00445556640625,
+            "right": 324.860107421875,
+            "top": 310.1097106933594,
+            "bottom": 327.5587158203125,
+            "width": 15.85565185546875,
+            "height": 17.449005126953125
+          },
+          "smallSuit": {
+            "left": 309.00445556640625,
+            "right": 315.6435241699219,
+            "top": 328.5584716796875,
+            "bottom": 338.25933837890625,
+            "width": 6.639068603515625,
+            "height": 9.70086669921875
+          },
+          "centerSuit": {
+            "left": 333.52996826171875,
+            "right": 349.9948425292969,
+            "top": 349.05364990234375,
+            "bottom": 373.0948486328125,
+            "width": 16.464874267578125,
+            "height": 24.04119873046875
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        },
+        {
+          "index": 2,
+          "card": {
+            "left": 363.02197265625,
+            "right": 416.97802734375,
+            "top": 303.3880920410156,
+            "bottom": 378.3255310058594,
+            "width": 53.9560546875,
+            "height": 74.93743896484375
+          },
+          "text": "8♣♣",
+          "rank": {
+            "left": 371.01544189453125,
+            "right": 384.1453857421875,
+            "top": 310.38226318359375,
+            "bottom": 327.82080078125,
+            "width": 13.12994384765625,
+            "height": 17.43853759765625
+          },
+          "smallSuit": {
+            "left": 371.01544189453125,
+            "right": 377.65069580078125,
+            "top": 328.8199768066406,
+            "bottom": 338.5150146484375,
+            "width": 6.63525390625,
+            "height": 9.695037841796875
+          },
+          "centerSuit": {
+            "left": 395.5267333984375,
+            "right": 411.98211669921875,
+            "top": 349.3028869628906,
+            "bottom": 373.3297119140625,
+            "width": 16.45538330078125,
+            "height": 24.026824951171875
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        }
+      ],
+      "actionSample": []
+    },
+    "startResult": {
+      "phase": "human-turn",
+      "playerCount": 4,
+      "handCount": 5,
+      "tableCount": 12
+    },
+    "screenshotPath": "C:/Users/HOUSE/Desktop/redpoint/artifacts/layout-check/real-index-card-symbol-spacing-4p-844x390.png",
+    "logs": []
+  },
+  {
+    "url": "http://127.0.0.1:4173/index.html?verify=card-symbol-spacing-2p-915x412&t=1780840503182",
+    "bodyClass": "is-game-view",
+    "resources": [
+      "http://127.0.0.1:4173/styles.css?v=20260607-card-symbol-spacing",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-app-compat.js",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth-compat.js",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore-compat.js",
+      "http://127.0.0.1:4173/app.js?v=20260607-card-symbol-spacing"
+    ],
+    "cardFaceCount": 0,
+    "cardButtonCount": 22,
+    "phase": "human-turn",
+    "openingStage": null,
+    "media": {
+      "hoverNone": true,
+      "pointerCoarse": true,
+      "landscape": true,
+      "max960": true
+    },
+    "tableMetrics": {
+      "count": 12,
+      "overlap": false,
+      "sample": [
+        {
+          "left": 305.50018310546875,
+          "right": 349.49981689453125,
+          "top": 97.89427185058594,
+          "bottom": 159.00315856933594,
+          "width": 43.9996337890625,
+          "height": 61.10888671875
+        },
+        {
+          "left": 357.5051574707031,
+          "right": 401.4948425292969,
+          "top": 97.99881744384766,
+          "bottom": 159.09376525878906,
+          "width": 43.98968505859375,
+          "height": 61.094947814941406
+        },
+        {
+          "left": 409.5179138183594,
+          "right": 453.4820861816406,
+          "top": 98.26732635498047,
+          "bottom": 159.32568359375,
+          "width": 43.96417236328125,
+          "height": 61.05835723876953
+        }
+      ]
+    },
+    "handMetrics": {
+      "count": 10,
+      "overlap": false,
+      "clientWidth": 422,
+      "scrollWidth": 616,
+      "sample": [
+        {
+          "left": 218.00021362304688,
+          "right": 271.9997863769531,
+          "top": 325.0037536621094,
+          "bottom": 400.003173828125,
+          "width": 53.99957275390625,
+          "height": 74.99942016601562
+        },
+        {
+          "left": 280.00634765625,
+          "right": 333.99365234375,
+          "top": 325.1114807128906,
+          "bottom": 400.09375,
+          "width": 53.9873046875,
+          "height": 74.98226928710938
+        },
+        {
+          "left": 342.02197265625,
+          "right": 395.97802734375,
+          "top": 325.3883056640625,
+          "bottom": 400.32568359375,
+          "width": 53.9560546875,
+          "height": 74.9373779296875
+        }
+      ]
+    },
+    "actionMetrics": {
+      "count": 0,
+      "overlap": false,
+      "sample": []
+    },
+    "symbolMetrics": {
+      "tableOverlap": false,
+      "handOverlap": false,
+      "actionOverlap": false,
+      "tableOverlapCount": 0,
+      "handOverlapCount": 0,
+      "actionOverlapCount": 0,
+      "tableSample": [
+        {
+          "index": 0,
+          "card": {
+            "left": 305.50018310546875,
+            "right": 349.49981689453125,
+            "top": 97.89427185058594,
+            "bottom": 159.00315856933594,
+            "width": 43.9996337890625,
+            "height": 61.10888671875
+          },
+          "text": "7♦♦",
+          "rank": {
+            "left": 312.5001220703125,
+            "right": 322.3906555175781,
+            "top": 103.89422607421875,
+            "bottom": 119.94097137451172,
+            "width": 9.890533447265625,
+            "height": 16.04674530029297
+          },
+          "smallSuit": {
+            "left": 312.5001220703125,
+            "right": 318.76568603515625,
+            "top": 120.94096374511719,
+            "bottom": 130.09713745117188,
+            "width": 6.26556396484375,
+            "height": 9.156173706054688
+          },
+          "centerSuit": {
+            "left": 330.4062194824219,
+            "right": 344.4998779296875,
+            "top": 133.40960693359375,
+            "bottom": 154.00320434570312,
+            "width": 14.093658447265625,
+            "height": 20.593597412109375
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        },
+        {
+          "index": 1,
+          "card": {
+            "left": 357.5051574707031,
+            "right": 401.4948425292969,
+            "top": 97.99881744384766,
+            "bottom": 159.09376525878906,
+            "width": 43.98968505859375,
+            "height": 61.094947814941406
+          },
+          "text": "2♣♣",
+          "rank": {
+            "left": 364.5035095214844,
+            "right": 375.6883850097656,
+            "top": 103.99739837646484,
+            "bottom": 120.04048156738281,
+            "width": 11.18487548828125,
+            "height": 16.04308319091797
+          },
+          "smallSuit": {
+            "left": 364.5035095214844,
+            "right": 370.7676696777344,
+            "top": 121.04025268554688,
+            "bottom": 130.1943359375,
+            "width": 6.26416015625,
+            "height": 9.154083251953125
+          },
+          "centerSuit": {
+            "left": 382.40557861328125,
+            "right": 396.49603271484375,
+            "top": 133.5060577392578,
+            "bottom": 154.09494018554688,
+            "width": 14.0904541015625,
+            "height": 20.588882446289062
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        },
+        {
+          "index": 2,
+          "card": {
+            "left": 409.5179138183594,
+            "right": 453.4820861816406,
+            "top": 98.26732635498047,
+            "bottom": 159.32568359375,
+            "width": 43.96417236328125,
+            "height": 61.05835723876953
+          },
+          "text": "5♠♠",
+          "rank": {
+            "left": 416.51220703125,
+            "right": 427.2066345214844,
+            "top": 104.26231384277344,
+            "bottom": 120.29579162597656,
+            "width": 10.694427490234375,
+            "height": 16.033477783203125
+          },
+          "smallSuit": {
+            "left": 416.51220703125,
+            "right": 422.7727355957031,
+            "top": 121.29496002197266,
+            "bottom": 130.44357299804688,
+            "width": 6.260528564453125,
+            "height": 9.148612976074219
+          },
+          "centerSuit": {
+            "left": 434.40386962890625,
+            "right": 448.48614501953125,
+            "top": 133.7532958984375,
+            "bottom": 154.32986450195312,
+            "width": 14.082275390625,
+            "height": 20.576568603515625
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        }
+      ],
+      "handSample": [
+        {
+          "index": 0,
+          "card": {
+            "left": 218.00021362304688,
+            "right": 271.9997863769531,
+            "top": 325.0037536621094,
+            "bottom": 400.003173828125,
+            "width": 53.99957275390625,
+            "height": 74.99942016601562
+          },
+          "text": "10♦♦",
+          "rank": {
+            "left": 226.00015258789062,
+            "right": 251.0624542236328,
+            "top": 332.0036926269531,
+            "bottom": 350.9410400390625,
+            "width": 25.062301635742188,
+            "height": 18.937347412109375
+          },
+          "smallSuit": {
+            "left": 226.00015258789062,
+            "right": 233.20321655273438,
+            "top": 351.9410400390625,
+            "bottom": 362.45660400390625,
+            "width": 7.20306396484375,
+            "height": 10.51556396484375
+          },
+          "centerSuit": {
+            "left": 249.14059448242188,
+            "right": 266.99981689453125,
+            "top": 368.92529296875,
+            "bottom": 395.0032043457031,
+            "width": 17.859222412109375,
+            "height": 26.077911376953125
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        },
+        {
+          "index": 1,
+          "card": {
+            "left": 280.00634765625,
+            "right": 333.99365234375,
+            "top": 325.1114807128906,
+            "bottom": 400.09375,
+            "width": 53.9873046875,
+            "height": 74.98226928710938
+          },
+          "text": "7♥♥",
+          "rank": {
+            "left": 288.00445556640625,
+            "right": 299.673583984375,
+            "top": 332.1098327636719,
+            "bottom": 351.0428466796875,
+            "width": 11.66912841796875,
+            "height": 18.933013916015625
+          },
+          "smallSuit": {
+            "left": 288.00445556640625,
+            "right": 295.20587158203125,
+            "top": 352.0426025390625,
+            "bottom": 362.5557556152344,
+            "width": 7.201416015625,
+            "height": 10.513153076171875
+          },
+          "centerSuit": {
+            "left": 311.1396484375,
+            "right": 328.9948425292969,
+            "top": 369.0229797363281,
+            "bottom": 395.0949401855469,
+            "width": 17.855194091796875,
+            "height": 26.07196044921875
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        },
+        {
+          "index": 2,
+          "card": {
+            "left": 342.02197265625,
+            "right": 395.97802734375,
+            "top": 325.3883056640625,
+            "bottom": 400.32568359375,
+            "width": 53.9560546875,
+            "height": 74.9373779296875
+          },
+          "text": "10♣♣",
+          "rank": {
+            "left": 350.0154724121094,
+            "right": 375.05755615234375,
+            "top": 332.3824462890625,
+            "bottom": 351.30413818359375,
+            "width": 25.042083740234375,
+            "height": 18.92169189453125
+          },
+          "smallSuit": {
+            "left": 350.0154724121094,
+            "right": 357.2127380371094,
+            "top": 352.3033142089844,
+            "bottom": 362.8101501464844,
+            "width": 7.197265625,
+            "height": 10.5068359375
+          },
+          "centerSuit": {
+            "left": 373.13726806640625,
+            "right": 390.9820861816406,
+            "top": 369.27349853515625,
+            "bottom": 395.3298645019531,
+            "width": 17.844818115234375,
+            "height": 26.056365966796875
+          },
+          "rankSmallSuitOverlap": 0,
+          "rankCenterOverlap": 0,
+          "smallSuitCenterOverlap": 0
+        }
+      ],
+      "actionSample": []
+    },
+    "startResult": {
+      "phase": "human-turn",
+      "playerCount": 2,
+      "handCount": 10,
+      "tableCount": 12
+    },
+    "screenshotPath": "C:/Users/HOUSE/Desktop/redpoint/artifacts/layout-check/real-index-card-symbol-spacing-2p-915x412.png",
+    "logs": []
+  }
+]

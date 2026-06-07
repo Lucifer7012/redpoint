@@ -4,6 +4,28 @@
 
 ## 2026-06-07
 
+### 扑克牌内部图案分离
+
+- 背景：用户补充说明“不要把牌堆在一起”指的是牌面内部图案不要堆叠，而不是牌与牌之间的排列；参考图希望左上角是点数和小花色，右下角是独立的大花色。
+- 改动：
+  - `.card-corner` 从普通文本流改成绝对定位，固定在牌面左上角，避免被按钮文本居中规则带到牌面中间。
+  - 右下大花色继续使用 `.card-center-suit`，但在触屏横屏小牌上进一步缩小，和左上角组拉开。
+  - 公共牌宽度从 `clamp(38px, 4.3vw, 42px)` 调整为 `clamp(44px, 4.8vw, 48px)`，手牌宽度从 `clamp(48px, 5.1vw, 56px)` 调整为 `clamp(54px, 5.7vw, 62px)`。
+  - 触屏横屏下公共牌、手牌、最近动作小牌分别使用更保守的点数/小花色/大花色字号，保证小牌里三组图案不互相压住。
+  - 缓存版本更新为 `20260607-card-symbol-spacing`。
+- 涉及文件：
+  - `index.html`
+  - `styles.css`
+  - `artifacts/layout-check/public-area-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 内置浏览器确认真实页面加载 `styles.css?v=20260607-card-symbol-spacing` 与 `app.js?v=20260607-card-symbol-spacing`，入口页 `.card-face` 数量为 0。
+  - 真实 `index.html` 在本机 Chrome + Playwright 触屏横屏下截图验证：
+    - `artifacts/layout-check/real-index-card-symbol-spacing-4p-915x412.png`
+    - `artifacts/layout-check/real-index-card-symbol-spacing-4p-844x390.png`
+    - `artifacts/layout-check/real-index-card-symbol-spacing-2p-915x412.png`
+  - `artifacts/layout-check/card-symbol-spacing-check.json` 记录三种视口均命中触屏横屏媒体规则，公共牌/手牌之间不重叠，牌内部 `rank / smallSuit / centerSuit` 也无重叠。
+
 ### 简洁斗地主式 CSS 扑克牌面
 
 - 背景：恢复原本牌后，用户反馈当前 CSS 牌仍然太丑，并给出斗地主手牌参考；随后明确补充“能不用重叠的时候还是不要重叠，单纯颜色图案和数字就行”。

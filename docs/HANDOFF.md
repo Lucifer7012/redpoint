@@ -104,13 +104,13 @@ cd redpoint
 - GitHub：`https://github.com/Lucifer7012/redpoint`
 - 线上测试链接：`https://lucifer7012.github.io/redpoint/`
 - 本地测试地址：`http://127.0.0.1:4173/`
-- 当前缓存版本：`styles.css?v=20260607-clean-poker-cards`，`app.js?v=20260607-clean-poker-cards`
-- 最近主要改动：在撤回道风图片牌后，继续把 CSS 牌面优化为简洁斗地主式扑克牌。当前牌面只显示点数/字母和红黑花色图案，不显示“钓牌 / 计分”文字，不加载 `assets/cards/daoist/` 或 `<img class="card-face">`。手牌取消负间距重叠，2 人局 10 张手牌放不下时横向滚动。
+- 当前缓存版本：`styles.css?v=20260607-card-symbol-spacing`，`app.js?v=20260607-card-symbol-spacing`
+- 最近主要改动：在撤回道风图片牌后，继续把 CSS 牌面优化为简洁斗地主式扑克牌，并按用户最新反馈把牌内图案分开：左上角点数/小花色贴左上，右下大花色贴右下，避免小牌里图案堆在一起。当前牌面只显示点数/字母和红黑花色图案，不显示“钓牌 / 计分”文字，不加载 `assets/cards/daoist/` 或 `<img class="card-face">`。2 人局 10 张手牌放不下时横向滚动。
 
 ## 当前接力状态
 
-- 上次做到哪里：当前版本已回到非图片牌方案，并把 CSS 牌改成更接近斗地主参考图的白底红黑牌。已用真实 `index.html` 生成 4 人 `915 x 412`、4 人 `844 x 390`、2 人 `915 x 412` 截图：`artifacts/layout-check/real-index-clean-poker-cards-4p-915x412.png`、`artifacts/layout-check/real-index-clean-poker-cards-4p-844x390.png`、`artifacts/layout-check/real-index-clean-poker-cards-2p-915x412.png`，验证记录为 `artifacts/layout-check/clean-poker-cards-check.json`。三种视口均为 `cardFaceCount: 0`；4 人手牌不重叠，2 人 10 张手牌不重叠但横向滚动。
-- 下一步准备做什么：如果继续调整牌桌，优先基于最新 clean-poker-cards 截图做细节微调；不要再从道风图片牌版本继续改。若用户要换另一套牌，先确认是 CSS 样式牌、图片牌，还是只做临时预览。
+- 上次做到哪里：当前版本已回到非图片牌方案，并把 CSS 牌改成更接近斗地主参考图的白底红黑牌；最新一轮又专门修正了牌内图案堆叠。已用真实 `index.html` 生成 4 人 `915 x 412`、4 人 `844 x 390`、2 人 `915 x 412` 截图：`artifacts/layout-check/real-index-card-symbol-spacing-4p-915x412.png`、`artifacts/layout-check/real-index-card-symbol-spacing-4p-844x390.png`、`artifacts/layout-check/real-index-card-symbol-spacing-2p-915x412.png`，验证记录为 `artifacts/layout-check/card-symbol-spacing-check.json`。三种视口均为 `cardFaceCount: 0`，公共牌/手牌不重叠，牌内部点数、小花色和右下大花色也不重叠。
+- 下一步准备做什么：如果继续调整牌桌，优先基于最新 `card-symbol-spacing` 截图做细节微调；不要再从道风图片牌版本继续改。若用户要换另一套牌，先确认是 CSS 样式牌、图片牌，还是只做临时预览。
 - 当前先别动什么：不要重新接入 `assets/cards/daoist/`；跨电脑同步入口和邀请弹窗展示时机也不要改，除非本轮任务明确要求。
 
 ## 当前可继续方向

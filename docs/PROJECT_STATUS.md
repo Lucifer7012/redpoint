@@ -1,6 +1,8 @@
 # Project Status
 
 最新状态补充（2026-06-07）：
+- 对局牌面继续按用户最新反馈修正为“牌内图案分离”：左上角点数/小花色固定贴左上，右下大花色固定贴右下，避免小牌里数字、小花色和大花色堆到一起。
+- 触屏横屏下公共牌和手牌已略放大，公共牌宽度为 `clamp(44px, 4.8vw, 48px)`，手牌宽度为 `clamp(54px, 5.7vw, 62px)`；2 人局 10 张手牌仍横向滚动。
 - 对局牌面已进一步优化为简洁斗地主式 CSS 扑克牌：视觉上只显示点数/字母和红黑花色图案，去掉“钓牌 / 计分”等牌面文字；说明信息保留在 `aria-label`。
 - 手牌负间距重叠已取消，能排开时完整排开；2 人局 10 张手牌在手机横屏放不下时使用横向滚动，不再互相压住。
 - 对局牌面已按用户要求撤回图片牌方案：`createCardButton()` 不再生成 `<img class="card-face">`，也不再加载 `assets/cards/daoist/`；当前可见牌面以最新简洁 CSS 扑克牌样式为准。
@@ -11,8 +13,8 @@
 - 手机横屏真实对局页底部整行已压缩：共同高度从 `184px` 调整为 `160px`，中间手牌区上方空白减少，左侧牌堆区、中间手牌区、右侧最近动作/指标区仍保持同高对齐。
 - 右侧最近动作的 JS 固定高度现在按 `.human-panel` 实际高度计算，避免底部压缩后动作框继续使用旧高度。
 - 已修正三张指标卡压缩后被旧 `grid-area` 静态位置带偏的问题，指标卡重新贴住底部，不再被视口裁切。
-- 当前缓存版本：`styles.css?v=20260607-clean-poker-cards`，`app.js?v=20260607-clean-poker-cards`。
-- 最新真实页面验证截图：`artifacts/layout-check/real-index-clean-poker-cards-4p-915x412.png`、`artifacts/layout-check/real-index-clean-poker-cards-4p-844x390.png`、`artifacts/layout-check/real-index-clean-poker-cards-2p-915x412.png`；验证记录为 `artifacts/layout-check/clean-poker-cards-check.json`。历史骰子布局截图仍可作为上一轮布局参考：`artifacts/layout-check/real-index-dice-layout-4p-915x412.png`、`artifacts/layout-check/real-index-dice-layout-4p-844x390.png`、`artifacts/layout-check/real-index-dice-layout-2p-915x412.png`、`artifacts/layout-check/real-index-dice-layout-4p-active-915x412.png`。
+- 当前缓存版本：`styles.css?v=20260607-card-symbol-spacing`，`app.js?v=20260607-card-symbol-spacing`。
+- 最新真实页面验证截图：`artifacts/layout-check/real-index-card-symbol-spacing-4p-915x412.png`、`artifacts/layout-check/real-index-card-symbol-spacing-4p-844x390.png`、`artifacts/layout-check/real-index-card-symbol-spacing-2p-915x412.png`；验证记录为 `artifacts/layout-check/card-symbol-spacing-check.json`。三种视口均确认公共牌/手牌不重叠，牌内部点数、小花色和右下大花色也不重叠。历史骰子布局截图仍可作为上一轮布局参考：`artifacts/layout-check/real-index-dice-layout-4p-915x412.png`、`artifacts/layout-check/real-index-dice-layout-4p-844x390.png`、`artifacts/layout-check/real-index-dice-layout-2p-915x412.png`、`artifacts/layout-check/real-index-dice-layout-4p-active-915x412.png`。
 
 历史状态补充（2026-06-04）：
 - 真实 `index.html` 对局页右侧最近动作已改为 JS 固定：每次渲染后按右下三张指标卡位置，将 `.action-stage` 以内联 important 样式固定到指标卡上方；这次不再动公共牌、手牌、对手区等整体布局。

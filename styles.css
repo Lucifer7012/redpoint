@@ -2340,8 +2340,8 @@ select {
   border-radius: 8px;
   border: 1px solid rgba(34, 31, 29, 0.2);
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.92), rgba(236, 238, 240, 0.78) 48%, rgba(255, 255, 255, 0.96)),
-    #f8f8f6;
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(238, 239, 241, 0.82) 52%, rgba(255, 255, 255, 0.98)),
+    #fbfbfa;
   cursor: pointer;
   padding: 8px;
   display: block;
@@ -2431,9 +2431,9 @@ select {
 .card-btn.playable-target {
   border-color: rgba(31, 106, 78, 0.5);
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.96), rgba(228, 245, 235, 0.86) 52%, rgba(255, 255, 255, 0.96)),
-    #f7fff9;
-  box-shadow: 0 0 0 2px rgba(31, 106, 78, 0.16), 0 12px 20px rgba(39, 28, 20, 0.12);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(238, 239, 241, 0.82) 52%, rgba(255, 255, 255, 0.98)),
+    #fbfbfa;
+  box-shadow: 0 0 0 2px rgba(31, 106, 78, 0.18), 0 12px 20px rgba(39, 28, 20, 0.12);
 }
 
 .hand-grid .card-btn.playable-target:not(.source-selected) {
@@ -2457,11 +2457,13 @@ select {
 }
 
 .card-corner {
-  position: relative;
+  position: absolute;
+  top: 8px;
+  left: 8px;
   z-index: 1;
   display: inline-grid;
-  justify-items: center;
-  gap: 1px;
+  justify-items: start;
+  gap: 2px;
   line-height: 1;
 }
 
@@ -2470,24 +2472,24 @@ select {
   font-family: Georgia, "Times New Roman", serif;
   font-size: 34px;
   font-weight: 900;
-  line-height: 0.86;
+  line-height: 0.9;
   letter-spacing: 0;
 }
 
 .card-suit {
   display: block;
-  font-size: 22px;
-  line-height: 0.9;
+  font-size: 19px;
+  line-height: 1;
 }
 
 .card-center-suit {
   position: absolute;
-  right: 7px;
-  bottom: 6px;
+  right: 6px;
+  bottom: 5px;
   z-index: 0;
-  font-size: 38px;
+  font-size: 42px;
   line-height: 1;
-  opacity: 0.88;
+  opacity: 0.9;
 }
 
 .card-btn.hidden-zone .card-center-suit {
@@ -6744,9 +6746,9 @@ select {
     --game-bottom-band-height: calc(160px + env(safe-area-inset-bottom, 0px));
     --game-hand-panel-height: var(--game-bottom-band-height);
     --game-side-panel-height: var(--game-bottom-band-height);
-    --game-public-card-width: clamp(38px, 4.3vw, 42px);
-    --game-action-card-width: clamp(38px, 4.2vw, 44px);
-    --game-hand-card-width: clamp(48px, 5.1vw, 56px);
+    --game-public-card-width: clamp(44px, 4.8vw, 48px);
+    --game-action-card-width: clamp(40px, 4.4vw, 46px);
+    --game-hand-card-width: clamp(54px, 5.7vw, 62px);
     --game-card-ratio: 18 / 25;
     --game-panel-side-padding: 6px;
     --game-panel-vertical-padding: 5px;
@@ -6919,7 +6921,7 @@ select {
 
   body.is-game-view .table-cards {
     width: 100%;
-    max-width: calc((var(--game-public-card-width) * 6) + 24px);
+    max-width: calc((var(--game-public-card-width) * 6) + 40px);
     height: 100%;
     max-height: 100%;
     min-height: 0;
@@ -6927,7 +6929,7 @@ select {
     flex-wrap: wrap;
     align-content: center;
     justify-content: center;
-    gap: 4px;
+    gap: 8px;
     padding: 0;
     align-content: center;
     overflow-y: auto;
@@ -7294,7 +7296,7 @@ select {
     min-height: 0;
     max-height: none;
     padding: 0 2px 2px;
-    gap: 4px;
+    gap: 8px;
     align-items: flex-end;
     justify-content: safe center;
     overflow-x: auto;
@@ -7328,25 +7330,48 @@ select {
     transform: translateY(-8px) !important;
   }
 
-  body.is-game-view .card-corner {
-    gap: 0;
+  body.is-game-view .table-board .card-corner {
+    top: 5px;
+    left: 6px;
+    gap: 1px;
   }
 
-  body.is-game-view .table-board .card-rank,
+  body.is-game-view .table-board .card-rank {
+    font-size: clamp(16px, 1.95vw, 19px);
+    line-height: 0.9;
+  }
+
+  body.is-game-view .table-board .card-suit {
+    font-size: clamp(8px, 1vw, 10px);
+    line-height: 1;
+  }
+
+  body.is-game-view .table-board .card-center-suit {
+    right: 4px;
+    bottom: 4px;
+    font-size: clamp(17px, 2.25vw, 23px);
+  }
+
+  body.is-game-view .human-panel .card-corner {
+    top: 6px;
+    left: 7px;
+    gap: 1px;
+  }
+
   body.is-game-view .human-panel .card-rank {
-    font-size: clamp(18px, 2.4vw, 26px);
+    font-size: clamp(18px, 2.3vw, 23px);
+    line-height: 0.9;
   }
 
-  body.is-game-view .table-board .card-suit,
   body.is-game-view .human-panel .card-suit {
-    font-size: clamp(12px, 1.6vw, 18px);
+    font-size: clamp(9px, 1.15vw, 12px);
+    line-height: 1;
   }
 
-  body.is-game-view .table-board .card-center-suit,
   body.is-game-view .human-panel .card-center-suit {
     right: 4px;
     bottom: 4px;
-    font-size: clamp(19px, 2.8vw, 30px);
+    font-size: clamp(22px, 2.85vw, 28px);
   }
 
   body.is-game-view .seat-dice-top {
@@ -7608,16 +7633,18 @@ select {
   }
 
   body.is-game-view .action-stage__cards .card-rank {
-    font-size: 18px !important;
+    font-size: 15px !important;
+    line-height: 0.9 !important;
   }
 
   body.is-game-view .action-stage__cards .card-suit {
-    font-size: 12px !important;
+    font-size: 8px !important;
+    line-height: 1 !important;
   }
 
   body.is-game-view .action-stage__cards .card-center-suit {
     right: 3px !important;
-    bottom: 3px !important;
+    bottom: 4px !important;
     font-size: 18px !important;
   }
 }
