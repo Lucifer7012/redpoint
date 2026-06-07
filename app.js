@@ -5431,6 +5431,7 @@ function render() {
   document.body.classList.toggle("is-login-view", loginEntryView);
   document.body.classList.toggle("is-auth-entry-view", authEntryView);
   document.body.classList.toggle("is-game-view", state.phase !== "setup");
+  document.body.classList.toggle("is-dice-view", state.phase === "dice-rolling" || state.phase === "dice-result");
 
   if (state.phase === "setup") {
     updateGameLayoutScale();
@@ -6198,7 +6199,9 @@ function renderHumanHand(humanPlayer) {
   if (!humanPlayer || humanPlayer.hand.length === 0) {
     const emptyText = state.phase === "opening-deal"
       ? "正在发你的手牌"
-      : "你的手牌已经出完";
+      : state.phase === "dice-rolling" || state.phase === "dice-result"
+        ? "等待摇骰子结果"
+        : "你的手牌已经出完";
     ui.handCards.appendChild(createEmptyState(emptyText));
     return;
   }

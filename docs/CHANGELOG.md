@@ -11,6 +11,18 @@
 
 ## 2026-06-07
 
+### 四人横屏骰子布局修正
+
+- 新增 `is-dice-view` 页面状态，只在 `dice-rolling` / `dice-result` 阶段启用骰子专用布局，避免影响发牌后正常牌桌。
+- 手机横屏骰子阶段隐藏空的公共牌外框，避免 4 人模式骰子压在“公共牌区暂时没有明牌”提示上。
+- 将骰子压缩为更小的徽章式显示：上方三名对手各自贴近自己的玩家卡，本地玩家骰子居中放在下方但不压到底部手牌面板。
+- 骰子阶段底部手牌区空状态文案改为“等待摇骰子结果”，不再显示“你的手牌已经出完”。
+- 缓存版本更新为 `20260607-dice-layout-4p`。
+验证：
+- `node --check app.js` 通过。
+- 使用真实 `index.html`、本机 Chrome + Playwright、`isMobile: true`、`hasTouch: true` 验证 4 人 `915 x 412`、4 人 `844 x 390`、2 人 `915 x 412` 骰子结果阶段；截图为 `artifacts/layout-check/real-index-dice-layout-4p-915x412.png`、`artifacts/layout-check/real-index-dice-layout-4p-844x390.png`、`artifacts/layout-check/real-index-dice-layout-2p-915x412.png`。
+- 额外验证 4 人 `915 x 412` 发牌完成后公共牌外框恢复可见，截图为 `artifacts/layout-check/real-index-dice-layout-4p-active-915x412.png`。
+
 ### 手机横屏公共牌外框收窄
 
 - 将手机横屏对局页公共牌大外框的左右安全边距从 `clamp(88px, 10.8vw, 102px)` 加大到 `clamp(144px, 17vw, 170px)`，让 4 人模式左右/上方玩家座位有独立空间，不再被公共牌外框抢占。
