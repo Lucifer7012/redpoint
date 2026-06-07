@@ -11,6 +11,18 @@
 
 ## 2026-06-07
 
+### 道风牌面可读性放大
+
+- 放大手机横屏对局中的图片牌面：公共牌从约 31-34px 提升到约 42-46px 宽，手牌从约 38px 提升到约 50-53px 宽，右侧最近动作牌提升到约 46px 宽。
+- 公共牌区竖向空间略微上收/下放，避免放大后两排公共牌被裁切；当台面超过 12 张牌时自动切到更宽的 7 张一排，避免第 13 张掉到第三排。
+- 修正 `syncLandscapeActionPanel()` 里残留的旧动作牌固定样式，不再把右侧动作牌压回 40px 和旧比例。
+- 图片牌置灰从 `0.38` 提升到 `0.72`，保留不可选提示但不再把牌面细节洗掉。
+- 缓存版本更新为 `20260607-daoist-cards-readable`。
+验证：
+- `node --check app.js` 通过。
+- 内置浏览器打开本地真实页面，确认加载 `styles.css?v=20260607-daoist-cards-readable` 与 `app.js?v=20260607-daoist-cards-readable`。
+- 使用真实 `index.html`、本机 Chrome + Playwright、`isMobile: true`、`hasTouch: true` 验证 4 人 `915 x 412`、4 人 `844 x 390`、2 人 `915 x 412`；截图为 `artifacts/layout-check/real-index-daoist-cards-readable-4p-915x412.png`、`artifacts/layout-check/real-index-daoist-cards-readable-4p-844x390.png`、`artifacts/layout-check/real-index-daoist-cards-readable-2p-915x412.png`，验证记录为 `artifacts/layout-check/daoist-cards-readable-check.json`。
+
 ### 道风扑克牌图片牌面接入
 
 - 将对局中的文字/CSS 扑克牌替换为新设计的 52 张图片牌面，资源放在 `assets/cards/daoist/`，使用 256 x 384 WebP，保持 2:3 比例。

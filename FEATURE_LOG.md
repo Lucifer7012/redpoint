@@ -4,6 +4,30 @@
 
 ## 2026-06-07
 
+### 道风牌面可读性放大
+
+- 背景：用户实机截图反馈上一版图片牌面仍然太小，看不清细节；截图中公共牌和右侧动作牌尤其小，且不可选牌置灰后细节发白。
+- 改动：
+  - 触屏横屏对局中，公共牌宽度提升到 `clamp(42px, 5vw, 48px)`，手牌提升到 `clamp(50px, 5.8vw, 56px)`，右侧最近动作牌提升到 `clamp(44px, 5vw, 50px)`。
+  - 公共牌区域 top/bottom 留白重新分配，给放大后的两排牌更多竖向空间。
+  - `renderTableCards()` 给公共牌容器写入张数并在超过 12 张时加 `is-wide-table`，让 13 张牌自动排成 7 + 6，避免第 13 张被挤到第三排。
+  - `syncLandscapeActionPanel()` 的旧内联兜底同步改为 2:3 图片牌尺寸，不再强制 40px、18/25 和 4px padding。
+  - `.dimmed-card` 从 0.38 透明度调整为 0.72，并降低灰度，避免图片牌不可选时看不清。
+  - 缓存版本更新为 `20260607-daoist-cards-readable`。
+- 涉及文件：
+  - `index.html`
+  - `app.js`
+  - `styles.css`
+  - `artifacts/layout-check/public-area-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 内置浏览器确认真实页面加载 `styles.css?v=20260607-daoist-cards-readable` 与 `app.js?v=20260607-daoist-cards-readable`。
+  - 真实 `index.html` 在本机 Chrome + Playwright 触屏横屏下截图验证：
+    - `artifacts/layout-check/real-index-daoist-cards-readable-4p-915x412.png`
+    - `artifacts/layout-check/real-index-daoist-cards-readable-4p-844x390.png`
+    - `artifacts/layout-check/real-index-daoist-cards-readable-2p-915x412.png`
+  - `artifacts/layout-check/daoist-cards-readable-check.json` 记录 3 个视口均命中触屏横屏媒体规则，牌面坏图数为 0，公共牌越界为 false；4 人 `915 x 412` 丢牌后公共牌张数为 13 且启用 `is-wide-table`。
+
 ### 道风扑克牌图片牌面接入
 
 - 背景：用户反馈当前牌显示偏大、观感偏粗糙，并提供一套重新设计的扑克牌；要求前 52 张作为正式牌面，显示大小可以调整，但不能改变比例，也不要继续使用没有棱角的大圆角牌 UI。

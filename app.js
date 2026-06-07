@@ -5626,7 +5626,7 @@ function syncLandscapeActionPanel() {
   setImportantStyle(ui.actionStage, "min-height", "0");
   setImportantStyle(ui.actionStage, "padding", "9px 10px");
   setImportantStyle(ui.actionStage, "display", "grid");
-  setImportantStyle(ui.actionStage, "grid-template-columns", "minmax(0, 1fr) 48px");
+  setImportantStyle(ui.actionStage, "grid-template-columns", "minmax(0, 1fr) 56px");
   setImportantStyle(ui.actionStage, "grid-template-rows", "minmax(0, 1fr)");
   setImportantStyle(ui.actionStage, "align-items", "center");
   setImportantStyle(ui.actionStage, "column-gap", "8px");
@@ -5651,8 +5651,8 @@ function syncLandscapeActionPanel() {
 
   setImportantStyle(ui.actionCards, "grid-column", "2");
   setImportantStyle(ui.actionCards, "grid-row", "1");
-  setImportantStyle(ui.actionCards, "width", "48px");
-  setImportantStyle(ui.actionCards, "min-width", "48px");
+  setImportantStyle(ui.actionCards, "width", "56px");
+  setImportantStyle(ui.actionCards, "min-width", "56px");
   setImportantStyle(ui.actionCards, "display", "flex");
   setImportantStyle(ui.actionCards, "justify-content", "center");
   setImportantStyle(ui.actionCards, "align-items", "center");
@@ -5662,12 +5662,12 @@ function syncLandscapeActionPanel() {
   setImportantStyle(ui.actionCards, "transform", "none");
 
   Array.from(ui.actionCards.querySelectorAll(".card-btn")).forEach((card) => {
-    setImportantStyle(card, "width", "40px");
-    setImportantStyle(card, "min-width", "40px");
+    setImportantStyle(card, "width", "var(--game-action-card-width)");
+    setImportantStyle(card, "min-width", "var(--game-action-card-width)");
     setImportantStyle(card, "min-height", "auto");
-    setImportantStyle(card, "aspect-ratio", "18 / 25");
-    setImportantStyle(card, "padding", "4px");
-    setImportantStyle(card, "border-radius", "9px");
+    setImportantStyle(card, "aspect-ratio", "2 / 3");
+    setImportantStyle(card, "padding", "0");
+    setImportantStyle(card, "border-radius", "3px");
   });
 }
 
@@ -6064,6 +6064,8 @@ function renderTableCards(selectedSourceCard) {
   state.renderCache.tableCards = signature;
 
   ui.tableCards.innerHTML = "";
+  ui.tableCards.dataset.cardCount = String(state.tableCards.length);
+  ui.tableCards.classList.toggle("is-wide-table", state.tableCards.length > 12);
   if (state.tableCards.length === 0) {
     const emptyText = state.phase === "opening-deal"
       ? "公共牌正在逐张翻开"

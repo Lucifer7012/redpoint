@@ -104,13 +104,13 @@ cd redpoint
 - GitHub：`https://github.com/Lucifer7012/redpoint`
 - 线上测试链接：`https://lucifer7012.github.io/redpoint/`
 - 本地测试地址：`http://127.0.0.1:4173/`
-- 当前缓存版本：`styles.css?v=20260607-daoist-card-faces`，`app.js?v=20260607-daoist-card-faces`
-- 最近主要改动：对局牌面已从旧文字/CSS 扑克牌切换为道风图片牌面。52 张 256 x 384 WebP 位于 `assets/cards/daoist/`，显示比例固定为 2:3；`.card-btn` 已改为小边角图片框，手机横屏公共牌、最近动作牌和手牌均缩小一档。同步脚本已补上 `assets` 和 `artifacts/layout-check`，后续新资源和截图会随 GitHub 同步。
+- 当前缓存版本：`styles.css?v=20260607-daoist-cards-readable`，`app.js?v=20260607-daoist-cards-readable`
+- 最近主要改动：对局牌面已从旧文字/CSS 扑克牌切换为道风图片牌面，并按实机反馈再次放大。52 张 256 x 384 WebP 位于 `assets/cards/daoist/`，显示比例固定为 2:3；触屏横屏公共牌约 42-46px 宽，手牌约 50-53px 宽，右侧最近动作牌约 46px 宽。超过 12 张公共牌时会启用 `is-wide-table` 排成 7 + 6，避免第 13 张掉到第三排。同步脚本已补上 `assets` 和 `artifacts/layout-check`，后续新资源和截图会随 GitHub 同步。
 
 ## 当前接力状态
 
-- 上次做到哪里：横屏小视口对局已经完成结构性重排、真实对局页 JS 固定右侧最近动作、底部整行高度压缩、公共牌大外框收窄、4 人骰子阶段专用布局，以及道风图片扑克牌接入。已用真实 `index.html` 生成 4 人 `915 x 412`、4 人 `844 x 390`、2 人 `915 x 412` 新牌面截图：`artifacts/layout-check/real-index-daoist-cards-4p-915x412.png`、`artifacts/layout-check/real-index-daoist-cards-4p-844x390.png`、`artifacts/layout-check/real-index-daoist-cards-2p-915x412.png`；`daoist-card-faces-check.json` 记录坏图数为 0。
-- 下一步准备做什么：如果你继续拿实机图回来，我们下一步就按真实截图继续抠细节，优先看新牌面在公共牌区、底部手牌区和右侧最近动作里的大小是否还需要单独放大/缩小；不要再改整体分区，除非截图显示布局本身又错位。
+- 上次做到哪里：横屏小视口对局已经完成结构性重排、真实对局页 JS 固定右侧最近动作、底部整行高度压缩、公共牌大外框收窄、4 人骰子阶段专用布局，以及道风图片扑克牌接入和二次放大。已用真实 `index.html` 生成 4 人 `915 x 412`、4 人 `844 x 390`、2 人 `915 x 412` 新牌面截图：`artifacts/layout-check/real-index-daoist-cards-readable-4p-915x412.png`、`artifacts/layout-check/real-index-daoist-cards-readable-4p-844x390.png`、`artifacts/layout-check/real-index-daoist-cards-readable-2p-915x412.png`；`daoist-cards-readable-check.json` 记录坏图数为 0，公共牌越界为 false。
+- 下一步准备做什么：如果你继续拿实机图回来，我们下一步就按真实截图继续抠细节，优先看新牌面是否还需要轻微放大/缩小，或置灰/选中态是否够清楚；不要再改整体分区，除非截图显示布局本身又错位。
 - 当前先别动什么：跨电脑同步脚本、自动开始同步入口和邀请弹窗展示时机，除非本轮任务明确要求调整。
 
 ## 当前可继续方向
