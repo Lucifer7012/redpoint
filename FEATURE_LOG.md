@@ -4,6 +4,30 @@
 
 ## 2026-06-07
 
+### 横屏单张牌继续放大
+
+- 背景：用户继续反馈单张牌希望更接近标注图中的大尺寸，同时仍要求公共牌和手牌保持一行，牌面比例不能变形。
+- 改动：
+  - 触屏横屏 `--game-public-card-width` 提升到 `clamp(80px, 9.8vw, 90px)`，真实验证中公共牌约 `83-90px` 宽。
+  - 触屏横屏 `--game-hand-card-width` 提升到 `clamp(82px, 9.5vw, 90px)`，真实验证中手牌约 `82-87px` 宽。
+  - 公共牌继续 `flex-wrap: nowrap`，并把 `.table-cards` 最大宽度放开到 `100%`；公共牌之间使用负边距压缩横向占用，13 张公共牌仍保持单行。
+  - `renderHumanHand()` 给手牌容器写入 `data-card-count`，并在手牌超过 7 张时加 `is-scroll-hand`，让 2 人 10 张手牌保持单行且可横向滚动。
+  - 右侧最近动作牌保持 `clamp(56px, 6.2vw, 60px)`，不跟主牌面同幅放大，避免压住最近动作文字和三张指标卡。
+  - 缓存版本更新为 `20260607-large-single-cards`。
+- 涉及文件：
+  - `index.html`
+  - `app.js`
+  - `styles.css`
+  - `artifacts/layout-check/public-area-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 内置浏览器确认真实页面加载 `styles.css?v=20260607-large-single-cards` 与 `app.js?v=20260607-large-single-cards`。
+  - 真实 `index.html` 在本机 Chrome + Playwright 触屏横屏下截图验证：
+    - `artifacts/layout-check/real-index-large-single-cards-4p-915x412.png`
+    - `artifacts/layout-check/real-index-large-single-cards-4p-844x390.png`
+    - `artifacts/layout-check/real-index-large-single-cards-2p-915x412.png`
+  - `artifacts/layout-check/large-single-cards-check.json` 记录 3 个视口均命中触屏横屏媒体规则，坏图数为 0，公共牌行数为 1，手牌行数为 1；2 人 `915 x 412` 下手牌启用 `is-scroll-hand`，横向滚动宽度大于可视宽度。
+
 ### 横屏牌面单行放大与四人座位调整
 
 - 背景：用户截图标注希望左右两个玩家移到两侧空位，并要求公共牌和手牌都改成一行排列，让牌继续变大，便于看清道风牌面。

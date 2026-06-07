@@ -6208,6 +6208,8 @@ function renderHumanHand(humanPlayer) {
   ui.handCards.closest(".human-panel")?.classList.toggle("is-settlement", state.phase === "game-over");
   ui.handCards.innerHTML = "";
   ui.handCards.classList.toggle("settlement-grid", state.phase === "game-over");
+  ui.handCards.dataset.cardCount = String(humanPlayer?.hand?.length || 0);
+  ui.handCards.classList.toggle("is-scroll-hand", (humanPlayer?.hand?.length || 0) > 7);
   if (state.phase === "game-over") {
     renderRoundSettlementSummary();
     return;

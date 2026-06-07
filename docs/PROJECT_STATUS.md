@@ -1,9 +1,9 @@
 # Project Status
 
 最新状态补充（2026-06-07）：
-- 手机横屏对局公共牌和手牌已改成单行横排：公共牌 `flex-wrap: nowrap`，2 人 10 张手牌、4 人 12/13 张公共牌验证均为 1 行；牌面进一步放大，公共牌约 52-57px 宽，手牌约 58-62px 宽。
+- 手机横屏对局公共牌和手牌已改成单行横排并继续放大：公共牌 `flex-wrap: nowrap`，2 人 10 张手牌、4 人 12/13 张公共牌验证均为 1 行；当前公共牌约 `83-90px` 宽，手牌约 `82-87px` 宽。
 - 4 人模式对手座位已调整为左 / 中 / 右：2 号、4 号玩家从顶部左右挪到牌桌左右侧空位，避免压住公共牌一行横排。
-- 道风图片牌面已按实机反馈持续放大：触屏横屏公共牌约 52-57px 宽，手牌约 58-62px 宽，右侧最近动作牌约 53px 宽；不可选牌置灰已调轻到 0.72，避免细节发白看不清。
+- 道风图片牌面已按实机反馈持续放大：触屏横屏公共牌约 `83-90px` 宽，手牌约 `82-87px` 宽，右侧最近动作牌约 `57px` 宽；不可选牌置灰已调轻到 0.72，避免细节发白看不清。
 - 公共牌区放大后已补张数自适应：12 张仍保持 6 + 6，超过 12 张时自动切到更宽的 `is-wide-table`，4 人 `915 x 412` 丢牌后 13 张公共牌不再掉到第三排或越界。
 - 对局牌面已接入道风扑克牌图片资源：`assets/cards/daoist/` 中包含 52 张 256 x 384 WebP，`createCardButton()` 现在按牌面花色和点数加载真实图片，保留按钮点击、选中、禁用和动画逻辑。
 - 牌面显示比例统一为 2:3，不再使用旧的文字牌大内边距和 18px 大圆角；手机横屏公共牌、最近动作牌和手牌已按真实截图重新定尺寸。
@@ -14,8 +14,8 @@
 - 手机横屏真实对局页底部整行已压缩：共同高度从 `184px` 调整为 `160px`，中间手牌区上方空白减少，左侧牌堆区、中间手牌区、右侧最近动作/指标区仍保持同高对齐。
 - 右侧最近动作的 JS 固定高度现在按 `.human-panel` 实际高度计算，避免底部压缩后动作框继续使用旧高度。
 - 已修正三张指标卡压缩后被旧 `grid-area` 静态位置带偏的问题，指标卡重新贴住底部，不再被视口裁切。
-- 当前缓存版本：`styles.css?v=20260607-one-row-cards`，`app.js?v=20260607-one-row-cards`。
-- 最新真实页面验证截图：`artifacts/layout-check/real-index-one-row-cards-4p-915x412.png`、`artifacts/layout-check/real-index-one-row-cards-4p-844x390.png`、`artifacts/layout-check/real-index-one-row-cards-2p-915x412.png`；验证记录为 `artifacts/layout-check/one-row-cards-check.json`。
+- 当前缓存版本：`styles.css?v=20260607-large-single-cards`，`app.js?v=20260607-large-single-cards`。
+- 最新真实页面验证截图：`artifacts/layout-check/real-index-large-single-cards-4p-915x412.png`、`artifacts/layout-check/real-index-large-single-cards-4p-844x390.png`、`artifacts/layout-check/real-index-large-single-cards-2p-915x412.png`；验证记录为 `artifacts/layout-check/large-single-cards-check.json`。
 
 历史状态补充（2026-06-04）：
 - 真实 `index.html` 对局页右侧最近动作已改为 JS 固定：每次渲染后按右下三张指标卡位置，将 `.action-stage` 以内联 important 样式固定到指标卡上方；这次不再动公共牌、手牌、对手区等整体布局。
@@ -61,7 +61,7 @@
 - 手机横屏大厅中间主入口已改为“单机 / 好友联机”切换；单机显示玩家人数和摇骰子，好友联机显示创建 2 / 3 / 4 人好友房卡片和摇骰子。
 - 右侧“好友列表 / 排行榜”固定外框再次向下延长，手机横屏下可显示更多列表内容。
 - 右侧“好友列表 / 排行榜”切换框已做二次固定高度修正，小屏和手机横屏大厅点击排行榜时不再撑高外框；排行榜和好友列表都在同一外框内滚动。
-- 当前缓存版本：`styles.css?v=20260607-one-row-cards`，`app.js?v=20260607-one-row-cards`。
+- 当前缓存版本：`styles.css?v=20260607-large-single-cards`，`app.js?v=20260607-large-single-cards`。
 
 更新时间：2026-06-07
 

@@ -11,6 +11,17 @@
 
 ## 2026-06-07
 
+### 横屏单张牌继续放大
+
+- 按“单张牌能不能变这么大”的反馈继续放大手机横屏对局主牌面：公共牌提升到约 `83-90px` 宽，手牌提升到约 `82-87px` 宽，继续保持 2:3 图片比例和小棱角。
+- 公共牌区保持单行横排，13 张公共牌仍在一行内显示；手牌超过 7 张时给手牌行加 `is-scroll-hand`，2 人 10 张手牌保持一行并允许横向滚动查看。
+- 右侧最近动作牌沿用 `56-60px` 宽，避免挤掉右侧文字和底部三张指标卡。
+- 缓存版本更新为 `20260607-large-single-cards`。
+验证：
+- `node --check app.js` 通过。
+- 内置浏览器打开本地真实页面，确认加载 `styles.css?v=20260607-large-single-cards` 与 `app.js?v=20260607-large-single-cards`。
+- 使用真实 `index.html`、本机 Chrome + Playwright、`isMobile: true`、`hasTouch: true` 验证 4 人 `915 x 412`、4 人 `844 x 390`、2 人 `915 x 412`；截图为 `artifacts/layout-check/real-index-large-single-cards-4p-915x412.png`、`artifacts/layout-check/real-index-large-single-cards-4p-844x390.png`、`artifacts/layout-check/real-index-large-single-cards-2p-915x412.png`，验证记录为 `artifacts/layout-check/large-single-cards-check.json`，坏图数为 0，公共牌/手牌行数均为 1。
+
 ### 横屏牌面单行放大与四人座位调整
 
 - 4 人横屏对局座位调整为左 / 中 / 右三名对手：原本顶部左右的 2 号、4 号玩家移到牌桌左右侧空位，减少对公共牌区域的挤压。

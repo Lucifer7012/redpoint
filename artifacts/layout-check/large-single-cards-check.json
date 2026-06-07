@@ -1,0 +1,259 @@
+[
+  {
+    "name": "real-index-large-single-cards-4p-915x412",
+    "players": 4,
+    "width": 915,
+    "height": 412,
+    "discard": true,
+    "screenshot": "C:\\Users\\HOUSE\\Desktop\\redpoint\\artifacts\\layout-check\\real-index-large-single-cards-4p-915x412.png",
+    "metrics": {
+      "bodyClass": "is-game-view",
+      "cache": {
+        "css": "http://127.0.0.1:4173/styles.css?v=20260607-large-single-cards",
+        "js": "http://127.0.0.1:4173/app.js?v=20260607-large-single-cards"
+      },
+      "cardImages": 19,
+      "brokenImages": 0,
+      "visibleBrokenImages": 0,
+      "tableCardCount": 13,
+      "handCardCount": 4,
+      "actionCardCount": 1,
+      "tableRows": 1,
+      "handRows": 1,
+      "handScrollClass": false,
+      "handScroll": {
+        "width": 422,
+        "client": 422
+      },
+      "tableScroll": {
+        "width": 711,
+        "client": 711
+      },
+      "media": {
+        "touchLandscape": true,
+        "orientationLandscape": true,
+        "hoverNone": true,
+        "pointerCoarse": true
+      },
+      "cards": {
+        "public": {
+          "width": 90,
+          "height": 134
+        },
+        "hand": {
+          "width": 87,
+          "height": 130
+        },
+        "action": {
+          "width": 57,
+          "height": 85
+        }
+      },
+      "seats": {
+        "left": {
+          "x": 18,
+          "y": 178,
+          "width": 119,
+          "height": 44
+        },
+        "top": {
+          "x": 398,
+          "y": 36,
+          "width": 119,
+          "height": 44
+        },
+        "right": {
+          "x": 778,
+          "y": 178,
+          "width": 119,
+          "height": 44
+        }
+      },
+      "tableCards": {
+        "x": 102,
+        "y": 87,
+        "width": 711,
+        "height": 152
+      },
+      "handCards": {
+        "x": 216,
+        "y": 284,
+        "width": 422,
+        "height": 118
+      },
+      "actionStage": {
+        "x": 653,
+        "y": 248,
+        "width": 244,
+        "height": 90
+      }
+    },
+    "errors": []
+  },
+  {
+    "name": "real-index-large-single-cards-4p-844x390",
+    "players": 4,
+    "width": 844,
+    "height": 390,
+    "discard": false,
+    "screenshot": "C:\\Users\\HOUSE\\Desktop\\redpoint\\artifacts\\layout-check\\real-index-large-single-cards-4p-844x390.png",
+    "metrics": {
+      "bodyClass": "is-game-view",
+      "cache": {
+        "css": "http://127.0.0.1:4173/styles.css?v=20260607-large-single-cards",
+        "js": "http://127.0.0.1:4173/app.js?v=20260607-large-single-cards"
+      },
+      "cardImages": 17,
+      "brokenImages": 0,
+      "visibleBrokenImages": 0,
+      "tableCardCount": 12,
+      "handCardCount": 5,
+      "actionCardCount": 0,
+      "tableRows": 1,
+      "handRows": 1,
+      "handScrollClass": false,
+      "handScroll": {
+        "width": 354,
+        "client": 354
+      },
+      "tableScroll": {
+        "width": 650,
+        "client": 650
+      },
+      "media": {
+        "touchLandscape": true,
+        "orientationLandscape": true,
+        "hoverNone": true,
+        "pointerCoarse": true
+      },
+      "cards": {
+        "public": {
+          "width": 83,
+          "height": 124
+        },
+        "hand": {
+          "width": 82,
+          "height": 123
+        },
+        "action": null
+      },
+      "seats": {
+        "left": {
+          "x": 18,
+          "y": 178,
+          "width": 110,
+          "height": 44
+        },
+        "top": {
+          "x": 367,
+          "y": 36,
+          "width": 110,
+          "height": 44
+        },
+        "right": {
+          "x": 716,
+          "y": 178,
+          "width": 110,
+          "height": 44
+        }
+      },
+      "tableCards": {
+        "x": 97,
+        "y": 87,
+        "width": 650,
+        "height": 130
+      },
+      "handCards": {
+        "x": 213,
+        "y": 262,
+        "width": 354,
+        "height": 118
+      },
+      "actionStage": {
+        "x": 582,
+        "y": 226,
+        "width": 244,
+        "height": 90
+      }
+    },
+    "errors": []
+  },
+  {
+    "name": "real-index-large-single-cards-2p-915x412",
+    "players": 2,
+    "width": 915,
+    "height": 412,
+    "discard": false,
+    "screenshot": "C:\\Users\\HOUSE\\Desktop\\redpoint\\artifacts\\layout-check\\real-index-large-single-cards-2p-915x412.png",
+    "metrics": {
+      "bodyClass": "is-game-view",
+      "cache": {
+        "css": "http://127.0.0.1:4173/styles.css?v=20260607-large-single-cards",
+        "js": "http://127.0.0.1:4173/app.js?v=20260607-large-single-cards"
+      },
+      "cardImages": 22,
+      "brokenImages": 0,
+      "visibleBrokenImages": 0,
+      "tableCardCount": 12,
+      "handCardCount": 10,
+      "actionCardCount": 0,
+      "tableRows": 1,
+      "handRows": 1,
+      "handScrollClass": true,
+      "handScroll": {
+        "width": 659,
+        "client": 422
+      },
+      "tableScroll": {
+        "width": 711,
+        "client": 711
+      },
+      "media": {
+        "touchLandscape": true,
+        "orientationLandscape": true,
+        "hoverNone": true,
+        "pointerCoarse": true
+      },
+      "cards": {
+        "public": {
+          "width": 90,
+          "height": 134
+        },
+        "hand": {
+          "width": 87,
+          "height": 130
+        },
+        "action": null
+      },
+      "seats": {
+        "left": null,
+        "top": {
+          "x": 398,
+          "y": 36,
+          "width": 119,
+          "height": 44
+        },
+        "right": null
+      },
+      "tableCards": {
+        "x": 102,
+        "y": 87,
+        "width": 711,
+        "height": 152
+      },
+      "handCards": {
+        "x": 216,
+        "y": 284,
+        "width": 422,
+        "height": 118
+      },
+      "actionStage": {
+        "x": 653,
+        "y": 248,
+        "width": 244,
+        "height": 90
+      }
+    },
+    "errors": []
+  }
+]
