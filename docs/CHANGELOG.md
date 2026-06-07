@@ -11,6 +11,18 @@
 
 ## 2026-06-07
 
+### 横屏牌面单行放大与四人座位调整
+
+- 4 人横屏对局座位调整为左 / 中 / 右三名对手：原本顶部左右的 2 号、4 号玩家移到牌桌左右侧空位，减少对公共牌区域的挤压。
+- 公共牌强制单行横向排列，不再自动换成两排；12 张公共牌一行显示，13 张时保持一行并在牌区内处理横向空间。
+- 继续放大图片牌面：公共牌约 52-57px 宽，手牌约 58-62px 宽，右侧最近动作牌约 53px 宽。
+- 扩大手机横屏公共牌区域横向空间，并增加手牌重叠量，保证 2 人 10 张手牌也保持一行。
+- 缓存版本更新为 `20260607-one-row-cards`。
+验证：
+- `node --check app.js` 通过。
+- 内置浏览器打开本地真实页面，确认加载 `styles.css?v=20260607-one-row-cards` 与 `app.js?v=20260607-one-row-cards`。
+- 使用真实 `index.html`、本机 Chrome + Playwright、`isMobile: true`、`hasTouch: true` 验证 4 人 `915 x 412`、4 人 `844 x 390`、2 人 `915 x 412`；截图为 `artifacts/layout-check/real-index-one-row-cards-4p-915x412.png`、`artifacts/layout-check/real-index-one-row-cards-4p-844x390.png`、`artifacts/layout-check/real-index-one-row-cards-2p-915x412.png`，验证记录为 `artifacts/layout-check/one-row-cards-check.json`。
+
 ### 道风牌面可读性放大
 
 - 放大手机横屏对局中的图片牌面：公共牌从约 31-34px 提升到约 42-46px 宽，手牌从约 38px 提升到约 50-53px 宽，右侧最近动作牌提升到约 46px 宽。

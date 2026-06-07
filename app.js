@@ -5992,9 +5992,9 @@ function getSeatAssignments() {
     seats["top-left"] = opponents[0] || null;
     seats["top-right"] = opponents[1] || null;
   } else if (state.players.length === 4) {
-    seats["top-left"] = opponents[0] || null;
+    seats.left = opponents[0] || null;
     seats.top = opponents[1] || null;
-    seats["top-right"] = opponents[2] || null;
+    seats.right = opponents[2] || null;
   }
 
   return seats;

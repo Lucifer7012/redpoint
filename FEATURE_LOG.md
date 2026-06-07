@@ -4,6 +4,31 @@
 
 ## 2026-06-07
 
+### 横屏牌面单行放大与四人座位调整
+
+- 背景：用户截图标注希望左右两个玩家移到两侧空位，并要求公共牌和手牌都改成一行排列，让牌继续变大，便于看清道风牌面。
+- 改动：
+  - `getSeatAssignments()` 在 4 人模式下改为 `left / top / right` 三个对手座位，不再使用 `top-left / top-right`。
+  - 触屏横屏 `.seat-left` / `.seat-right` 下移到牌桌两侧空位，避开公共牌横排。
+  - 触屏横屏 `--game-side-inset` 从较大的公共牌安全边距收窄到 `clamp(82px, 9.5vw, 96px)`，给公共牌单行横排留出更多宽度。
+  - `.table-cards` 改为 `flex-wrap: nowrap`，公共牌始终单行排列；超过 12 张时 `is-wide-table` 会略缩公共牌宽度但仍保持一行。
+  - 公共牌宽度提升到 `clamp(52px, 6.2vw, 58px)`，手牌提升到 `clamp(58px, 6.8vw, 66px)`，最近动作牌提升到 `clamp(50px, 5.8vw, 56px)`。
+  - 手牌重叠量调整为 `-26px`，确保 2 人 10 张手牌仍在底部手牌区内保持一行。
+  - 缓存版本更新为 `20260607-one-row-cards`。
+- 涉及文件：
+  - `index.html`
+  - `app.js`
+  - `styles.css`
+  - `artifacts/layout-check/public-area-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 内置浏览器确认真实页面加载 `styles.css?v=20260607-one-row-cards` 与 `app.js?v=20260607-one-row-cards`。
+  - 真实 `index.html` 在本机 Chrome + Playwright 触屏横屏下截图验证：
+    - `artifacts/layout-check/real-index-one-row-cards-4p-915x412.png`
+    - `artifacts/layout-check/real-index-one-row-cards-4p-844x390.png`
+    - `artifacts/layout-check/real-index-one-row-cards-2p-915x412.png`
+  - `artifacts/layout-check/one-row-cards-check.json` 记录 3 个视口均命中触屏横屏媒体规则，坏图数为 0，公共牌行数为 1，手牌行数为 1；4 人模式左右座位已切到 `seat-left` / `seat-right`。
+
 ### 道风牌面可读性放大
 
 - 背景：用户实机截图反馈上一版图片牌面仍然太小，看不清细节；截图中公共牌和右侧动作牌尤其小，且不可选牌置灰后细节发白。
