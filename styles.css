@@ -7060,6 +7060,13 @@ select {
     pointer-events: auto;
   }
 
+  body.is-game-view .action-stage:not(:has(.action-stage__cards .card-btn)) {
+    bottom: 58px;
+    height: 58px;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+  }
+
   body.is-game-view .action-stage__meta {
     width: 100%;
     min-width: 0;
@@ -7135,10 +7142,15 @@ select {
 
   body.is-game-view .draw-zone {
     grid-area: draw;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: var(--game-left-slot-width);
+    height: calc(var(--game-bottom-band-height) - 44px);
     margin: 0;
     min-height: 0;
     display: flex;
-    align-items: stretch;
+    align-items: flex-end;
     padding-bottom: 0;
     pointer-events: auto;
   }
@@ -7573,6 +7585,13 @@ select {
     visibility: visible !important;
     transform: none !important;
     pointer-events: auto !important;
+  }
+
+  body.is-game-view .action-stage:not(:has(.action-stage__cards .card-btn)) {
+    bottom: 58px !important;
+    height: 58px !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: center !important;
   }
 
   body.is-game-view .action-stage__meta,

@@ -4,6 +4,27 @@
 
 ## 2026-06-07
 
+### 横屏底部牌堆和动作框贴齐
+
+- 背景：用户反馈左下牌堆虽然缩小了，但没有跟着底边一起下移；右侧最近动作在开局发牌这种无动作牌状态下还撑成大框，文字贴上方、下面一大块空白。
+- 改动：
+  - `syncLandscapeActionPanel()` 扩展为同步左下 `draw-zone`：读取 `.center-stage` 实际底边，固定 `draw-zone` 的 `top/height`，让牌堆框 bottom 与底部舞台 bottom 对齐。
+  - `clearLandscapeActionPanelStyles()` 同步清理 `draw-zone` 的内联固定样式，避免离开横屏布局后残留。
+  - 右侧最近动作按是否有动作牌分两套高度：无动作牌时压缩到 `58px` 短框；有动作牌时继续按手牌实际宽高撑出展示牌区域。
+  - 缓存版本更新为 `20260607-bottom-align`。
+- 涉及文件：
+  - `index.html`
+  - `app.js`
+  - `styles.css`
+  - `artifacts/layout-check/public-area-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 内置浏览器确认真实页面加载 `styles.css?v=20260607-bottom-align` 与 `app.js?v=20260607-bottom-align`。
+  - 真实 `index.html` 在本机 Chrome + Playwright 触屏横屏下截图验证：
+    - `artifacts/layout-check/real-index-bottom-align-opening-2p-915x412.png`
+    - `artifacts/layout-check/real-index-bottom-align-action-4p-844x390.png`
+  - `artifacts/layout-check/bottom-align-check.json` 记录 2 人 `915 x 412` 开局发牌无动作牌状态下左侧牌堆到底部舞台差值为 `0px`、右侧动作框到状态框间距为 `8px`；4 人 `844 x 390` 有动作牌状态下左侧牌堆到底部舞台差值同为 `0px`、动作牌与手牌同为 `82px` 宽；坏图数均为 0。
+
 ### 横屏底部左右区域让位
 
 - 背景：用户标注希望缩小左下角牌堆/提示区域，把空间还给中间手牌区；右下三张状态卡太占横向空间，想合并成一个三行文字框；右侧最近动作牌仍偏小，希望和手牌一样大。

@@ -5546,6 +5546,7 @@ function clearLandscapeActionPanelStyles() {
     ui.actionStage,
     ui.actionStage?.querySelector(".action-stage__meta"),
     ui.actionCards,
+    document.querySelector(".draw-zone"),
     ...Array.from(ui.actionCards?.querySelectorAll(".card-btn") || []),
   ];
   const properties = [
@@ -5597,21 +5598,43 @@ function syncLandscapeActionPanel() {
   }
 
   const metrics = document.querySelector(".selection-metrics");
+  const centerStage = document.querySelector(".center-stage");
+  const drawZone = document.querySelector(".draw-zone");
   const actionMeta = ui.actionStage.querySelector(".action-stage__meta");
-  if (!metrics || !actionMeta || !ui.actionCards) {
+  if (!metrics || !centerStage || !drawZone || !actionMeta || !ui.actionCards) {
     return;
   }
 
   const metricsRect = metrics.getBoundingClientRect();
-  if (!metricsRect.width || !metricsRect.height) {
+  const centerStageRect = centerStage.getBoundingClientRect();
+  if (!metricsRect.width || !metricsRect.height || !centerStageRect.width || !centerStageRect.height) {
     return;
   }
 
+  const drawZoneWidth = Math.round(Math.min(138, Math.max(120, window.innerWidth * 0.15)));
+  const drawZoneHeight = Math.min(132, Math.max(112, Math.round(centerStageRect.height - 44)));
+  const drawZoneTop = Math.round(centerStageRect.bottom - drawZoneHeight);
+
+  setImportantStyle(drawZone, "position", "fixed");
+  setImportantStyle(drawZone, "left", `${Math.round(centerStageRect.left)}px`);
+  setImportantStyle(drawZone, "top", `${drawZoneTop}px`);
+  setImportantStyle(drawZone, "right", "auto");
+  setImportantStyle(drawZone, "bottom", "auto");
+  setImportantStyle(drawZone, "z-index", "998");
+  setImportantStyle(drawZone, "width", `${drawZoneWidth}px`);
+  setImportantStyle(drawZone, "height", `${drawZoneHeight}px`);
+  setImportantStyle(drawZone, "display", "flex");
+  setImportantStyle(drawZone, "align-items", "flex-end");
+  setImportantStyle(drawZone, "pointer-events", "auto");
+
   const handCardRect = ui.handCards?.querySelector(".card-btn")?.getBoundingClientRect();
+  const hasActionCard = Boolean(ui.actionCards.querySelector(".card-btn"));
   const fallbackActionCardWidth = Math.min(90, Math.max(82, Math.round(window.innerWidth * 0.095)));
   const actionCardWidth = Math.round(handCardRect?.width || fallbackActionCardWidth);
   const actionCardHeight = Math.round(handCardRect?.height || actionCardWidth * 1.5);
-  const actionPanelHeight = Math.min(146, Math.max(100, actionCardHeight + 12));
+  const actionPanelHeight = hasActionCard
+    ? Math.min(146, Math.max(100, actionCardHeight + 12))
+    : 58;
   const width = Math.round(metricsRect.width);
   const left = Math.round(metricsRect.left);
   const height = actionPanelHeight;
@@ -5628,7 +5651,11 @@ function syncLandscapeActionPanel() {
   setImportantStyle(ui.actionStage, "min-height", "0");
   setImportantStyle(ui.actionStage, "padding", "6px 8px");
   setImportantStyle(ui.actionStage, "display", "grid");
-  setImportantStyle(ui.actionStage, "grid-template-columns", `minmax(0, 1fr) ${actionCardWidth}px`);
+  setImportantStyle(
+    ui.actionStage,
+    "grid-template-columns",
+    hasActionCard ? `minmax(0, 1fr) ${actionCardWidth}px` : "minmax(0, 1fr)",
+  );
   setImportantStyle(ui.actionStage, "grid-template-rows", "minmax(0, 1fr)");
   setImportantStyle(ui.actionStage, "align-items", "center");
   setImportantStyle(ui.actionStage, "column-gap", "8px");
@@ -5645,7 +5672,7 @@ function syncLandscapeActionPanel() {
   setImportantStyle(actionMeta, "min-width", "0");
   setImportantStyle(actionMeta, "gap", "3px");
   setImportantStyle(actionMeta, "justify-items", "start");
-  setImportantStyle(actionMeta, "align-self", "start");
+  setImportantStyle(actionMeta, "align-self", hasActionCard ? "start" : "center");
   setImportantStyle(actionMeta, "color", "#fff8ec");
   setImportantStyle(actionMeta, "opacity", "1");
   setImportantStyle(actionMeta, "visibility", "visible");
@@ -5653,9 +5680,9 @@ function syncLandscapeActionPanel() {
 
   setImportantStyle(ui.actionCards, "grid-column", "2");
   setImportantStyle(ui.actionCards, "grid-row", "1");
-  setImportantStyle(ui.actionCards, "width", `${actionCardWidth}px`);
-  setImportantStyle(ui.actionCards, "min-width", `${actionCardWidth}px`);
-  setImportantStyle(ui.actionCards, "display", "flex");
+  setImportantStyle(ui.actionCards, "width", hasActionCard ? `${actionCardWidth}px` : "0");
+  setImportantStyle(ui.actionCards, "min-width", hasActionCard ? `${actionCardWidth}px` : "0");
+  setImportantStyle(ui.actionCards, "display", hasActionCard ? "flex" : "none");
   setImportantStyle(ui.actionCards, "justify-content", "center");
   setImportantStyle(ui.actionCards, "align-items", "center");
   setImportantStyle(ui.actionCards, "overflow", "hidden");

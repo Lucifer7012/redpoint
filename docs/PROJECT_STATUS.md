@@ -17,8 +17,9 @@
 - 补枪相关最近动作已清理：`补枪目标` 和 `补枪成功` 的动作牌只显示摸到的补枪牌，`lastAction` 同步不再带被补公共牌，避免右侧最近动作出现两张牌。
 - 手机横屏底部左右区域已继续让位：左下牌堆/提示区域收窄到 `120-138px`，右下三张指标卡合并成一个三行状态框，中间手牌区在 2 人 `915 x 412` 下宽 `510px`、4 人 `844 x 390` 下宽 `449px`。
 - 右侧最近动作牌现在按手牌实际 `.card-btn` 宽高同步，2 人验证为 `87 x 131`，4 人验证为 `82 x 123`，不再使用旧 `56px` 小动作牌。
-- 当前缓存版本：`styles.css?v=20260607-side-panel-space`，`app.js?v=20260607-side-panel-space`。
-- 最新真实页面验证截图：`artifacts/layout-check/real-index-side-panel-space-2p-915x412.png`、`artifacts/layout-check/real-index-side-panel-space-4p-844x390.png`；验证记录为 `artifacts/layout-check/side-panel-space-check.json`。
+- 左下牌堆/提示区已改为跟随底部舞台真实 bottom 固定，2 人 `915 x 412` 和 4 人 `844 x 390` 验证中牌堆框到底部舞台差值均为 `0px`；右侧最近动作无动作牌时压缩为 `58px` 短框，不再留下大块空白。
+- 当前缓存版本：`styles.css?v=20260607-bottom-align`，`app.js?v=20260607-bottom-align`。
+- 最新真实页面验证截图：`artifacts/layout-check/real-index-bottom-align-opening-2p-915x412.png`、`artifacts/layout-check/real-index-bottom-align-action-4p-844x390.png`；验证记录为 `artifacts/layout-check/bottom-align-check.json`。
 
 历史状态补充（2026-06-04）：
 - 真实 `index.html` 对局页右侧最近动作已改为 JS 固定：每次渲染后按右下三张指标卡位置，将 `.action-stage` 以内联 important 样式固定到指标卡上方；这次不再动公共牌、手牌、对手区等整体布局。
@@ -64,7 +65,7 @@
 - 手机横屏大厅中间主入口已改为“单机 / 好友联机”切换；单机显示玩家人数和摇骰子，好友联机显示创建 2 / 3 / 4 人好友房卡片和摇骰子。
 - 右侧“好友列表 / 排行榜”固定外框再次向下延长，手机横屏下可显示更多列表内容。
 - 右侧“好友列表 / 排行榜”切换框已做二次固定高度修正，小屏和手机横屏大厅点击排行榜时不再撑高外框；排行榜和好友列表都在同一外框内滚动。
-- 当前缓存版本：`styles.css?v=20260607-side-panel-space`，`app.js?v=20260607-side-panel-space`。
+- 当前缓存版本：`styles.css?v=20260607-bottom-align`，`app.js?v=20260607-bottom-align`。
 
 更新时间：2026-06-07
 

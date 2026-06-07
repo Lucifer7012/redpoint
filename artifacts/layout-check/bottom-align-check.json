@@ -1,0 +1,202 @@
+[
+  {
+    "name": "real-index-bottom-align-opening-2p-915x412",
+    "players": 2,
+    "width": 915,
+    "height": 412,
+    "screenshot": "C:\\Users\\HOUSE\\Desktop\\redpoint\\artifacts\\layout-check\\real-index-bottom-align-opening-2p-915x412.png",
+    "metrics": {
+      "cache": {
+        "css": [
+          "http://127.0.0.1:4173/styles.css?v=20260607-bottom-align"
+        ],
+        "js": [
+          "http://127.0.0.1:4173/app.js?v=20260607-bottom-align"
+        ]
+      },
+      "cardCounts": {
+        "hand": 10,
+        "table": 12,
+        "action": 0,
+        "metricRows": 3
+      },
+      "rects": {
+        "centerStage": {
+          "x": 18,
+          "y": 236,
+          "width": 879,
+          "height": 172,
+          "top": 236,
+          "bottom": 408,
+          "right": 897
+        },
+        "drawZone": {
+          "x": 18,
+          "y": 280,
+          "width": 137,
+          "height": 128,
+          "top": 280,
+          "bottom": 408,
+          "right": 155
+        },
+        "drawPile": {
+          "x": 18,
+          "y": 280,
+          "width": 137,
+          "height": 128,
+          "top": 280,
+          "bottom": 408,
+          "right": 155
+        },
+        "humanPanel": {
+          "x": 161,
+          "y": 236,
+          "width": 510,
+          "height": 172,
+          "top": 236,
+          "bottom": 408,
+          "right": 671
+        },
+        "firstHandCard": {
+          "x": 172,
+          "y": 270,
+          "width": 87,
+          "height": 130,
+          "top": 270,
+          "bottom": 400,
+          "right": 259
+        },
+        "actionStage": {
+          "x": 677,
+          "y": 292,
+          "width": 220,
+          "height": 58,
+          "top": 292,
+          "bottom": 350,
+          "right": 897
+        },
+        "actionCard": null,
+        "selectionMetrics": {
+          "x": 677,
+          "y": 358,
+          "width": 220,
+          "height": 50,
+          "top": 358,
+          "bottom": 408,
+          "right": 897
+        }
+      },
+      "gaps": {
+        "drawPileToCenterBottom": 0,
+        "actionToMetrics": 8
+      },
+      "actionText": "正在逐张翻开桌面公共牌",
+      "brokenImages": 0
+    },
+    "errors": []
+  },
+  {
+    "name": "real-index-bottom-align-action-4p-844x390",
+    "players": 4,
+    "width": 844,
+    "height": 390,
+    "screenshot": "C:\\Users\\HOUSE\\Desktop\\redpoint\\artifacts\\layout-check\\real-index-bottom-align-action-4p-844x390.png",
+    "metrics": {
+      "cache": {
+        "css": [
+          "http://127.0.0.1:4173/styles.css?v=20260607-bottom-align"
+        ],
+        "js": [
+          "http://127.0.0.1:4173/app.js?v=20260607-bottom-align"
+        ]
+      },
+      "cardCounts": {
+        "hand": 5,
+        "table": 12,
+        "action": 1,
+        "metricRows": 3
+      },
+      "rects": {
+        "centerStage": {
+          "x": 18,
+          "y": 214,
+          "width": 808,
+          "height": 172,
+          "top": 214,
+          "bottom": 386,
+          "right": 826
+        },
+        "drawZone": {
+          "x": 18,
+          "y": 258,
+          "width": 127,
+          "height": 128,
+          "top": 258,
+          "bottom": 386,
+          "right": 145
+        },
+        "drawPile": {
+          "x": 18,
+          "y": 258,
+          "width": 127,
+          "height": 128,
+          "top": 258,
+          "bottom": 386,
+          "right": 145
+        },
+        "humanPanel": {
+          "x": 151,
+          "y": 214,
+          "width": 449,
+          "height": 172,
+          "top": 214,
+          "bottom": 386,
+          "right": 600
+        },
+        "firstHandCard": {
+          "x": 214,
+          "y": 255,
+          "width": 82,
+          "height": 123,
+          "top": 255,
+          "bottom": 378,
+          "right": 296
+        },
+        "actionStage": {
+          "x": 606,
+          "y": 193,
+          "width": 220,
+          "height": 135,
+          "top": 193,
+          "bottom": 328,
+          "right": 826
+        },
+        "actionCard": {
+          "x": 735,
+          "y": 199,
+          "width": 82,
+          "height": 123,
+          "top": 199,
+          "bottom": 322,
+          "right": 817
+        },
+        "selectionMetrics": {
+          "x": 606,
+          "y": 336,
+          "width": 220,
+          "height": 50,
+          "top": 336,
+          "bottom": 386,
+          "right": 826
+        }
+      },
+      "gaps": {
+        "drawPileToCenterBottom": 0,
+        "actionToMetrics": 8
+      },
+      "actionText": "补枪成功：成功钓走 红桃10",
+      "brokenImages": 0
+    },
+    "errors": []
+  }
+]

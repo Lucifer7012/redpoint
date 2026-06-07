@@ -11,6 +11,17 @@
 
 ## 2026-06-07
 
+### 横屏底部牌堆和动作框贴齐
+
+- 修正左下牌堆/提示区只缩窄但没有下移的问题：`syncLandscapeActionPanel()` 现在同步固定左下 `draw-zone`，按底部舞台真实 bottom 对齐，牌堆框不再悬在中间。
+- 修正右侧“最近动作”在开局发牌/无动作牌时仍撑出大空框的问题：无动作牌时动作框压缩为 `58px` 短框，只显示文字；有动作牌时仍按手牌牌面高度撑开。
+- 缓存版本更新为 `20260607-bottom-align`。
+验证：
+- `node --check app.js` 通过。
+- 内置浏览器打开本地真实页面，确认加载 `styles.css?v=20260607-bottom-align` 与 `app.js?v=20260607-bottom-align`。
+- 使用真实 `index.html`、本机 Chrome + Playwright、`isMobile: true`、`hasTouch: true` 验证 2 人 `915 x 412` 开局发牌无动作牌状态与 4 人 `844 x 390` 有动作牌状态；截图为 `artifacts/layout-check/real-index-bottom-align-opening-2p-915x412.png`、`artifacts/layout-check/real-index-bottom-align-action-4p-844x390.png`，验证记录为 `artifacts/layout-check/bottom-align-check.json`。
+- 验证记录显示左侧牌堆到底部舞台差值为 `0px`，右侧动作框到状态框间距为 `8px`，坏图数为 0。
+
 ### 横屏底部左右区域让位
 
 - 缩小手机横屏对局左下角牌堆/提示区域：左侧栏宽度从约 `180px` 级别收窄到 `120-138px`，给中间手牌区让出更多横向空间。
