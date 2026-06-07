@@ -104,13 +104,13 @@ cd redpoint
 - GitHub：`https://github.com/Lucifer7012/redpoint`
 - 线上测试链接：`https://lucifer7012.github.io/redpoint/`
 - 本地测试地址：`http://127.0.0.1:4173/`
-- 当前缓存版本：`styles.css?v=20260607-bottom-align`，`app.js?v=20260607-bottom-align`
-- 最近主要改动：对局牌面已从旧文字/CSS 扑克牌切换为道风图片牌面，并按实机反馈改成单行大牌。52 张 256 x 384 WebP 位于 `assets/cards/daoist/`，显示比例固定为 2:3；触屏横屏公共牌约 `83-90px` 宽，手牌约 `82-87px` 宽，右侧最近动作牌现在跟随手牌实际大小。公共牌强制单行横排，超过 12 张时继续保持单行；2 人 10 张手牌超过 7 张时启用 `is-scroll-hand` 横向滚动。4 人模式对手座位已改为左 / 中 / 右，2 号和 4 号玩家挪到两侧空位。本轮将底部共同高度保持 `172px`，左下牌堆/提示区域收窄到 `120-138px` 并贴齐底边，右下三张指标卡合并成一个三行状态框；右侧最近动作无动作牌时压缩成短框，有牌时保持和手牌同尺寸。同步脚本已补上 `assets` 和 `artifacts/layout-check`，后续新资源和截图会随 GitHub 同步。
+- 当前缓存版本：`styles.css?v=20260607-daoist-card-faces`，`app.js?v=20260607-daoist-card-faces`
+- 最近主要改动：对局牌面已从旧文字/CSS 扑克牌切换为道风图片牌面。52 张 256 x 384 WebP 位于 `assets/cards/daoist/`，显示比例固定为 2:3；`.card-btn` 已改为小边角图片框，手机横屏公共牌、最近动作牌和手牌均缩小一档。同步脚本已补上 `assets` 和 `artifacts/layout-check`，后续新资源和截图会随 GitHub 同步。
 
 ## 当前接力状态
 
-- 上次做到哪里：横屏小视口对局已经完成结构性重排、真实对局页 JS 固定右侧最近动作、底部整行高度压缩、公共牌大外框收窄、4 人骰子阶段专用布局，以及道风图片扑克牌接入、继续放大、公共牌/手牌单行排列和 4 人左右座位下移。本轮针对实机反馈继续小修：左下牌堆/提示区域缩小并贴齐底边，手牌区横向加宽；右下三张指标卡合并为一个三行状态框；右侧最近动作牌改为和手牌同尺寸，无动作牌时压缩为短框；补枪相关“最近动作”只显示摸到的补枪牌。已用真实 `index.html` 生成 2 人 `915 x 412`、4 人 `844 x 390` 截图：`artifacts/layout-check/real-index-bottom-align-opening-2p-915x412.png`、`artifacts/layout-check/real-index-bottom-align-action-4p-844x390.png`；`bottom-align-check.json` 记录坏图数为 0，左侧牌堆到底部舞台差值为 `0px`，右侧动作框到状态框间距为 `8px`。
-- 下一步准备做什么：如果你继续拿实机图回来，我们下一步就按真实截图继续抠细节，优先看左右玩家是否还需要再上下微调、单行公共牌是否需要稍微居中/缩放，或置灰/选中态是否够清楚；不要再改整体分区，除非截图显示布局本身又错位。
+- 上次做到哪里：横屏小视口对局已经完成结构性重排、真实对局页 JS 固定右侧最近动作、底部整行高度压缩、公共牌大外框收窄、4 人骰子阶段专用布局，以及道风图片扑克牌接入。已用真实 `index.html` 生成 4 人 `915 x 412`、4 人 `844 x 390`、2 人 `915 x 412` 新牌面截图：`artifacts/layout-check/real-index-daoist-cards-4p-915x412.png`、`artifacts/layout-check/real-index-daoist-cards-4p-844x390.png`、`artifacts/layout-check/real-index-daoist-cards-2p-915x412.png`；`daoist-card-faces-check.json` 记录坏图数为 0。
+- 下一步准备做什么：如果你继续拿实机图回来，我们下一步就按真实截图继续抠细节，优先看新牌面在公共牌区、底部手牌区和右侧最近动作里的大小是否还需要单独放大/缩小；不要再改整体分区，除非截图显示布局本身又错位。
 - 当前先别动什么：跨电脑同步脚本、自动开始同步入口和邀请弹窗展示时机，除非本轮任务明确要求调整。
 
 ## 当前可继续方向

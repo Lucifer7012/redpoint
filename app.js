@@ -4408,7 +4408,7 @@ function stageAiDrawTurn(player) {
       playerId: player.id,
       playerName: player.name,
       text: `补枪目标：${move.targets.map(cardLabel).join("、")}`,
-      cards: [drawCard],
+      cards: [drawCard, ...move.targets],
       tone: "aim",
     });
     setFeedback(`${player.name} 准备用摸牌补枪。`, "info");
@@ -4633,12 +4633,12 @@ function capturePendingDraw(player, targets, resolution, fromHuman) {
   removeTableCards(targets);
   player.captured.push(drawCard, ...targets);
   state.pendingDrawCard = null;
-  updateLastAction(player, `补枪成功：${resolution.description}`, [drawCard]);
+  updateLastAction(player, `补枪成功：${resolution.description}`, [drawCard, ...targets]);
   setActionDisplay({
     playerId: player.id,
     playerName: player.name,
     text: `补枪成功：${resolution.description}`,
-    cards: [drawCard],
+    cards: [drawCard, ...targets],
     tone: "collect",
   });
   pushLog(`${player.name} 用摸到的 ${cardLabel(drawCard)} 完成补枪。`);
@@ -5546,7 +5546,6 @@ function clearLandscapeActionPanelStyles() {
     ui.actionStage,
     ui.actionStage?.querySelector(".action-stage__meta"),
     ui.actionCards,
-    document.querySelector(".draw-zone"),
     ...Array.from(ui.actionCards?.querySelectorAll(".card-btn") || []),
   ];
   const properties = [
@@ -5598,46 +5597,22 @@ function syncLandscapeActionPanel() {
   }
 
   const metrics = document.querySelector(".selection-metrics");
-  const centerStage = document.querySelector(".center-stage");
-  const drawZone = document.querySelector(".draw-zone");
   const actionMeta = ui.actionStage.querySelector(".action-stage__meta");
-  if (!metrics || !centerStage || !drawZone || !actionMeta || !ui.actionCards) {
+  if (!metrics || !actionMeta || !ui.actionCards) {
     return;
   }
 
   const metricsRect = metrics.getBoundingClientRect();
-  const centerStageRect = centerStage.getBoundingClientRect();
-  if (!metricsRect.width || !metricsRect.height || !centerStageRect.width || !centerStageRect.height) {
+  if (!metricsRect.width || !metricsRect.height) {
     return;
   }
 
-  const drawZoneWidth = Math.round(Math.min(138, Math.max(120, window.innerWidth * 0.15)));
-  const drawZoneHeight = Math.min(132, Math.max(112, Math.round(centerStageRect.height - 44)));
-  const drawZoneTop = Math.round(centerStageRect.bottom - drawZoneHeight);
-
-  setImportantStyle(drawZone, "position", "fixed");
-  setImportantStyle(drawZone, "left", `${Math.round(centerStageRect.left)}px`);
-  setImportantStyle(drawZone, "top", `${drawZoneTop}px`);
-  setImportantStyle(drawZone, "right", "auto");
-  setImportantStyle(drawZone, "bottom", "auto");
-  setImportantStyle(drawZone, "z-index", "998");
-  setImportantStyle(drawZone, "width", `${drawZoneWidth}px`);
-  setImportantStyle(drawZone, "height", `${drawZoneHeight}px`);
-  setImportantStyle(drawZone, "display", "flex");
-  setImportantStyle(drawZone, "align-items", "flex-end");
-  setImportantStyle(drawZone, "pointer-events", "auto");
-
-  const handCardRect = ui.handCards?.querySelector(".card-btn")?.getBoundingClientRect();
-  const hasActionCard = Boolean(ui.actionCards.querySelector(".card-btn"));
-  const fallbackActionCardWidth = Math.min(90, Math.max(82, Math.round(window.innerWidth * 0.095)));
-  const actionCardWidth = Math.round(handCardRect?.width || fallbackActionCardWidth);
-  const actionCardHeight = Math.round(handCardRect?.height || actionCardWidth * 1.5);
-  const actionPanelHeight = hasActionCard
-    ? Math.min(146, Math.max(100, actionCardHeight + 12))
-    : 58;
+  const humanPanel = ui.handCards?.closest(".human-panel");
+  const sideBandRect = humanPanel?.getBoundingClientRect();
+  const sideBandHeight = sideBandRect?.height || metricsRect.height + 48;
   const width = Math.round(metricsRect.width);
   const left = Math.round(metricsRect.left);
-  const height = actionPanelHeight;
+  const height = Math.min(108, Math.max(82, Math.round(sideBandHeight - metricsRect.height - 8)));
   const top = Math.max(4, Math.round(metricsRect.top - height - 8));
 
   setImportantStyle(ui.actionStage, "position", "fixed");
@@ -5649,13 +5624,9 @@ function syncLandscapeActionPanel() {
   setImportantStyle(ui.actionStage, "width", `${width}px`);
   setImportantStyle(ui.actionStage, "height", `${height}px`);
   setImportantStyle(ui.actionStage, "min-height", "0");
-  setImportantStyle(ui.actionStage, "padding", "6px 8px");
+  setImportantStyle(ui.actionStage, "padding", "9px 10px");
   setImportantStyle(ui.actionStage, "display", "grid");
-  setImportantStyle(
-    ui.actionStage,
-    "grid-template-columns",
-    hasActionCard ? `minmax(0, 1fr) ${actionCardWidth}px` : "minmax(0, 1fr)",
-  );
+  setImportantStyle(ui.actionStage, "grid-template-columns", "minmax(0, 1fr) 48px");
   setImportantStyle(ui.actionStage, "grid-template-rows", "minmax(0, 1fr)");
   setImportantStyle(ui.actionStage, "align-items", "center");
   setImportantStyle(ui.actionStage, "column-gap", "8px");
@@ -5672,7 +5643,7 @@ function syncLandscapeActionPanel() {
   setImportantStyle(actionMeta, "min-width", "0");
   setImportantStyle(actionMeta, "gap", "3px");
   setImportantStyle(actionMeta, "justify-items", "start");
-  setImportantStyle(actionMeta, "align-self", hasActionCard ? "start" : "center");
+  setImportantStyle(actionMeta, "align-self", "start");
   setImportantStyle(actionMeta, "color", "#fff8ec");
   setImportantStyle(actionMeta, "opacity", "1");
   setImportantStyle(actionMeta, "visibility", "visible");
@@ -5680,9 +5651,9 @@ function syncLandscapeActionPanel() {
 
   setImportantStyle(ui.actionCards, "grid-column", "2");
   setImportantStyle(ui.actionCards, "grid-row", "1");
-  setImportantStyle(ui.actionCards, "width", hasActionCard ? `${actionCardWidth}px` : "0");
-  setImportantStyle(ui.actionCards, "min-width", hasActionCard ? `${actionCardWidth}px` : "0");
-  setImportantStyle(ui.actionCards, "display", hasActionCard ? "flex" : "none");
+  setImportantStyle(ui.actionCards, "width", "48px");
+  setImportantStyle(ui.actionCards, "min-width", "48px");
+  setImportantStyle(ui.actionCards, "display", "flex");
   setImportantStyle(ui.actionCards, "justify-content", "center");
   setImportantStyle(ui.actionCards, "align-items", "center");
   setImportantStyle(ui.actionCards, "overflow", "hidden");
@@ -5691,12 +5662,12 @@ function syncLandscapeActionPanel() {
   setImportantStyle(ui.actionCards, "transform", "none");
 
   Array.from(ui.actionCards.querySelectorAll(".card-btn")).forEach((card) => {
-    setImportantStyle(card, "width", `${actionCardWidth}px`);
-    setImportantStyle(card, "min-width", `${actionCardWidth}px`);
+    setImportantStyle(card, "width", "40px");
+    setImportantStyle(card, "min-width", "40px");
     setImportantStyle(card, "min-height", "auto");
-    setImportantStyle(card, "aspect-ratio", "2 / 3");
-    setImportantStyle(card, "padding", "0");
-    setImportantStyle(card, "border-radius", "3px");
+    setImportantStyle(card, "aspect-ratio", "18 / 25");
+    setImportantStyle(card, "padding", "4px");
+    setImportantStyle(card, "border-radius", "9px");
   });
 }
 
@@ -6021,9 +5992,9 @@ function getSeatAssignments() {
     seats["top-left"] = opponents[0] || null;
     seats["top-right"] = opponents[1] || null;
   } else if (state.players.length === 4) {
-    seats.left = opponents[0] || null;
+    seats["top-left"] = opponents[0] || null;
     seats.top = opponents[1] || null;
-    seats.right = opponents[2] || null;
+    seats["top-right"] = opponents[2] || null;
   }
 
   return seats;
@@ -6093,8 +6064,6 @@ function renderTableCards(selectedSourceCard) {
   state.renderCache.tableCards = signature;
 
   ui.tableCards.innerHTML = "";
-  ui.tableCards.dataset.cardCount = String(state.tableCards.length);
-  ui.tableCards.classList.toggle("is-wide-table", state.tableCards.length > 12);
   if (state.tableCards.length === 0) {
     const emptyText = state.phase === "opening-deal"
       ? "公共牌正在逐张翻开"
@@ -6237,8 +6206,6 @@ function renderHumanHand(humanPlayer) {
   ui.handCards.closest(".human-panel")?.classList.toggle("is-settlement", state.phase === "game-over");
   ui.handCards.innerHTML = "";
   ui.handCards.classList.toggle("settlement-grid", state.phase === "game-over");
-  ui.handCards.dataset.cardCount = String(humanPlayer?.hand?.length || 0);
-  ui.handCards.classList.toggle("is-scroll-hand", (humanPlayer?.hand?.length || 0) > 7);
   if (state.phase === "game-over") {
     renderRoundSettlementSummary();
     return;

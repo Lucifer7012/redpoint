@@ -2381,9 +2381,9 @@ select {
 }
 
 .card-btn.dimmed-card {
-  opacity: 0.72;
-  filter: grayscale(0.12) brightness(0.94);
-  box-shadow: 0 5px 10px rgba(39, 28, 20, 0.08);
+  opacity: 0.38;
+  filter: grayscale(0.24);
+  box-shadow: none;
 }
 
 .card-btn.red-card {
@@ -6762,16 +6762,16 @@ select {
   }
 
   body.is-game-view .play-stage {
-    --game-side-inset: clamp(82px, 9.5vw, 96px);
-    --game-left-slot-width: clamp(120px, 15vw, 138px);
-    --game-right-slot-width: clamp(220px, 23vw, 240px);
+    --game-side-inset: clamp(144px, 17vw, 170px);
+    --game-left-slot-width: clamp(180px, 20vw, 208px);
+    --game-right-slot-width: clamp(244px, 26vw, 278px);
     --game-side-gap: 6px;
-    --game-bottom-band-height: calc(172px + env(safe-area-inset-bottom, 0px));
+    --game-bottom-band-height: calc(160px + env(safe-area-inset-bottom, 0px));
     --game-hand-panel-height: var(--game-bottom-band-height);
     --game-side-panel-height: var(--game-bottom-band-height);
-    --game-public-card-width: clamp(80px, 9.8vw, 90px);
-    --game-hand-card-width: clamp(82px, 9.5vw, 90px);
-    --game-action-card-width: var(--game-hand-card-width);
+    --game-public-card-width: clamp(30px, 3.7vw, 36px);
+    --game-action-card-width: clamp(31px, 3.7vw, 36px);
+    --game-hand-card-width: clamp(38px, 4.2vw, 44px);
     --game-card-ratio: 2 / 3;
     --game-panel-side-padding: 6px;
     --game-panel-vertical-padding: 5px;
@@ -6838,7 +6838,7 @@ select {
   }
 
   body.is-game-view .seat-slot {
-    width: clamp(106px, 13vw, 122px);
+    width: min(24vw, 108px);
     z-index: 9;
   }
 
@@ -6859,14 +6859,14 @@ select {
   }
 
   body.is-game-view .seat-left {
-    top: 142px;
-    left: 12px;
+    top: 56px;
+    left: 6px;
     transform: none;
   }
 
   body.is-game-view .seat-right {
-    top: 142px;
-    right: 12px;
+    top: 56px;
+    right: 6px;
     transform: none;
   }
 
@@ -6907,9 +6907,9 @@ select {
 
   body.is-game-view .table-public-area {
     position: absolute;
-    top: 44px;
+    top: 52px;
     right: var(--game-side-inset);
-    bottom: calc(var(--game-bottom-band-height) + 6px);
+    bottom: calc(var(--game-bottom-band-height) + 14px);
     left: var(--game-side-inset);
     transform: none;
     width: auto;
@@ -6944,27 +6944,19 @@ select {
 
   body.is-game-view .table-cards {
     width: 100%;
-    max-width: 100%;
+    max-width: calc((var(--game-public-card-width) * 6) + 24px);
     height: 100%;
     max-height: 100%;
     min-height: 0;
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     align-content: center;
     justify-content: center;
-    gap: 3px;
+    gap: 4px;
     padding: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
+    align-content: center;
+    overflow-y: auto;
     overscroll-behavior: contain;
-  }
-
-  body.is-game-view .hand-grid.is-scroll-hand {
-    justify-content: flex-start;
-  }
-
-  body.is-game-view .table-cards.is-wide-table {
-    max-width: 100%;
   }
 
   body.is-game-view .table-cards .card-btn {
@@ -7041,14 +7033,14 @@ select {
   body.is-game-view .action-stage {
     position: absolute;
     right: 0;
-    bottom: 56px;
+    bottom: 70px;
     z-index: 4;
     min-height: 0;
     width: var(--game-right-slot-width);
-    height: calc(var(--game-bottom-band-height) - 58px);
-    padding: 6px 8px;
+    height: calc(var(--game-bottom-band-height) - 70px);
+    padding: 9px 10px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) var(--game-action-card-width);
+    grid-template-columns: minmax(0, 1fr) 46px;
     grid-template-rows: minmax(0, 1fr);
     align-items: center;
     justify-items: stretch;
@@ -7058,13 +7050,6 @@ select {
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.12);
     pointer-events: auto;
-  }
-
-  body.is-game-view .action-stage:not(:has(.action-stage__cards .card-btn)) {
-    bottom: 58px;
-    height: 58px;
-    grid-template-columns: minmax(0, 1fr);
-    align-items: center;
   }
 
   body.is-game-view .action-stage__meta {
@@ -7113,7 +7098,7 @@ select {
 
   body.is-game-view .action-stage__cards {
     min-height: 0;
-    width: var(--game-action-card-width);
+    width: 46px;
     max-width: none;
     grid-column: 2;
     grid-row: 1;
@@ -7142,15 +7127,10 @@ select {
 
   body.is-game-view .draw-zone {
     grid-area: draw;
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: var(--game-left-slot-width);
-    height: calc(var(--game-bottom-band-height) - 44px);
     margin: 0;
     min-height: 0;
     display: flex;
-    align-items: flex-end;
+    align-items: stretch;
     padding-bottom: 0;
     pointer-events: auto;
   }
@@ -7208,40 +7188,26 @@ select {
     bottom: 0;
     left: auto;
     width: var(--game-right-slot-width);
-    height: 50px;
-    padding: 5px 10px;
+    height: 62px;
     margin: 0;
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: repeat(3, minmax(0, 1fr));
-    gap: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
     pointer-events: auto;
     z-index: 2;
-    border-radius: 14px;
-    background: rgba(245, 248, 244, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
-    overflow: hidden;
   }
 
   body.is-game-view .selection-metrics > div {
     display: grid;
-    grid-template-columns: 58px minmax(0, 1fr);
-    align-items: center;
     min-width: 0;
     min-height: 0;
-    gap: 8px;
-    padding: 0;
-    border-radius: 0;
-    background: none;
-    border: 0;
-    border-bottom: 1px solid rgba(40, 60, 48, 0.1);
-    box-shadow: none;
+    gap: 3px;
+    padding: 7px 8px 6px;
+    border-radius: 12px;
+    background: rgba(245, 248, 244, 0.86);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
     overflow: hidden;
-  }
-
-  body.is-game-view .selection-metrics > div:last-child {
-    border-bottom: 0;
   }
 
   body.is-game-view .selection-metrics span {
@@ -7250,7 +7216,7 @@ select {
     color: #425046;
     font-size: 7px;
     font-weight: 800;
-    line-height: 1;
+    line-height: 1.15;
     overflow: hidden;
     text-overflow: ellipsis;
   }
@@ -7261,8 +7227,7 @@ select {
     margin-top: 0;
     color: #233329;
     font-size: 10px;
-    line-height: 1.05;
-    white-space: nowrap;
+    line-height: 1.15;
     overflow: hidden;
     text-overflow: ellipsis;
   }
@@ -7376,12 +7341,8 @@ select {
     border-radius: 3px;
   }
 
-  body.is-game-view .table-cards .card-btn + .card-btn {
-    margin-left: clamp(-42px, -4.6vw, -36px);
-  }
-
   body.is-game-view .hand-grid .card-btn {
-    margin-left: clamp(-24px, -2.6vw, -18px);
+    margin-left: -10px;
   }
 
   body.is-game-view .hand-grid .card-btn:first-child {
@@ -7568,14 +7529,14 @@ select {
   body.is-game-view .action-stage {
     position: absolute !important;
     right: 0 !important;
-    bottom: 56px !important;
+    bottom: 70px !important;
     z-index: 45 !important;
-    width: var(--game-right-slot-width, clamp(220px, 23vw, 240px)) !important;
-    height: calc(var(--game-bottom-band-height, 172px) - 58px) !important;
+    width: var(--game-right-slot-width, clamp(244px, 26vw, 278px)) !important;
+    height: calc(var(--game-bottom-band-height, 160px) - 70px) !important;
     min-height: 0 !important;
-    padding: 6px 8px !important;
+    padding: 9px 10px !important;
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) var(--game-action-card-width) !important;
+    grid-template-columns: minmax(0, 1fr) 48px !important;
     grid-template-rows: minmax(0, 1fr) !important;
     align-items: center !important;
     column-gap: 8px !important;
@@ -7585,13 +7546,6 @@ select {
     visibility: visible !important;
     transform: none !important;
     pointer-events: auto !important;
-  }
-
-  body.is-game-view .action-stage:not(:has(.action-stage__cards .card-btn)) {
-    bottom: 58px !important;
-    height: 58px !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    align-items: center !important;
   }
 
   body.is-game-view .action-stage__meta,
@@ -7648,8 +7602,8 @@ select {
   body.is-game-view .action-stage__cards {
     grid-column: 2 !important;
     grid-row: 1 !important;
-    width: var(--game-action-card-width) !important;
-    min-width: var(--game-action-card-width) !important;
+    width: 48px !important;
+    min-width: 48px !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
