@@ -4408,7 +4408,7 @@ function stageAiDrawTurn(player) {
       playerId: player.id,
       playerName: player.name,
       text: `补枪目标：${move.targets.map(cardLabel).join("、")}`,
-      cards: [drawCard, ...move.targets],
+      cards: [drawCard],
       tone: "aim",
     });
     setFeedback(`${player.name} 准备用摸牌补枪。`, "info");
@@ -4633,12 +4633,12 @@ function capturePendingDraw(player, targets, resolution, fromHuman) {
   removeTableCards(targets);
   player.captured.push(drawCard, ...targets);
   state.pendingDrawCard = null;
-  updateLastAction(player, `补枪成功：${resolution.description}`, [drawCard, ...targets]);
+  updateLastAction(player, `补枪成功：${resolution.description}`, [drawCard]);
   setActionDisplay({
     playerId: player.id,
     playerName: player.name,
     text: `补枪成功：${resolution.description}`,
-    cards: [drawCard, ...targets],
+    cards: [drawCard],
     tone: "collect",
   });
   pushLog(`${player.name} 用摸到的 ${cardLabel(drawCard)} 完成补枪。`);

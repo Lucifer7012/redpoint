@@ -11,11 +11,12 @@
 - 四人横屏骰子阶段布局已修正：新增 `is-dice-view` 状态，只在摇骰子中/摇骰子结果阶段隐藏空公共牌外框并启用紧凑骰子排布；上方三名对手骰子贴近各自玩家卡，本地玩家骰子居中放在下方且不压底部面板。
 - 骰子阶段底部手牌空状态文案已改为“等待摇骰子结果”；发牌完成后 `is-dice-view` 移除，公共牌外框恢复显示。
 - 手机横屏真实对局页公共牌大外框已收窄：公共牌外框左右安全边距从 `clamp(88px, 10.8vw, 102px)` 调整为 `clamp(144px, 17vw, 170px)`，给 4 人模式左右/上方玩家座位留出空间；公共牌本体仍居中显示。
-- 手机横屏真实对局页底部整行已压缩：共同高度从 `184px` 调整为 `160px`，中间手牌区上方空白减少，左侧牌堆区、中间手牌区、右侧最近动作/指标区仍保持同高对齐。
+- 手机横屏真实对局页底部整行已压缩后微调：共同高度先从 `184px` 压到 `160px`，本轮为避免操作按钮挡住手牌左上角回调到 `172px`，左侧牌堆区、中间手牌区、右侧最近动作/指标区仍保持同高对齐。
 - 右侧最近动作的 JS 固定高度现在按 `.human-panel` 实际高度计算，避免底部压缩后动作框继续使用旧高度。
 - 已修正三张指标卡压缩后被旧 `grid-area` 静态位置带偏的问题，指标卡重新贴住底部，不再被视口裁切。
-- 当前缓存版本：`styles.css?v=20260607-large-single-cards`，`app.js?v=20260607-large-single-cards`。
-- 最新真实页面验证截图：`artifacts/layout-check/real-index-large-single-cards-4p-915x412.png`、`artifacts/layout-check/real-index-large-single-cards-4p-844x390.png`、`artifacts/layout-check/real-index-large-single-cards-2p-915x412.png`；验证记录为 `artifacts/layout-check/large-single-cards-check.json`。
+- 补枪相关最近动作已清理：`补枪目标` 和 `补枪成功` 的动作牌只显示摸到的补枪牌，`lastAction` 同步不再带被补公共牌，避免右侧最近动作出现两张牌。
+- 当前缓存版本：`styles.css?v=20260607-hand-action-cleanup`，`app.js?v=20260607-hand-action-cleanup`。
+- 最新真实页面验证截图：`artifacts/layout-check/real-index-hand-action-cleanup-2p-915x412.png`、`artifacts/layout-check/real-index-hand-action-cleanup-4p-844x390.png`；验证记录为 `artifacts/layout-check/hand-action-cleanup-check.json`。
 
 历史状态补充（2026-06-04）：
 - 真实 `index.html` 对局页右侧最近动作已改为 JS 固定：每次渲染后按右下三张指标卡位置，将 `.action-stage` 以内联 important 样式固定到指标卡上方；这次不再动公共牌、手牌、对手区等整体布局。
@@ -61,7 +62,7 @@
 - 手机横屏大厅中间主入口已改为“单机 / 好友联机”切换；单机显示玩家人数和摇骰子，好友联机显示创建 2 / 3 / 4 人好友房卡片和摇骰子。
 - 右侧“好友列表 / 排行榜”固定外框再次向下延长，手机横屏下可显示更多列表内容。
 - 右侧“好友列表 / 排行榜”切换框已做二次固定高度修正，小屏和手机横屏大厅点击排行榜时不再撑高外框；排行榜和好友列表都在同一外框内滚动。
-- 当前缓存版本：`styles.css?v=20260607-large-single-cards`，`app.js?v=20260607-large-single-cards`。
+- 当前缓存版本：`styles.css?v=20260607-hand-action-cleanup`，`app.js?v=20260607-hand-action-cleanup`。
 
 更新时间：2026-06-07
 

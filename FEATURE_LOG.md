@@ -4,6 +4,27 @@
 
 ## 2026-06-07
 
+### 手牌遮挡和补枪动作显示清理
+
+- 背景：用户反馈手机横屏对局中，底部手牌的左上角被操作按钮行挡住；同时右侧“最近动作”在补枪相关动作里会出现两张牌，看起来像多补了一张。
+- 改动：
+  - 将触屏横屏 `--game-bottom-band-height` 从压缩后的 `160px` 回调到 `172px`，手牌区整体往下留出空间，同时继续让左侧牌堆、中间手牌、右侧最近动作/指标保持同高。
+  - `stageAiDrawTurn()` 的 `补枪目标` 动作牌保持只显示摸到的补枪牌。
+  - `capturePendingDraw()` 的 `补枪成功` 动作牌和 `lastAction` 历史牌组都改为只保留摸到的补枪牌，不再把被补公共牌也放进最近动作展示。
+  - 缓存版本更新为 `20260607-hand-action-cleanup`。
+- 涉及文件：
+  - `index.html`
+  - `app.js`
+  - `styles.css`
+  - `artifacts/layout-check/public-area-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 内置浏览器确认真实页面加载 `styles.css?v=20260607-hand-action-cleanup` 与 `app.js?v=20260607-hand-action-cleanup`。
+  - 真实 `index.html` 在本机 Chrome + Playwright 触屏横屏下截图验证：
+    - `artifacts/layout-check/real-index-hand-action-cleanup-2p-915x412.png`
+    - `artifacts/layout-check/real-index-hand-action-cleanup-4p-844x390.png`
+  - `artifacts/layout-check/hand-action-cleanup-check.json` 记录 2 人 `915 x 412` 下手牌 10 张、公共牌 12 张、最近动作 1 张、按钮到手牌间距 2px；4 人 `844 x 390` 下手牌 5 张、公共牌 12 张、最近动作 1 张、按钮到手牌间距 9px；坏图数均为 0。
+
 ### 横屏单张牌继续放大
 
 - 背景：用户继续反馈单张牌希望更接近标注图中的大尺寸，同时仍要求公共牌和手牌保持一行，牌面比例不能变形。

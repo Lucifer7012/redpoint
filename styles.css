@@ -6766,7 +6766,7 @@ select {
     --game-left-slot-width: clamp(180px, 20vw, 208px);
     --game-right-slot-width: clamp(244px, 26vw, 278px);
     --game-side-gap: 6px;
-    --game-bottom-band-height: calc(160px + env(safe-area-inset-bottom, 0px));
+    --game-bottom-band-height: calc(172px + env(safe-area-inset-bottom, 0px));
     --game-hand-panel-height: var(--game-bottom-band-height);
     --game-side-panel-height: var(--game-bottom-band-height);
     --game-public-card-width: clamp(80px, 9.8vw, 90px);

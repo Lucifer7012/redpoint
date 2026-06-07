@@ -11,6 +11,17 @@
 
 ## 2026-06-07
 
+### 手牌遮挡和补枪动作显示清理
+
+- 将手机横屏对局底部共同高度从压缩后的 `160px` 回调到 `172px`，让操作按钮和手牌之间重新留出间距，避免手牌左上角被按钮行挡住；左侧牌堆区、中间手牌区、右侧最近动作/指标区仍保持同高对齐。
+- 清理“最近动作”里的补枪展示：`补枪目标` 和 `补枪成功` 的动作牌只显示摸到的补枪牌，不再把被补的公共牌也一起显示成第二张牌；座位/同步用的 `lastAction` 也同步只保留这张补枪牌。
+- 缓存版本更新为 `20260607-hand-action-cleanup`。
+验证：
+- `node --check app.js` 通过。
+- 内置浏览器打开本地真实页面，确认加载 `styles.css?v=20260607-hand-action-cleanup` 与 `app.js?v=20260607-hand-action-cleanup`。
+- 使用真实 `index.html`、本机 Chrome + Playwright、`isMobile: true`、`hasTouch: true` 验证 2 人 `915 x 412` 与 4 人 `844 x 390`；截图为 `artifacts/layout-check/real-index-hand-action-cleanup-2p-915x412.png`、`artifacts/layout-check/real-index-hand-action-cleanup-4p-844x390.png`，验证记录为 `artifacts/layout-check/hand-action-cleanup-check.json`。
+- 验证记录显示动作牌数量为 1，坏图数为 0；按钮到底部手牌的间距分别为 2px 与 9px，手牌不再被按钮行压住。
+
 ### 横屏单张牌继续放大
 
 - 按“单张牌能不能变这么大”的反馈继续放大手机横屏对局主牌面：公共牌提升到约 `83-90px` 宽，手牌提升到约 `82-87px` 宽，继续保持 2:3 图片比例和小棱角。
