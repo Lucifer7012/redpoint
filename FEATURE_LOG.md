@@ -4,6 +4,32 @@
 
 ## 2026-06-07
 
+### 简洁斗地主式 CSS 扑克牌面
+
+- 背景：恢复原本牌后，用户反馈当前 CSS 牌仍然太丑，并给出斗地主手牌参考；随后明确补充“能不用重叠的时候还是不要重叠，单纯颜色图案和数字就行”。
+- 改动：
+  - `createCardButton()` 改为只渲染 `.card-corner` 和 `.card-center-suit`，牌面可见内容只剩点数/字母与花色图案。
+  - “钓牌值 / 计分值 / 牌名”等说明保留在 `aria-label`，不再占用视觉牌面。
+  - `.card-btn` 改为白色扑克牌底、细边框、小圆角、轻微内阴影和投影，红黑花色直接用牌面颜色区分。
+  - 取消手牌和公共牌的负间距重叠；`.hand-grid` 改为有小间距的安全居中，超宽时横向滚动。
+  - 手机横屏牌宽略微放大：公共牌宽度更新为 `clamp(38px, 4.3vw, 42px)`，手牌宽度更新为 `clamp(48px, 5.1vw, 56px)`。
+  - 本地手牌不再使用旧 `hidden-zone` 深色底，始终显示为白色扑克牌。
+  - `artifacts/layout-check/public-area-preview.html` 同步为新 CSS 牌结构。
+  - 缓存版本更新为 `20260607-clean-poker-cards`。
+- 涉及文件：
+  - `index.html`
+  - `app.js`
+  - `styles.css`
+  - `artifacts/layout-check/public-area-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 内置浏览器确认真实页面加载 `styles.css?v=20260607-clean-poker-cards` 与 `app.js?v=20260607-clean-poker-cards`，入口页无 `.card-face` / `.card-top` 旧牌元素。
+  - 真实 `index.html` 在本机 Chrome + Playwright 触屏横屏下截图验证：
+    - `artifacts/layout-check/real-index-clean-poker-cards-4p-915x412.png`
+    - `artifacts/layout-check/real-index-clean-poker-cards-4p-844x390.png`
+    - `artifacts/layout-check/real-index-clean-poker-cards-2p-915x412.png`
+  - `artifacts/layout-check/clean-poker-cards-check.json` 记录三种视口均命中触屏横屏媒体规则，`cardFaceCount` 为 0；4 人手牌不重叠，2 人 10 张手牌也不重叠，超出中心手牌区时使用横向滚动。
+
 ### 恢复原本 CSS/文字扑克牌面
 
 - 背景：用户确认当前版本仍在显示其重新设计的扑克牌，但这次实际希望回到使用该牌面之前的原本牌样式。

@@ -1,0 +1,215 @@
+[
+  {
+    "url": "http://127.0.0.1:4173/index.html?verify=clean-poker-cards-4p-915x412",
+    "bodyClass": "is-game-view",
+    "resources": [
+      "http://127.0.0.1:4173/styles.css?v=20260607-clean-poker-cards",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-app-compat.js",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth-compat.js",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore-compat.js",
+      "http://127.0.0.1:4173/app.js?v=20260607-clean-poker-cards"
+    ],
+    "cardFaceCount": 0,
+    "cardButtonCount": 17,
+    "phase": "human-turn",
+    "openingStage": null,
+    "media": {
+      "hoverNone": true,
+      "pointerCoarse": true,
+      "landscape": true,
+      "max960": true
+    },
+    "handMetrics": {
+      "count": 5,
+      "overlap": false,
+      "clientWidth": 422,
+      "scrollWidth": 422,
+      "sample": [
+        {
+          "left": 299,
+          "right": 347,
+          "width": 48,
+          "opacity": "1",
+          "background": "rgb(247, 255, 249)",
+          "color": "rgb(177, 59, 51)"
+        },
+        {
+          "left": 351,
+          "right": 399,
+          "width": 48,
+          "opacity": "1",
+          "background": "rgb(247, 255, 249)",
+          "color": "rgb(177, 59, 51)"
+        },
+        {
+          "left": 403,
+          "right": 451,
+          "width": 48,
+          "opacity": "1",
+          "background": "rgb(247, 255, 249)",
+          "color": "rgb(177, 59, 51)"
+        }
+      ]
+    },
+    "tableCardCount": 12,
+    "sampleCardHtml": [
+      "<span class=\"card-corner\" aria-hidden=\"true\"> <span class=\"card-rank\">3</span> <span class=\"card-suit\">♣</span> </span> <span class=\"card-center-suit\" aria-hidden=\"true\">♣</span>",
+      "<span class=\"card-corner\" aria-hidden=\"true\"> <span class=\"card-rank\">2</span> <span class=\"card-suit\">♠</span> </span> <span class=\"card-center-suit\" aria-hidden=\"true\">♠</span>",
+      "<span class=\"card-corner\" aria-hidden=\"true\"> <span class=\"card-rank\">4</span> <span class=\"card-suit\">♣</span> </span> <span class=\"card-center-suit\" aria-hidden=\"true\">♣</span>"
+    ],
+    "startResult": {
+      "canStartRound": true,
+      "hasState": true,
+      "hasRender": true
+    },
+    "screenshotPath": "C:/Users/HOUSE/Desktop/redpoint/artifacts/layout-check/real-index-clean-poker-cards-4p-915x412.png",
+    "logs": [
+      {
+        "type": "verbose",
+        "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o"
+      }
+    ]
+  },
+  {
+    "url": "http://127.0.0.1:4173/index.html?verify=clean-poker-cards-4p-844x390",
+    "bodyClass": "is-game-view",
+    "resources": [
+      "http://127.0.0.1:4173/styles.css?v=20260607-clean-poker-cards",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-app-compat.js",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth-compat.js",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore-compat.js",
+      "http://127.0.0.1:4173/app.js?v=20260607-clean-poker-cards"
+    ],
+    "cardFaceCount": 0,
+    "cardButtonCount": 17,
+    "phase": "human-turn",
+    "openingStage": null,
+    "media": {
+      "hoverNone": true,
+      "pointerCoarse": true,
+      "landscape": true,
+      "max960": true
+    },
+    "handMetrics": {
+      "count": 5,
+      "overlap": false,
+      "clientWidth": 354,
+      "scrollWidth": 354,
+      "sample": [
+        {
+          "left": 262,
+          "right": 310,
+          "width": 48,
+          "opacity": "1",
+          "background": "rgb(247, 255, 249)",
+          "color": "rgb(30, 45, 57)"
+        },
+        {
+          "left": 314,
+          "right": 362,
+          "width": 48,
+          "opacity": "1",
+          "background": "rgb(247, 255, 249)",
+          "color": "rgb(30, 45, 57)"
+        },
+        {
+          "left": 366,
+          "right": 414,
+          "width": 48,
+          "opacity": "1",
+          "background": "rgb(247, 255, 249)",
+          "color": "rgb(177, 59, 51)"
+        }
+      ]
+    },
+    "tableCardCount": 12,
+    "sampleCardHtml": [
+      "<span class=\"card-corner\" aria-hidden=\"true\"> <span class=\"card-rank\">7</span> <span class=\"card-suit\">♠</span> </span> <span class=\"card-center-suit\" aria-hidden=\"true\">♠</span>",
+      "<span class=\"card-corner\" aria-hidden=\"true\"> <span class=\"card-rank\">2</span> <span class=\"card-suit\">♥</span> </span> <span class=\"card-center-suit\" aria-hidden=\"true\">♥</span>",
+      "<span class=\"card-corner\" aria-hidden=\"true\"> <span class=\"card-rank\">6</span> <span class=\"card-suit\">♠</span> </span> <span class=\"card-center-suit\" aria-hidden=\"true\">♠</span>"
+    ],
+    "startResult": {
+      "canStartRound": true,
+      "hasState": true,
+      "hasRender": true
+    },
+    "screenshotPath": "C:/Users/HOUSE/Desktop/redpoint/artifacts/layout-check/real-index-clean-poker-cards-4p-844x390.png",
+    "logs": [
+      {
+        "type": "verbose",
+        "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o"
+      }
+    ]
+  },
+  {
+    "url": "http://127.0.0.1:4173/index.html?verify=clean-poker-cards-2p-915x412",
+    "bodyClass": "is-game-view",
+    "resources": [
+      "http://127.0.0.1:4173/styles.css?v=20260607-clean-poker-cards",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-app-compat.js",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth-compat.js",
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore-compat.js",
+      "http://127.0.0.1:4173/app.js?v=20260607-clean-poker-cards"
+    ],
+    "cardFaceCount": 0,
+    "cardButtonCount": 22,
+    "phase": "human-turn",
+    "openingStage": null,
+    "media": {
+      "hoverNone": true,
+      "pointerCoarse": true,
+      "landscape": true,
+      "max960": true
+    },
+    "handMetrics": {
+      "count": 10,
+      "overlap": false,
+      "clientWidth": 422,
+      "scrollWidth": 520,
+      "sample": [
+        {
+          "left": 218,
+          "right": 266,
+          "width": 48,
+          "opacity": "1",
+          "background": "rgb(247, 255, 249)",
+          "color": "rgb(177, 59, 51)"
+        },
+        {
+          "left": 270,
+          "right": 318,
+          "width": 48,
+          "opacity": "1",
+          "background": "rgb(247, 255, 249)",
+          "color": "rgb(30, 45, 57)"
+        },
+        {
+          "left": 322,
+          "right": 370,
+          "width": 48,
+          "opacity": "1",
+          "background": "rgb(247, 255, 249)",
+          "color": "rgb(30, 45, 57)"
+        }
+      ]
+    },
+    "tableCardCount": 12,
+    "sampleCardHtml": [
+      "<span class=\"card-corner\" aria-hidden=\"true\"> <span class=\"card-rank\">J</span> <span class=\"card-suit\">♠</span> </span> <span class=\"card-center-suit\" aria-hidden=\"true\">♠</span>",
+      "<span class=\"card-corner\" aria-hidden=\"true\"> <span class=\"card-rank\">8</span> <span class=\"card-suit\">♣</span> </span> <span class=\"card-center-suit\" aria-hidden=\"true\">♣</span>",
+      "<span class=\"card-corner\" aria-hidden=\"true\"> <span class=\"card-rank\">Q</span> <span class=\"card-suit\">♣</span> </span> <span class=\"card-center-suit\" aria-hidden=\"true\">♣</span>"
+    ],
+    "startResult": {
+      "canStartRound": true,
+      "hasState": true,
+      "hasRender": true
+    },
+    "screenshotPath": "C:/Users/HOUSE/Desktop/redpoint/artifacts/layout-check/real-index-clean-poker-cards-2p-915x412.png",
+    "logs": [
+      {
+        "type": "verbose",
+        "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o"
+      }
+    ]
+  }
+]

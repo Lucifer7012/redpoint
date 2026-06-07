@@ -11,6 +11,17 @@
 
 ## 2026-06-07
 
+### 简洁斗地主式 CSS 扑克牌面
+
+- 按用户参考图继续优化原本 CSS 牌面：牌面只保留点数/字母和红黑花色图案，去掉“钓牌 / 计分”等说明文字，说明信息保留在按钮 `aria-label` 中。
+- 牌面改为白色扑克牌底、细边框、小圆角、轻微阴影和大号花色角标；红桃/方块使用红色，黑桃/梅花使用深色。
+- 手牌取消负间距重叠，能排开时完整排开；2 人局 10 张手牌在手机横屏中放不下时改为横向滚动，不再互相压住。
+- `artifacts/layout-check/public-area-preview.html` 同步更新为新牌面结构；缓存版本更新为 `20260607-clean-poker-cards`。
+验证：
+- `node --check app.js` 通过。
+- 内置浏览器确认真实页面加载 `styles.css?v=20260607-clean-poker-cards` 与 `app.js?v=20260607-clean-poker-cards`，入口页无 `.card-face` / `.card-top` 旧牌元素。
+- 使用真实 `index.html`、本机 Chrome + Playwright、`isMobile: true`、`hasTouch: true` 验证 4 人 `915 x 412`、4 人 `844 x 390`、2 人 `915 x 412`；三组截图均为 `cardFaceCount: 0`，4 人手牌 `overlap: false`，2 人 10 张手牌 `overlap: false` 且通过横向滚动容纳。截图为 `artifacts/layout-check/real-index-clean-poker-cards-4p-915x412.png`、`artifacts/layout-check/real-index-clean-poker-cards-4p-844x390.png`、`artifacts/layout-check/real-index-clean-poker-cards-2p-915x412.png`，记录为 `artifacts/layout-check/clean-poker-cards-check.json`。
+
 ### 恢复原本 CSS/文字扑克牌面
 
 - 按用户要求撤回 `2f6a179 Add daoist card faces` 的图片牌接入，当前对局牌面回到原本的 CSS/文字扑克牌样式，不再加载 `assets/cards/daoist/`。

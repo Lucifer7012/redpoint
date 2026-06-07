@@ -6217,7 +6217,6 @@ function renderHumanHand(humanPlayer) {
         : "";
     ui.handCards.appendChild(createCardButton(card, {
       selected: state.selectedHandCardId === card.id,
-      hiddenZone: true,
       playable: clickable,
       dimmed: !clickable,
       onClick: () => selectHandCard(card.id),
@@ -6486,9 +6485,12 @@ function createCardButton(card, options = {}) {
   button.className = classes.join(" ");
   button.type = "button";
   button.disabled = Boolean(options.disabled);
+  const label = cardLabel(card);
+  const suitSymbol = cardSymbol(card);
+  const accessibilityLabel = `${label}，钓牌 ${card.playValue}，计分 ${card.scoreValue}`;
+  button.setAttribute("aria-label", options.disabledReason ? `${accessibilityLabel}：${options.disabledReason}` : accessibilityLabel);
   if (options.disabledReason) {
     button.title = options.disabledReason;
-    button.setAttribute("aria-label", `${cardLabel(card)}：${options.disabledReason}`);
   }
   button.style.setProperty("--card-index", String(options.cardIndex ?? 0));
   if (options.onClick) {
@@ -6496,14 +6498,11 @@ function createCardButton(card, options = {}) {
   }
 
   button.innerHTML = `
-    <div class="card-top">
-      <span>${cardSymbol(card)}</span>
-      <span class="card-value">钓牌 ${card.playValue} / 计分 ${card.scoreValue}</span>
-    </div>
-    <div class="card-bottom">
-      <span class="card-rank">${card.rank}</span>
-      <span>${SUITS.find((item) => item.key === card.suit)?.label || ""}</span>
-    </div>
+    <span class="card-corner" aria-hidden="true">
+      <span class="card-rank">${escapeHtml(card.rank)}</span>
+      <span class="card-suit">${escapeHtml(suitSymbol)}</span>
+    </span>
+    <span class="card-center-suit" aria-hidden="true">${escapeHtml(suitSymbol)}</span>
   `;
 
   return button;

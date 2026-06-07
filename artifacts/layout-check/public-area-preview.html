@@ -4,28 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Public Area Preview</title>
-  <link rel="stylesheet" href="../../styles.css?v=20260607-original-card-faces">
+  <link rel="stylesheet" href="../../styles.css?v=20260607-clean-poker-cards">
   <style>
     body {
       margin: 0;
     }
 
     .card-btn {
-      display: grid;
-      gap: 2px;
-      align-content: space-between;
-    }
-
-    .card-label {
-      font-size: 12px;
-      line-height: 1.1;
-      color: #2a211c;
-      font-weight: 700;
-    }
-
-    .action-stage .card-label,
-    .hand-grid .card-label {
-      display: none;
+      flex: 0 0 auto;
     }
   </style>
 </head>
@@ -68,18 +54,18 @@
             </div>
             <div class="table-public-slot">
               <div class="table-cards" id="table-cards">
-                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">J</span><span class="card-value">♣</span></span><span class="card-label">梅花</span></button>
-                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">2</span><span class="card-value">♠</span></span><span class="card-label">黑桃</span></button>
-                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">Q</span><span class="card-value">♥</span></span><span class="card-label">红桃</span></button>
-                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">9</span><span class="card-value">♥</span></span><span class="card-label">红桃</span></button>
-                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">K</span><span class="card-value">♠</span></span><span class="card-label">黑桃</span></button>
-                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">10</span><span class="card-value">♠</span></span><span class="card-label">黑桃</span></button>
-                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">Q</span><span class="card-value">♣</span></span><span class="card-label">梅花</span></button>
-                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">4</span><span class="card-value">♣</span></span><span class="card-label">梅花</span></button>
-                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">7</span><span class="card-value">♥</span></span><span class="card-label">红桃</span></button>
-                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">9</span><span class="card-value">♠</span></span><span class="card-label">黑桃</span></button>
-                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">A</span><span class="card-value">♦</span></span><span class="card-label">方块</span></button>
-                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">3</span><span class="card-value">♦</span></span><span class="card-label">方块</span></button>
+                <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">J</span><span class="card-suit">♣</span></span><span class="card-center-suit">♣</span></button>
+                <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">2</span><span class="card-suit">♠</span></span><span class="card-center-suit">♠</span></button>
+                <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">Q</span><span class="card-suit">♥</span></span><span class="card-center-suit">♥</span></button>
+                <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">9</span><span class="card-suit">♥</span></span><span class="card-center-suit">♥</span></button>
+                <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">K</span><span class="card-suit">♠</span></span><span class="card-center-suit">♠</span></button>
+                <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">10</span><span class="card-suit">♠</span></span><span class="card-center-suit">♠</span></button>
+                <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">Q</span><span class="card-suit">♣</span></span><span class="card-center-suit">♣</span></button>
+                <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">4</span><span class="card-suit">♣</span></span><span class="card-center-suit">♣</span></button>
+                <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">7</span><span class="card-suit">♥</span></span><span class="card-center-suit">♥</span></button>
+                <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">9</span><span class="card-suit">♠</span></span><span class="card-center-suit">♠</span></button>
+                <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">A</span><span class="card-suit">♦</span></span><span class="card-center-suit">♦</span></button>
+                <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">3</span><span class="card-suit">♦</span></span><span class="card-center-suit">♦</span></button>
               </div>
             </div>
           </div>
@@ -108,7 +94,7 @@
                 <p>正在逐张翻开桌面公共牌</p>
               </div>
               <div class="action-stage__cards">
-                <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">7</span><span class="card-value">♠</span></span></button>
+                <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">7</span><span class="card-suit">♠</span></span><span class="card-center-suit">♠</span></button>
               </div>
             </div>
 
@@ -138,16 +124,16 @@
             </div>
           </div>
           <div class="card-grid hand-grid">
-            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">6</span><span class="card-value">♦</span></span></button>
-            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">4</span><span class="card-value">♥</span></span></button>
-            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">9</span><span class="card-value">♣</span></span></button>
-            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">4</span><span class="card-value">♠</span></span></button>
-            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">J</span><span class="card-value">♦</span></span></button>
-            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">2</span><span class="card-value">♣</span></span></button>
-            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">8</span><span class="card-value">♥</span></span></button>
-            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">8</span><span class="card-value">♠</span></span></button>
-            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">Q</span><span class="card-value">♦</span></span></button>
-            <button class="card-btn" type="button"><span class="card-top"><span class="card-rank">7</span><span class="card-value">♣</span></span></button>
+            <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">6</span><span class="card-suit">♦</span></span><span class="card-center-suit">♦</span></button>
+            <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">4</span><span class="card-suit">♥</span></span><span class="card-center-suit">♥</span></button>
+            <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">9</span><span class="card-suit">♣</span></span><span class="card-center-suit">♣</span></button>
+            <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">4</span><span class="card-suit">♠</span></span><span class="card-center-suit">♠</span></button>
+            <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">J</span><span class="card-suit">♦</span></span><span class="card-center-suit">♦</span></button>
+            <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">2</span><span class="card-suit">♣</span></span><span class="card-center-suit">♣</span></button>
+            <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">8</span><span class="card-suit">♥</span></span><span class="card-center-suit">♥</span></button>
+            <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">8</span><span class="card-suit">♠</span></span><span class="card-center-suit">♠</span></button>
+            <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">Q</span><span class="card-suit">♦</span></span><span class="card-center-suit">♦</span></button>
+            <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">7</span><span class="card-suit">♣</span></span><span class="card-center-suit">♣</span></button>
           </div>
         </section>
       </div>
