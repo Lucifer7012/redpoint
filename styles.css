@@ -6936,6 +6936,20 @@ select {
     overscroll-behavior: contain;
   }
 
+  body.is-game-view .table-cards.is-expanded-7 {
+    max-width: calc((var(--game-public-card-width) * 7) + 48px);
+  }
+
+  body.is-game-view .table-cards.is-expanded-8 {
+    max-width: calc((var(--game-public-card-width) * 8) + 56px);
+  }
+
+  body.is-game-view .table-cards.is-overflowing-rows {
+    align-content: flex-start;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
   body.is-game-view .table-cards .card-btn {
     flex: 0 0 auto;
     width: var(--game-public-card-width);

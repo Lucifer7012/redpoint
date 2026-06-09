@@ -6031,6 +6031,11 @@ function renderTableCards(selectedSourceCard) {
     ui.tablePublicSlot.appendChild(ui.tableCards);
   }
 
+  const publicCardCount = state.tableCards.length;
+  ui.tableCards.classList.toggle("is-expanded-7", publicCardCount > 12 && publicCardCount <= 14);
+  ui.tableCards.classList.toggle("is-expanded-8", publicCardCount > 14);
+  ui.tableCards.classList.toggle("is-overflowing-rows", publicCardCount > 16);
+
   const currentPlayer = getCurrentPlayer();
   const playableIds = isLocalTurnPlayable() ? getPlayableTargetIds(selectedSourceCard) : new Set();
   const signature = [

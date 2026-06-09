@@ -1,0 +1,3 @@
+﻿<!DOCTYPE html>
+<html><head></head><body>{"hoverNone":false,"pointerCoarse":false,"landscape":true,"width":true,"innerWidth":889,"innerHeight":319}
+</body></html>

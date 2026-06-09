@@ -22,6 +22,27 @@
 - 内置浏览器确认真实页面加载 `styles.css?v=20260607-card-symbol-spacing` 与 `app.js?v=20260607-card-symbol-spacing`，`.card-face` 数量为 0。
 - 使用真实 `index.html`、本机 Chrome + Playwright、`isMobile: true`、`hasTouch: true` 验证 4 人 `915 x 412`、4 人 `844 x 390`、2 人 `915 x 412`；三组均为 `tableMetrics.overlap: false`、`handMetrics.overlap: false`、`symbolMetrics.tableOverlap: false`、`symbolMetrics.handOverlap: false`。截图为 `artifacts/layout-check/real-index-card-symbol-spacing-4p-915x412.png`、`artifacts/layout-check/real-index-card-symbol-spacing-4p-844x390.png`、`artifacts/layout-check/real-index-card-symbol-spacing-2p-915x412.png`，记录为 `artifacts/layout-check/card-symbol-spacing-check.json`。
 
+## 2026-06-09
+
+### 公共牌区多牌自动扩宽
+
+- 按用户对红框两侧留白的反馈，继续优化四人横屏对局里的公共牌区，不再让 13 张以上公共牌白白挤成更高的三行。
+- 公共牌布局改为按数量自动扩宽：
+  - `13-14 张` 自动按 7 列展开
+  - `15 张及以上` 自动按 8 列展开
+  - 只有 `17 张及以上` 真正进入 3 行时，才切换为贴顶排布，避免第一行被裁掉
+- 这次没有继续缩小牌面，也没有往公共牌区两侧塞额外文案或按钮，只利用原本浪费掉的横向空间。
+- 缓存版本更新为 `20260609-public-area-columns`；`artifacts/layout-check/public-area-preview.html` 同步使用新缓存版本。
+
+验证：
+
+- `node --check app.js` 通过。
+- 本地静态服务 `http://127.0.0.1:4173/` 已确认可访问。
+- 使用本机 Chrome 触屏横屏 `915 x 412` 对预览页做真实截图验证：
+  - `artifacts/layout-check/public-area-13-expanded-915x412.png`
+  - `artifacts/layout-check/public-area-15-expanded-915x412.png`
+- 两张图分别确认了 `13 张 = 7 + 6`、`15 张 = 8 + 7` 的排布，公共牌确实开始利用左右留白扩宽，而不是继续向上堆第三行。
+
 ### 简洁斗地主式 CSS 扑克牌面
 
 - 按用户参考图继续优化原本 CSS 牌面：牌面只保留点数/字母和红黑花色图案，去掉“钓牌 / 计分”等说明文字，说明信息保留在按钮 `aria-label` 中。

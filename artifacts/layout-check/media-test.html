@@ -1,0 +1,10 @@
+﻿<!DOCTYPE html><html><body><script>
+document.body.textContent = JSON.stringify({
+  hoverNone: matchMedia('(hover: none)').matches,
+  pointerCoarse: matchMedia('(pointer: coarse)').matches,
+  landscape: matchMedia('(orientation: landscape)').matches,
+  width: matchMedia('(max-width: 960px)').matches,
+  innerWidth,
+  innerHeight
+});
+</script></body></html>
