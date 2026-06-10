@@ -7,8 +7,9 @@
 - 最新新增功能：单机局现在也支持像好友联机那样，从大厅 `返回对局`，并额外支持 `关闭对局`。
 - 入口位置：大厅单机模式右侧动作区；未结束单机局存在时，会显示一行说明和两个并排按钮 `返回对局` / `关闭对局`。
 - 防误覆盖：这类挂起中的单机局存在时，大厅主按钮会改成 `单机进行中` 并禁用，必须先返回或关闭，才允许重新开新单机局。
+- 对称限制也已补上：只要当前单机局还没关闭，就不能切去 `好友联机`，也不能创建好友房或接受好友房邀请。
 - 恢复范围：`human-turn`、`ai-turn`、`dice-rolling`、`dice-result`、`opening-deal` 都做了处理；其中开局发牌中途返回大厅后，恢复时会从干净的开局动画重新播，不会重复发牌。
-- 当前缓存版本：`styles.css?v=20260610-solo-resume-buttons`，`app.js?v=20260610-solo-resume-buttons`。
+- 当前缓存版本：`styles.css?v=20260610-solo-friend-lock`，`app.js?v=20260610-solo-friend-lock`。
 - 本轮预览辅助页：`artifacts/layout-check/solo-resume-preview.html`。
 - 已做校验：`node --check app.js`。
 - 注意：Codex 内置 Browser 当前被本地 URL 策略拦截，不能直接在这里打开 `localhost`/`file://` 预览；如果下轮需要人工看图或手动确认，用普通浏览器打开上面的预览辅助页即可。

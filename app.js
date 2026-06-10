@@ -734,6 +734,17 @@ function blockSoloModeWhileFriendRoomOpen() {
   return true;
 }
 
+function blockFriendModeWhileSoloGameOpen() {
+  if (!hasResumableSoloGame()) {
+    return false;
+  }
+
+  state.lobbyPlayMode = "solo";
+  setSocialStatus("你当前还有单机对局，请先返回或关闭当前对局，再开始好友联机。", "info");
+  renderAuthControls();
+  return true;
+}
+
 function syncLobbyModeWithOpenFriendRoom() {
   if (!hasOpenFriendRoom()) {
     return false;
@@ -742,6 +753,17 @@ function syncLobbyModeWithOpenFriendRoom() {
     return false;
   }
   state.lobbyPlayMode = "friends";
+  return true;
+}
+
+function syncLobbyModeWithResumableSoloGame() {
+  if (hasOpenFriendRoom() || !hasResumableSoloGame()) {
+    return false;
+  }
+  if (state.lobbyPlayMode === "solo") {
+    return false;
+  }
+  state.lobbyPlayMode = "solo";
   return true;
 }
 
@@ -1503,6 +1525,9 @@ async function handleRespondFriendRequest(requestId, accept) {
 async function handleCreateRoom(mode) {
   if (!db || !state.authUser || !state.currentPlayerId) {
     setSocialStatus("先登录并绑定游戏 ID，再创建房间。");
+    return;
+  }
+  if (blockFriendModeWhileSoloGameOpen()) {
     return;
   }
   if (state.socialActiveRoom && state.socialActiveRoom.status === "waiting") {
@@ -2534,6 +2559,9 @@ function setLobbyPlayMode(mode) {
   if (nextMode === "solo" && blockSoloModeWhileFriendRoomOpen()) {
     return;
   }
+  if (nextMode === "friends" && blockFriendModeWhileSoloGameOpen()) {
+    return;
+  }
   if (state.lobbyPlayMode === nextMode) {
     return;
   }
@@ -2549,6 +2577,7 @@ function renderLobbyModeControls() {
 
   const friendsMode = state.lobbyPlayMode === "friends";
   const soloLocked = hasOpenFriendRoom();
+  const friendsLocked = hasResumableSoloGame();
   ui.lobbyModeCard.classList.toggle("is-solo-mode", !friendsMode);
   ui.lobbyModeCard.classList.toggle("is-friends-mode", friendsMode);
   ui.lobbyModeSolo?.classList.toggle("active", !friendsMode);
@@ -2557,8 +2586,13 @@ function renderLobbyModeControls() {
   ui.lobbyModeFriends?.setAttribute("aria-selected", String(friendsMode));
   ui.lobbyModeSolo?.toggleAttribute("disabled", soloLocked);
   ui.lobbyModeSolo?.setAttribute("aria-disabled", String(soloLocked));
+  ui.lobbyModeFriends?.toggleAttribute("disabled", friendsLocked);
+  ui.lobbyModeFriends?.setAttribute("aria-disabled", String(friendsLocked));
   if (ui.lobbyModeSolo) {
     ui.lobbyModeSolo.title = soloLocked ? "请先关闭或离开当前好友房" : "";
+  }
+  if (ui.lobbyModeFriends) {
+    ui.lobbyModeFriends.title = friendsLocked ? "请先返回或关闭当前单机对局" : "";
   }
   renderLobbyFriendRoomCard();
   renderLobbySoloSessionActions();
@@ -2637,7 +2671,13 @@ function renderLobbyFriendRoomCard() {
       button.type = "button";
       button.textContent = `创建${mode}人房`;
       button.title = `门票 ${formatBeans(getTicketCost(mode))}`;
-      button.disabled = state.socialBusy || !state.currentPlayerId || state.currentBeans < getTicketCost(mode);
+      button.disabled = state.socialBusy
+        || !state.currentPlayerId
+        || state.currentBeans < getTicketCost(mode)
+        || hasResumableSoloGame();
+      if (hasResumableSoloGame()) {
+        button.title = "请先返回或关闭当前单机对局";
+      }
       button.addEventListener("click", () => handleCreateRoom(mode));
       actions.appendChild(button);
     });
@@ -2719,7 +2759,10 @@ function renderAuthControls() {
   const needsIdSetup = needsInitialPlayerIdSetup();
   const resumableSolo = hasResumableSoloGame();
   if (signedIn && !authEntryMode && !needsIdSetup) {
-    syncLobbyModeWithOpenFriendRoom();
+    const syncedToFriends = syncLobbyModeWithOpenFriendRoom();
+    if (!syncedToFriends) {
+      syncLobbyModeWithResumableSoloGame();
+    }
   }
   const lobbyMode = signedIn && !needsIdSetup && !authEntryMode;
   const lockedId = signedIn && state.hasBoundGameId && !state.gameIdEditable;
@@ -3868,6 +3911,9 @@ async function handleStartGameButton() {
   }
 
   if (state.lobbyPlayMode !== "friends" && blockSoloModeWhileFriendRoomOpen()) {
+    return;
+  }
+  if (state.lobbyPlayMode === "friends" && blockFriendModeWhileSoloGameOpen()) {
     return;
   }
 
@@ -6574,9 +6620,12 @@ function renderRoomInviteModal() {
     <span>邀请人 ${invite.fromGameId || "好友"}</span>
   `;
   const blockedByRoom = Boolean(state.socialActiveRoom?.id);
-  ui.roomInviteAccept.disabled = state.socialBusy || blockedByRoom || state.currentBeans < ticket;
+  const blockedBySolo = hasResumableSoloGame();
+  ui.roomInviteAccept.disabled = state.socialBusy || blockedByRoom || blockedBySolo || state.currentBeans < ticket;
   ui.roomInviteAccept.textContent = blockedByRoom
     ? "先离开当前房间"
+    : blockedBySolo
+      ? "先关闭单机对局"
     : state.currentBeans < ticket
       ? "欢乐豆不足"
       : "同意加入";
@@ -6956,6 +7005,9 @@ async function handleRespondRoomInvite(inviteId, accept, rejectReason = "") {
   }
   if (accept && !state.currentPlayerId) {
     setSocialStatus("先绑定游戏 ID，再加入好友房间。", "error");
+    return;
+  }
+  if (accept && blockFriendModeWhileSoloGameOpen()) {
     return;
   }
   if (accept && state.socialActiveRoom?.id) {
@@ -7566,7 +7618,13 @@ function renderSocialPanel() {
       button.className = "ghost-btn";
       button.type = "button";
       button.textContent = `创建${mode}人房 · ${formatBeans(getTicketCost(mode))}`;
-      button.disabled = state.socialBusy || !state.currentPlayerId || state.currentBeans < getTicketCost(mode);
+      button.disabled = state.socialBusy
+        || !state.currentPlayerId
+        || state.currentBeans < getTicketCost(mode)
+        || hasResumableSoloGame();
+      if (hasResumableSoloGame()) {
+        button.title = "请先返回或关闭当前单机对局";
+      }
       button.addEventListener("click", () => handleCreateRoom(mode));
       actions.appendChild(button);
     });
@@ -7673,8 +7731,13 @@ function renderSocialPanel() {
       const accept = document.createElement("button");
       accept.className = "ghost-btn";
       accept.type = "button";
-      accept.textContent = room ? "先离开当前房间" : "查看邀请";
-      accept.disabled = state.socialBusy || (!room && state.currentBeans < inviteTicket);
+      const blockedBySolo = hasResumableSoloGame();
+      accept.textContent = room
+        ? "先离开当前房间"
+        : blockedBySolo
+          ? "先关闭单机对局"
+          : "查看邀请";
+      accept.disabled = state.socialBusy || blockedBySolo || (!room && state.currentBeans < inviteTicket);
       accept.addEventListener("click", () => {
         if (room) {
           setSocialStatus("你当前还在一个房间里，先点上面的“关闭房间”或“离开房间”，再来加入这个邀请。", "error");
