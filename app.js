@@ -2575,13 +2575,12 @@ function renderLobbySoloSessionActions() {
 
   ui.lobbyRoomSideActions.innerHTML = "";
   const actions = document.createElement("div");
-  actions.className = "social-inline-actions lobby-room-side-actions-inner";
+  actions.className = "social-inline-actions lobby-room-side-actions-inner is-solo-session-actions";
 
   const note = document.createElement("div");
   note.className = "lobby-solo-session-note";
   note.innerHTML = `
-    <strong>单机对局中</strong>
-    <span>可返回继续，或关闭后重开。</span>
+    <strong>单机对局中，可返回或关闭。</strong>
   `;
   actions.appendChild(note);
 

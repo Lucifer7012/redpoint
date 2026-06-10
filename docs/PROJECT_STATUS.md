@@ -4,7 +4,8 @@ Latest status update (2026-06-10):
 - 单机对局现在支持“从大厅返回对局 / 关闭对局”。用户从对局返回大厅后，若当前是未结束单机局，大厅单机模式右侧会显示 `返回对局` 和 `关闭对局`。
 - 大厅主按钮会在该状态下改为 `单机进行中` 并禁用，避免误开新单机局覆盖当前进度。
 - 本地挂起恢复覆盖 `human-turn`、`ai-turn`、`dice-rolling`、`dice-result`、`opening-deal`；关闭则彻底清空当前本地单机局状态。
-- 当前缓存版本：`styles.css?v=20260610-solo-resume-actions`，`app.js?v=20260610-solo-resume-actions`。
+- 已修正单机动作区首版高度不够、`关闭对局` 被裁掉的问题；现在提示是一行，两个按钮并排。
+- 当前缓存版本：`styles.css?v=20260610-solo-resume-buttons`，`app.js?v=20260610-solo-resume-buttons`。
 - 新增预览辅助页：`artifacts/layout-check/solo-resume-preview.html`。
 - 本轮已完成校验：`node --check app.js`。
 
