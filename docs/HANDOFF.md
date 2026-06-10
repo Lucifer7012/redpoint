@@ -2,6 +2,15 @@
 
 本文件用于在不同电脑、不同 Codex 会话之间交接 `redpoint` 项目进度。这里不记录 API Key、密码、Token、Cookie 或任何真实密钥。
 
+## 2026-06-10 ID Setup UI Follow-up
+
+- 最新新增界面：`创建游戏 ID` 页面已经补齐为和登录页 / 大厅一致的深色游戏 UI，不再保留旧的浅色网页式面板。
+- 改动范围：基础 `is-id-setup-mode` 现在使用深色半透明卡片、深色输入框、金色主按钮；手机横屏下进一步改成和大厅同一套全屏背景语言，左上标题说明、左侧创建卡片、右上退出/状态说明分区清晰。
+- 这轮只动了 UI，没有改 `创建 ID` 本身的绑定逻辑；原有“登录后先建 ID，再进大厅”的流程保持不变。
+- 当前缓存版本：`styles.css?v=20260610-id-setup-ui`，`app.js?v=20260610-id-setup-ui`。
+- 本轮预览截图：`artifacts/layout-check/id-setup-ui-preview.png`、`artifacts/layout-check/id-setup-ui-desktop-preview.png`。
+- 已做校验：`node --check app.js`；本机 Chrome headless 已验证 `915 x 412` 触屏横屏与 `1366 x 768` 桌面视口。
+
 ## 2026-06-10 Solo Resume Follow-up
 
 - 最新新增功能：单机局现在也支持像好友联机那样，从大厅 `返回对局`，并额外支持 `关闭对局`。
@@ -117,13 +126,13 @@ cd redpoint
 - GitHub：`https://github.com/Lucifer7012/redpoint`
 - 线上测试链接：`https://lucifer7012.github.io/redpoint/`
 - 本地测试地址：`http://127.0.0.1:4173/`
-- 当前缓存版本：`styles.css?v=20260610-solo-lock-refresh`，`app.js?v=20260610-solo-lock-refresh`
-- 最近主要改动：单机局现在支持从大厅 `返回对局` / `关闭对局`，并且会像好友房反向限制单机一样，在“单机局未关闭”时锁住 `好友联机`、创建好友房和接受好友房邀请。最新补丁进一步修复了关闭单机后社交邀请按钮文案不刷新的问题，右侧邀请列表会立即恢复可接受状态。
+- 当前缓存版本：`styles.css?v=20260610-id-setup-ui`，`app.js?v=20260610-id-setup-ui`
+- 最近主要改动：`创建游戏 ID` 页面已统一到登录页 / 大厅同风格；手机横屏下不再是旧的浅色卡片，而是全屏游戏化布局。此前补上的“单机局从大厅返回/关闭”以及“单机未关闭时锁好友联机”逻辑仍保留。
 
 ## 当前接力状态
 
-- 上次做到哪里：已经把单机挂起恢复、单机关闭、以及“单机未关闭时锁好友联机”的整套流程接上，并修掉了关闭单机后邀请按钮仍显示 `先关闭单机对局` 的缓存刷新问题。除了 `node --check app.js` 之外，还用本机 Chrome headless 模拟了“大厅好友邀请 + 挂起单机局 -> 点击关闭对局”的流程，确认按钮会即时恢复成 `查看邀请`。预览辅助页仍可用 `artifacts/layout-check/solo-resume-preview.html`。
-- 下一步准备做什么：优先继续用真实浏览器验证“单机关闭后立即接受好友邀请”的完整流程；如果用户继续迭代大厅/邀请区，再基于当前 `solo-lock-refresh` 版本做小范围调整。
+- 上次做到哪里：已经补齐 `创建游戏 ID` 页的统一风格，基础桌面样式改成深色金边卡片，手机横屏改成和大厅同语言的全屏布局；并生成了 `artifacts/layout-check/id-setup-ui-preview.png` 与 `artifacts/layout-check/id-setup-ui-desktop-preview.png` 两张预览图。当前没有改 `创建 ID` 绑定逻辑，只是补 UI 一致性。
+- 下一步准备做什么：优先用真实浏览器串一次“登录 -> 创建 ID -> 进入大厅”流程；如果用户继续抠桌面端细节，再小范围收紧桌面创建 ID 页右侧空白。
 - 当前先别动什么：不要重新接入 `assets/cards/daoist/`；跨电脑同步入口和邀请弹窗展示时机也不要改，除非本轮任务明确要求。
 
 ## 当前可继续方向

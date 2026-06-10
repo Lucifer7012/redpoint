@@ -11,6 +11,19 @@
 
 ## 2026-06-10
 
+### 创建游戏 ID 页面统一到登录 / 大厅风格
+
+- 原来的 `创建游戏 ID` 页面还停留在旧的浅色 setup 样式，和已经更新过的登录页 / 大厅风格割裂。
+- 为 `setup-panel.is-id-setup-mode` 补上深色半透明卡片、深色输入框、金色主按钮和统一的顶部账号区样式。
+- 在 `max-width: 960px` 横屏场景下，创建 ID 页改成与大厅同语言的全屏布局：左上标题说明、左侧输入卡与主按钮、右上退出登录 / 状态说明。
+- 这轮没有改 `创建 ID` 流程逻辑，只统一界面表现。
+- 更新缓存版本为 `20260610-id-setup-ui`；`artifacts/layout-check/solo-resume-preview.html` 同步使用新缓存版本。
+
+验证：
+
+- `node --check app.js` 通过。
+- 使用本机 Chrome headless 生成 `artifacts/layout-check/id-setup-ui-preview.png`（`915 x 412`，触屏横屏）和 `artifacts/layout-check/id-setup-ui-desktop-preview.png`（`1366 x 768`），确认创建 ID 页已切到新的视觉风格。
+
 ### 单机局支持从大厅返回或关闭
 
 - 给本地单机对局补上了可挂起状态：从对局点击“回到大厅”后，不再只能丢失现场，而是会在大厅单机模式里保留一个可恢复入口。

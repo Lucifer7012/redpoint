@@ -283,6 +283,61 @@ body.is-lobby-setup .app-shell {
   padding-right: min(48vw, 440px);
 }
 
+.setup-panel.is-id-setup-mode {
+  color: #fff8de;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(245, 210, 112, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(20, 62, 82, 0.97), rgba(8, 31, 48, 0.97));
+}
+
+.setup-panel.is-id-setup-mode .panel-head h2,
+.setup-panel.is-id-setup-mode .panel-head p,
+.setup-panel.is-id-setup-mode .auth-status,
+.setup-panel.is-id-setup-mode #player-id-hint {
+  color: rgba(239, 249, 255, 0.82);
+}
+
+.setup-panel.is-id-setup-mode .setup-grid > label,
+.setup-panel.is-id-setup-mode .setup-grid .lobby-actions-card {
+  border-color: rgba(255, 229, 150, 0.22);
+  background:
+    radial-gradient(circle at 18% 8%, rgba(245, 210, 112, 0.06), transparent 34%),
+    rgba(3, 22, 34, 0.58);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.setup-panel.is-id-setup-mode #player-id {
+  border-color: rgba(221, 238, 255, 0.24);
+  color: #fff8de;
+  background: rgba(3, 22, 34, 0.58);
+}
+
+.setup-panel.is-id-setup-mode #player-id::placeholder {
+  color: rgba(239, 249, 255, 0.5);
+}
+
+.setup-panel.is-id-setup-mode #player-id:focus {
+  outline: 2px solid rgba(255, 229, 150, 0.42);
+  border-color: rgba(255, 229, 150, 0.58);
+  background: rgba(5, 29, 45, 0.78);
+}
+
+.setup-panel.is-id-setup-mode .setup-grid label span {
+  color: #fff8de;
+}
+
+.setup-panel.is-id-setup-mode .lobby-actions-card .primary-btn {
+  color: #fff8de;
+  background: linear-gradient(180deg, #d9a44e, #9e5b1d);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.26);
+}
+
+.setup-panel.is-id-setup-mode .lobby-actions-card .ghost-btn {
+  color: #fff4d0;
+  border-color: rgba(255, 229, 150, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .setup-panel.is-lobby-mode .auth-card {
   display: none;
 }
@@ -5845,6 +5900,176 @@ select {
     margin: 0;
     padding: 0;
     overflow: hidden;
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode {
+    width: 100vw;
+    height: 100dvh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background:
+      radial-gradient(circle at 50% 74%, rgba(255, 221, 128, 0.2), transparent 28%),
+      linear-gradient(180deg, rgba(72, 160, 196, 0.3), rgba(8, 35, 46, 0.54) 58%, rgba(5, 18, 27, 0.72));
+    backdrop-filter: none;
+    animation: none;
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode::after {
+    display: none;
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .panel-head {
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    z-index: 6;
+    display: grid;
+    width: min(264px, calc(100vw - 292px));
+    min-height: 54px;
+    margin: 0;
+    padding: 8px 12px 9px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(12, 50, 72, 0.72), rgba(5, 26, 39, 0.58));
+    border: 1px solid rgba(221, 238, 255, 0.2);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+    color: #f7fbff;
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .panel-head h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 18px;
+    line-height: 1.05;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .panel-head p {
+    margin: 4px 0 0;
+    color: rgba(246, 251, 255, 0.9);
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1.28;
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .setup-grid {
+    display: block;
+    width: min(420px, calc(100vw - 24px));
+    max-width: none;
+    margin: 0;
+    padding: 92px 0 0 12px;
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .setup-grid > label,
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .setup-grid .lobby-actions-card {
+    width: 100%;
+    min-height: 0 !important;
+    margin: 0 0 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 229, 150, 0.24);
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 18% 8%, rgba(245, 210, 112, 0.08), transparent 34%),
+      linear-gradient(180deg, rgba(20, 62, 82, 0.94), rgba(8, 31, 48, 0.94));
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .setup-grid > label {
+    gap: 8px;
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .setup-grid label span {
+    color: #fff8de;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode #player-id {
+    min-height: 42px;
+    padding: 0 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(221, 238, 255, 0.24);
+    color: #fff8de;
+    background: rgba(3, 22, 34, 0.58);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode #player-id::placeholder {
+    color: rgba(239, 249, 255, 0.5);
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode #player-id-hint {
+    color: rgba(239, 249, 255, 0.72);
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .lobby-actions-card {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .lobby-actions-card .primary-btn,
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .lobby-actions-card .ghost-btn {
+    width: 100%;
+    min-height: 54px;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .lobby-actions-card .primary-btn {
+    color: #fff9df;
+    font-size: 20px;
+    font-weight: 900;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.42);
+    background: linear-gradient(180deg, rgba(245, 214, 129, 0.62), rgba(166, 105, 31, 0.52));
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .auth-row {
+    position: absolute;
+    top: 9px;
+    right: 12px;
+    z-index: 6;
+    display: flex;
+    width: auto;
+    max-width: 260px;
+    margin: 0;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+    color: #fff8d6;
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .lobby-account-id,
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .auth-row .auth-method-btn {
+    display: none !important;
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .auth-row #auth-logout {
+    min-height: 34px;
+    padding: 0 15px;
+    border-radius: 999px;
+    color: #fff8d6;
+    font-size: 13px;
+    font-weight: 900;
+    border-color: rgba(255, 229, 150, 0.42);
+    background: linear-gradient(180deg, rgba(19, 56, 70, 0.86), rgba(8, 35, 52, 0.8));
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.24);
+  }
+
+  body.is-lobby-setup .setup-panel.is-id-setup-mode .auth-status {
+    display: block;
+    max-width: 140px;
+    margin: 0;
+    color: rgba(255, 248, 214, 0.9);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.32;
+    text-align: right;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode {

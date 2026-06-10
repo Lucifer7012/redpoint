@@ -4,6 +4,29 @@
 
 ## 2026-06-10
 
+### 创建游戏 ID 页面统一到登录 / 大厅风格
+
+- 背景：用户追问“注册 ID 的 UI 是不是没有一起改”；排查后确认 `is-id-setup-mode` 仍停留在旧的浅色 setup 面板，和已经改完的登录页 / 大厅风格不一致。
+- 改动：
+  - 为 `.setup-panel.is-id-setup-mode` 补上深色半透明卡片、深色输入框、金色主按钮、金色边线 / 阴影，统一到账户体系 UI 语言。
+  - 手机横屏 `body.is-lobby-setup .setup-panel.is-id-setup-mode` 改成和大厅同源的全屏背景布局：左上标题说明、左侧输入卡与主按钮、右上退出登录和状态说明。
+  - 顶部账户区在创建 ID 阶段收窄为“退出登录 + 状态说明”，隐藏不适用的 ID 胶囊与登录方式按钮，避免和创建 ID 主流程抢空间。
+  - `artifacts/layout-check/solo-resume-preview.html` 同步切换到新缓存版本，避免继续使用旧资源。
+  - 这轮没有改动 `创建 ID` 的绑定逻辑，只做 UI 一致性修正。
+  - 缓存版本更新为 `20260610-id-setup-ui`。
+- 涉及文件：
+  - `index.html`
+  - `styles.css`
+  - `artifacts/layout-check/solo-resume-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 使用本机 Chrome headless + Playwright 生成：
+    - `artifacts/layout-check/id-setup-ui-preview.png`
+    - `artifacts/layout-check/id-setup-ui-desktop-preview.png`
+  - 其中 `915 x 412` 触屏横屏截图确认移动端创建 ID 页已切到游戏化全屏布局；`1366 x 768` 桌面截图确认基础深色卡片样式已生效。
+- 后续注意：
+  - 当前如果还要继续抠细节，优先看桌面端右侧空白感是否要再收一轮；若用户不继续提，这一版已经达到“和登录 / 大厅同风格”的目标。
+
 ### 单机从大厅返回对局 / 关闭对局
 
 - 背景：用户指出当前“好友联机”从大厅可以回到进行中的对局，但“单机”从对局返回大厅后没有同类入口，导致一旦点了“回到大厅”，只能默认丢掉现场。
