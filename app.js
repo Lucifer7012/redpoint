@@ -912,6 +912,7 @@ const SOLO_RESUMABLE_PHASES = new Set(["human-turn", "ai-turn", "dice-rolling", 
 
 function clearSoloResumeState() {
   state.soloResume = null;
+  state.renderCache.social = "";
 }
 
 function canSuspendSoloGame(phase = state.phase) {
@@ -3964,6 +3965,7 @@ function returnToSetup() {
       phase: state.phase,
       savedAt: Date.now(),
     };
+    state.renderCache.social = "";
   } else {
     clearSoloResumeState();
   }
@@ -7505,6 +7507,10 @@ function renderSocialPanel() {
   const signature = JSON.stringify({
     signedIn,
     sideView,
+    lobbyPlayMode: state.lobbyPlayMode,
+    soloLockActive: hasResumableSoloGame(),
+    soloResumePhase: state.soloResume?.phase || "",
+    soloPlayerCount: Array.isArray(state.players) ? state.players.length : 0,
     currentPlayerId: state.currentPlayerId,
     currentBeans: state.currentBeans,
     leaderboardRefreshing: state.leaderboardRefreshing,

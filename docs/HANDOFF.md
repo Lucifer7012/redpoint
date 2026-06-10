@@ -9,7 +9,8 @@
 - 防误覆盖：这类挂起中的单机局存在时，大厅主按钮会改成 `单机进行中` 并禁用，必须先返回或关闭，才允许重新开新单机局。
 - 对称限制也已补上：只要当前单机局还没关闭，就不能切去 `好友联机`，也不能创建好友房或接受好友房邀请。
 - 恢复范围：`human-turn`、`ai-turn`、`dice-rolling`、`dice-result`、`opening-deal` 都做了处理；其中开局发牌中途返回大厅后，恢复时会从干净的开局动画重新播，不会重复发牌。
-- 当前缓存版本：`styles.css?v=20260610-solo-friend-lock`，`app.js?v=20260610-solo-friend-lock`。
+- 最新补丁：修复了关闭单机对局后，右侧社交面板里的邀请按钮还停留在 `先关闭单机对局` 的刷新问题。现在社交面板缓存会跟踪单机挂起状态，并在关闭/挂起切换时主动失效。
+- 当前缓存版本：`styles.css?v=20260610-solo-lock-refresh`，`app.js?v=20260610-solo-lock-refresh`。
 - 本轮预览辅助页：`artifacts/layout-check/solo-resume-preview.html`。
 - 已做校验：`node --check app.js`。
 - 注意：Codex 内置 Browser 当前被本地 URL 策略拦截，不能直接在这里打开 `localhost`/`file://` 预览；如果下轮需要人工看图或手动确认，用普通浏览器打开上面的预览辅助页即可。
@@ -116,13 +117,13 @@ cd redpoint
 - GitHub：`https://github.com/Lucifer7012/redpoint`
 - 线上测试链接：`https://lucifer7012.github.io/redpoint/`
 - 本地测试地址：`http://127.0.0.1:4173/`
-- 当前缓存版本：`styles.css?v=20260609-public-area-columns`，`app.js?v=20260609-public-area-columns`
-- 最近主要改动：在保持当前简洁斗地主式 CSS 扑克牌面不变的前提下，继续优化四人横屏公共牌区对两侧留白的利用。现在公共牌 `13-14 张` 时自动扩宽到 7 列，`15 张及以上` 自动扩宽到 8 列；只有 `17 张及以上` 真正进到 3 行时，才贴顶排布，避免第一行被裁掉。当前牌面仍只显示点数/字母和红黑花色图案，不显示“钓牌 / 计分”文字，不加载 `assets/cards/daoist/` 或 `<img class="card-face">`。2 人局 10 张手牌放不下时继续横向滚动。
+- 当前缓存版本：`styles.css?v=20260610-solo-lock-refresh`，`app.js?v=20260610-solo-lock-refresh`
+- 最近主要改动：单机局现在支持从大厅 `返回对局` / `关闭对局`，并且会像好友房反向限制单机一样，在“单机局未关闭”时锁住 `好友联机`、创建好友房和接受好友房邀请。最新补丁进一步修复了关闭单机后社交邀请按钮文案不刷新的问题，右侧邀请列表会立即恢复可接受状态。
 
 ## 当前接力状态
 
-- 上次做到哪里：当前版本仍是非图片牌方案，CSS 牌面保持白底红黑牌；这轮新补的是公共牌区多牌时的横向扩宽。已验证 `13 张` 公共牌会展开成 `7 + 6`，`15 张` 会展开成 `8 + 7`，不再继续浪费左右留白，也不会因为过早进入 3 行而把第一行裁掉。验证截图：`artifacts/layout-check/public-area-13-expanded-915x412.png`、`artifacts/layout-check/public-area-15-expanded-915x412.png`。
-- 下一步准备做什么：如果继续调牌桌，优先基于最新 `public-area-columns` 和 `card-symbol-spacing` 两轮结果做细节微调；不要再从道风图片牌版本继续改。若用户要换另一套牌，先确认是 CSS 样式牌、图片牌，还是只做临时预览。
+- 上次做到哪里：已经把单机挂起恢复、单机关闭、以及“单机未关闭时锁好友联机”的整套流程接上，并修掉了关闭单机后邀请按钮仍显示 `先关闭单机对局` 的缓存刷新问题。除了 `node --check app.js` 之外，还用本机 Chrome headless 模拟了“大厅好友邀请 + 挂起单机局 -> 点击关闭对局”的流程，确认按钮会即时恢复成 `查看邀请`。预览辅助页仍可用 `artifacts/layout-check/solo-resume-preview.html`。
+- 下一步准备做什么：优先继续用真实浏览器验证“单机关闭后立即接受好友邀请”的完整流程；如果用户继续迭代大厅/邀请区，再基于当前 `solo-lock-refresh` 版本做小范围调整。
 - 当前先别动什么：不要重新接入 `assets/cards/daoist/`；跨电脑同步入口和邀请弹窗展示时机也不要改，除非本轮任务明确要求。
 
 ## 当前可继续方向

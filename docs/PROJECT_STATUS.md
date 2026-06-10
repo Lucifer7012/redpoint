@@ -6,7 +6,9 @@ Latest status update (2026-06-10):
 - 单机未关闭时，现在也无法进入好友联机：好友联机标签会被锁住，创建好友房和接受好友房邀请也会一起被拦住。
 - 本地挂起恢复覆盖 `human-turn`、`ai-turn`、`dice-rolling`、`dice-result`、`opening-deal`；关闭则彻底清空当前本地单机局状态。
 - 已修正单机动作区首版高度不够、`关闭对局` 被裁掉的问题；现在提示是一行，两个按钮并排。
-- 当前缓存版本：`styles.css?v=20260610-solo-friend-lock`，`app.js?v=20260610-solo-friend-lock`。
+- 已修复一个 UI 刷新问题：关闭单机对局后，右侧社交面板里的邀请按钮不会再停留在 `先关闭单机对局`，好友邀请会立即恢复可接受状态。
+- 本轮已额外用本机 Chrome headless 做过行为验证：模拟挂起单机局和大厅好友邀请后，`关闭对局` 会立刻解除邀请按钮锁定。
+- 当前缓存版本：`styles.css?v=20260610-solo-lock-refresh`，`app.js?v=20260610-solo-lock-refresh`。
 - 新增预览辅助页：`artifacts/layout-check/solo-resume-preview.html`。
 - 本轮已完成校验：`node --check app.js`。
 
