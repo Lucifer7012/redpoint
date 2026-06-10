@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>单机返回对局预览</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      background: #081625;
+      color: #f7f3df;
+    }
+
+    .debug-panel {
+      display: grid;
+      gap: 10px;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255, 231, 171, 0.2);
+      background: rgba(6, 18, 30, 0.92);
+    }
+
+    .debug-panel strong {
+      font-size: 16px;
+    }
+
+    .debug-panel p {
+      margin: 0;
+      color: rgba(240, 246, 255, 0.8);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .debug-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .debug-actions button {
+      min-height: 32px;
+      padding: 0 12px;
+      border: 1px solid rgba(255, 231, 171, 0.28);
+      border-radius: 10px;
+      color: #fff8d6;
+      background: rgba(255, 255, 255, 0.08);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .frame-wrap {
+      padding: 16px;
+    }
+
+    iframe {
+      width: 100%;
+      height: calc(100vh - 132px);
+      border: 1px solid rgba(255, 231, 171, 0.18);
+      border-radius: 18px;
+      background: #0f2032;
+    }
+  </style>
+</head>
+<body>
+  <section class="debug-panel">
+    <strong>单机返回对局预览</strong>
+    <p id="debug-status">正在加载预览...</p>
+    <div class="debug-actions">
+      <button type="button" id="preview-reset">重置预览</button>
+      <button type="button" id="preview-resume">触发返回对局</button>
+      <button type="button" id="preview-close">触发关闭对局</button>
+    </div>
+  </section>
+  <div class="frame-wrap">
+    <iframe
+      id="preview-frame"
+      title="single-player resume preview"
+      src="../../index.html?v=20260610-solo-resume-actions">
+    </iframe>
+  </div>
+  <script>
+    const PREVIEW_SRC = "../../index.html?v=20260610-solo-resume-actions";
+    const frame = document.getElementById("preview-frame");
+    const status = document.getElementById("debug-status");
+    const resetButton = document.getElementById("preview-reset");
+    const resumeButton = document.getElementById("preview-resume");
+    const closeButton = document.getElementById("preview-close");
+
+    function getPreviewWindow() {
+      return frame.contentWindow;
+    }
+
+    function readPreviewState() {
+      try {
+        const win = getPreviewWindow();
+        const phase = win.eval("state.phase");
+        const soloResume = win.eval("state.soloResume?.phase || ''") || "none";
+        const buttons = Array.from(
+          win.document.querySelectorAll("#lobby-room-side-actions button"),
+        ).map((button) => button.textContent.trim()).join(" / ") || "none";
+        const startButton = win.document.querySelector("#start-game");
+        return `phase=${phase} | soloResume=${soloResume} | actions=${buttons} | start=${startButton?.textContent?.trim() || ""} | disabled=${Boolean(startButton?.disabled)}`;
+      } catch (error) {
+        return `读取预览状态失败：${error.message}`;
+      }
+    }
+
+    function seedSoloResumeLobby() {
+      const win = getPreviewWindow();
+      try {
+        win.eval(`
+          state.authUser = { uid: "solo-preview-user" };
+          state.authReady = true;
+          state.authSessionConfirmed = true;
+          state.authEntryActive = false;
+          state.authFormOpen = false;
+          state.authBusy = false;
+          state.currentPlayerId = "SOLOTEST";
+          state.hasBoundGameId = true;
+          state.gameIdEditable = false;
+          state.currentBeans = 2000;
+          state.phase = "setup";
+          state.lobbyPlayMode = "solo";
+          state.socialActiveRoom = null;
+          state.lastFinishedResult = null;
+          state.pendingBeansAward = null;
+          state.beansRound = null;
+          render();
+          startGameRound(2, false);
+          returnToSetup();
+        `);
+        status.textContent = readPreviewState();
+      } catch (error) {
+        status.textContent = `初始化预览失败：${error.message}`;
+      }
+    }
+
+    frame.addEventListener("load", () => {
+      window.setTimeout(seedSoloResumeLobby, 120);
+    });
+
+    resetButton.addEventListener("click", () => {
+      frame.src = `${PREVIEW_SRC}&preview=${Date.now()}`;
+    });
+
+    resumeButton.addEventListener("click", () => {
+      const win = getPreviewWindow();
+      const button = win.document.querySelector("#lobby-room-side-actions button");
+      button?.click();
+      status.textContent = readPreviewState();
+    });
+
+    closeButton.addEventListener("click", () => {
+      const win = getPreviewWindow();
+      const buttons = win.document.querySelectorAll("#lobby-room-side-actions button");
+      buttons[1]?.click();
+      status.textContent = readPreviewState();
+    });
+  </script>
+</body>
+</html>

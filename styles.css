@@ -6262,6 +6262,24 @@ select {
     gap: 4px;
   }
 
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-solo-session-note {
+    display: grid;
+    gap: 2px;
+    padding: 2px 0 4px;
+    color: rgba(255, 248, 214, 0.9);
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-solo-session-note strong {
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-solo-session-note span {
+    font-size: 9px;
+    line-height: 1.35;
+    color: rgba(236, 244, 255, 0.74);
+  }
+
   body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-room-side-actions-inner .ghost-btn {
     min-height: 24px;
     padding: 0 6px;

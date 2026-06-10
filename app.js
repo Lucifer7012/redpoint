@@ -293,6 +293,7 @@ const state = {
     openingToken: "",
     openingInProgress: false,
   },
+  soloResume: null,
   layoutMetrics: {
     stableWidth: 0,
     stableHeight: 0,
@@ -818,6 +819,7 @@ function resetSocialState() {
   state.socialBusy = false;
   state.socialStatusTone = "info";
   clearMultiplayerState();
+  clearSoloResumeState();
 }
 
 function clearSocialListeners() {
@@ -882,6 +884,112 @@ function clearMultiplayerState() {
 
 function isMultiplayerActive() {
   return Boolean(state.multiplayer.active && state.socialActiveRoom?.gameState);
+}
+
+const SOLO_RESUMABLE_PHASES = new Set(["human-turn", "ai-turn", "dice-rolling", "dice-result", "opening-deal"]);
+
+function clearSoloResumeState() {
+  state.soloResume = null;
+}
+
+function canSuspendSoloGame(phase = state.phase) {
+  return Boolean(
+    !isMultiplayerActive()
+    && SOLO_RESUMABLE_PHASES.has(phase)
+    && Array.isArray(state.players)
+    && state.players.length > 0,
+  );
+}
+
+function hasResumableSoloGame() {
+  return Boolean(
+    state.authUser
+    && state.phase === "setup"
+    && state.soloResume?.phase
+    && SOLO_RESUMABLE_PHASES.has(state.soloResume.phase)
+    && Array.isArray(state.players)
+    && state.players.length > 0,
+  );
+}
+
+function clearSoloRoundState() {
+  clearAllRoundTimers();
+  clearSoloResumeState();
+  hideOverlay();
+  state.phase = "setup";
+  state.players = [];
+  state.tableCards = [];
+  state.drawPile = [];
+  state.currentPlayerIndex = 0;
+  state.pendingDrawCard = null;
+  state.selectedHandCardId = null;
+  state.selectedTable = new Set();
+  state.focusedTableIds = new Set();
+  state.feedback = null;
+  state.log = [];
+  state.actionDisplay = null;
+  state.diceSummary = [];
+  state.diceAnimation = null;
+  state.openingStage = null;
+  state.roundPlan = null;
+  state.beansRound = null;
+  state.pendingBeansAward = null;
+  render();
+}
+
+function handleReturnToSoloGame() {
+  if (!hasResumableSoloGame()) {
+    clearSoloResumeState();
+    renderAuthControls();
+    render();
+    return;
+  }
+
+  const resumePhase = state.soloResume.phase;
+  clearAllRoundTimers();
+  hideOverlay();
+  clearSoloResumeState();
+
+  if (resumePhase === "dice-rolling" || resumePhase === "dice-result") {
+    state.phase = "dice-rolling";
+    render();
+    startDiceSequence();
+    return;
+  }
+
+  if (resumePhase === "opening-deal") {
+    state.players = state.players.map((player) => ({
+      ...player,
+      hand: [],
+      captured: [],
+      lastAction: null,
+    }));
+    state.tableCards = [];
+    state.drawPile = [];
+    state.pendingDrawCard = null;
+    state.phase = "opening-deal";
+    render();
+    startOpeningSequence();
+    return;
+  }
+
+  state.phase = resumePhase === "ai-turn" ? "ai-turn" : "human-turn";
+  render();
+
+  if (resumePhase === "ai-turn") {
+    scheduleAiStep(runAiTurn, 450);
+  }
+}
+
+function handleCloseSoloGame() {
+  if (!hasResumableSoloGame()) {
+    clearSoloResumeState();
+    renderAuthControls();
+    render();
+    return;
+  }
+
+  clearSoloRoundState();
 }
 
 function createHiddenHand(count, uid) {
@@ -1780,6 +1888,7 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
     clearMultiplayerState();
     return;
   }
+  clearSoloResumeState();
 
   const sameOpeningReplay = Boolean(
     state.multiplayer.active
@@ -2452,6 +2561,46 @@ function renderLobbyModeControls() {
     ui.lobbyModeSolo.title = soloLocked ? "请先关闭或离开当前好友房" : "";
   }
   renderLobbyFriendRoomCard();
+  renderLobbySoloSessionActions();
+}
+
+function renderLobbySoloSessionActions() {
+  if (!ui.lobbyRoomSideActions) {
+    return;
+  }
+
+  if (state.lobbyPlayMode !== "solo" || !hasResumableSoloGame()) {
+    return;
+  }
+
+  ui.lobbyRoomSideActions.innerHTML = "";
+  const actions = document.createElement("div");
+  actions.className = "social-inline-actions lobby-room-side-actions-inner";
+
+  const note = document.createElement("div");
+  note.className = "lobby-solo-session-note";
+  note.innerHTML = `
+    <strong>单机对局中</strong>
+    <span>可返回继续，或关闭后重开。</span>
+  `;
+  actions.appendChild(note);
+
+  const resumeButton = document.createElement("button");
+  resumeButton.className = "ghost-btn";
+  resumeButton.type = "button";
+  resumeButton.textContent = "返回对局";
+  resumeButton.addEventListener("click", handleReturnToSoloGame);
+  actions.appendChild(resumeButton);
+
+  const closeButton = document.createElement("button");
+  closeButton.className = "ghost-btn";
+  closeButton.type = "button";
+  closeButton.textContent = "关闭对局";
+  closeButton.addEventListener("click", handleCloseSoloGame);
+  actions.appendChild(closeButton);
+
+  ui.lobbyRoomSideActions.appendChild(actions);
+  ui.lobbyRoomSideActions.classList.remove("hidden");
 }
 
 function renderLobbyFriendRoomCard() {
@@ -2569,6 +2718,7 @@ function renderAuthControls() {
   const signedIn = Boolean(state.authUser);
   const authEntryMode = isAuthEntryViewActive();
   const needsIdSetup = needsInitialPlayerIdSetup();
+  const resumableSolo = hasResumableSoloGame();
   if (signedIn && !authEntryMode && !needsIdSetup) {
     syncLobbyModeWithOpenFriendRoom();
   }
@@ -2651,10 +2801,17 @@ function renderAuthControls() {
     ui.rechargeBeans.title = signedIn ? "打开欢乐豆中心" : "登录后打开欢乐豆中心";
   }
   ui.startGame.textContent = needsIdSetup ? "创建 ID，进入大厅" : "开始游戏";
+  ui.startGame.title = "";
   if (!needsIdSetup && state.lobbyPlayMode === "friends") {
     ui.startGame.textContent = "好友联机";
+  } else if (!needsIdSetup && resumableSolo) {
+    ui.startGame.textContent = "单机进行中";
+    ui.startGame.title = "请先返回对局或关闭当前单机局";
   }
-  ui.startGame.disabled = state.authBusy || !signedIn || !state.authReady;
+  ui.startGame.disabled = state.authBusy
+    || !signedIn
+    || !state.authReady
+    || (!needsIdSetup && state.lobbyPlayMode === "solo" && resumableSolo);
   ui.playerId.disabled = state.authBusy || !signedIn || lockedId;
   ui.authStatus.textContent = state.authStatusMessage;
   ui.playerId.value = state.currentPlayerId || ui.playerId.value;
@@ -3715,6 +3872,11 @@ async function handleStartGameButton() {
     return;
   }
 
+  if (state.lobbyPlayMode === "solo" && hasResumableSoloGame()) {
+    setSocialStatus("当前有未结束的单机对局，请先返回对局或关闭对局。", "info");
+    return;
+  }
+
   if (state.lobbyPlayMode === "friends") {
     const room = state.socialActiveRoom;
     const members = Array.isArray(room?.members) ? room.members : [];
@@ -3751,16 +3913,29 @@ function updateReturnToRoomButton() {
 function returnToSetup() {
   clearAllRoundTimers();
   syncLobbyModeWithOpenFriendRoom();
+  const preserveSoloRound = canSuspendSoloGame();
+  if (preserveSoloRound) {
+    state.soloResume = {
+      phase: state.phase,
+      savedAt: Date.now(),
+    };
+  } else {
+    clearSoloResumeState();
+  }
   state.phase = "setup";
-  state.pendingDrawCard = null;
+  if (!preserveSoloRound) {
+    state.pendingDrawCard = null;
+  }
   state.selectedHandCardId = null;
   state.selectedTable = new Set();
   state.focusedTableIds = new Set();
-  state.feedback = null;
-  state.actionDisplay = null;
-  state.diceAnimation = null;
-  state.openingStage = null;
-  state.roundPlan = null;
+  if (!preserveSoloRound) {
+    state.feedback = null;
+    state.actionDisplay = null;
+    state.diceAnimation = null;
+    state.openingStage = null;
+    state.roundPlan = null;
+  }
   render();
 }
 
@@ -3817,6 +3992,7 @@ function buildRoundPlan(playerCount, useDice) {
 
 function startGameRound(playerCount, useDice) {
   clearAllRoundTimers();
+  clearSoloResumeState();
   const roundPlan = buildRoundPlan(playerCount, useDice);
   const normalizedRoundPlan = normalizeRoundPlan({
     playerHands: Object.fromEntries(roundPlan.players.map((player) => [player.id, [...player.hand]])),
@@ -4915,6 +5091,7 @@ async function syncRoundResultToCloud(humanResult, isWin) {
 
 async function finishGame() {
   clearAiTimer();
+  clearSoloResumeState();
   hideOverlay();
   state.phase = "game-over";
   const result = getRankedPlayers();
