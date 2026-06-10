@@ -825,3 +825,37 @@ Verification:
 - Refreshed mobile preview screenshots:
   - `artifacts/layout-check/mobile-layout-844x390.png`
   - `artifacts/layout-check/mobile-layout-915x412.png`
+
+### 2026-06-09 Waiting Friend Room Blocks Solo
+
+- Added a shared waiting-room guard in `app.js` so a pending friend room now locks the lobby away from solo play.
+- Clicking the `单机` tab while a friend room is still `waiting` now keeps the user in `好友联机` and shows a prompt to close or leave that room first.
+- The lobby `开始游戏` path now re-checks the same rule before starting a solo round, so the user cannot bypass the lock through stale UI state.
+- Social data refresh now forces the lobby back to `好友联机` when a waiting room is restored from cloud state, and the solo tab is visibly disabled.
+- Updated cache references to `20260609-waiting-room-solo-lock`.
+
+Verification:
+
+- `node --check app.js` passed.
+
+### 2026-06-10 Open Friend Room Blocks Solo
+
+- Tightened the solo-play guard again so it now applies to both `waiting` and `playing` friend rooms instead of only pending rooms.
+- Renamed the helper logic in `app.js` around the broader “open friend room” rule and kept the lobby pinned to `好友联机` whenever such a room exists.
+- Added the same guard to the lower-level `startGame()` entry point so solo mode is blocked even if another flow bypasses the lobby tab state.
+- Updated cache references to `20260610-open-room-solo-lock`.
+
+Verification:
+
+- `node --check app.js` passed.
+
+### 2026-06-10 Open Friend Room Lobby Sync
+
+- Added `syncLobbyModeWithOpenFriendRoom()` in `app.js` so returning to the lobby now immediately forces the mode back to `好友联机` whenever the current friend room is still open.
+- Hooked that sync into both `renderAuthControls()` and `returnToSetup()` to cover the “对局中点回到大厅” path that could still show the solo tab as active.
+- Synced the latest root `app.js`, `index.html`, and `styles.css` into `_github_upload/` and `_github_repo/` so local testing and upload bundles stop drifting apart.
+- Updated cache references to `20260610-open-room-solo-lock-sync`.
+
+Verification:
+
+- `node --check app.js` passed.

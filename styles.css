@@ -6149,6 +6149,11 @@ select {
     background: linear-gradient(180deg, rgba(212, 151, 55, 0.28), rgba(111, 86, 40, 0.24));
   }
 
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-mode-tab:disabled {
+    cursor: not-allowed;
+    opacity: 0.46;
+  }
+
   body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-solo-options {
     grid-column: 1;
     grid-row: 2;

@@ -714,6 +714,36 @@ function setSocialStatus(message, tone = "info") {
   renderSocialPanel();
 }
 
+function hasOpenFriendRoom() {
+  return Boolean(
+    state.authUser
+    && state.socialActiveRoom?.id
+    && ["waiting", "playing"].includes(state.socialActiveRoom.status),
+  );
+}
+
+function blockSoloModeWhileFriendRoomOpen() {
+  if (!hasOpenFriendRoom()) {
+    return false;
+  }
+
+  state.lobbyPlayMode = "friends";
+  setSocialStatus("你当前还有好友房，请先关闭或离开当前房间，再开始单机。", "info");
+  renderAuthControls();
+  return true;
+}
+
+function syncLobbyModeWithOpenFriendRoom() {
+  if (!hasOpenFriendRoom()) {
+    return false;
+  }
+  if (state.lobbyPlayMode === "friends") {
+    return false;
+  }
+  state.lobbyPlayMode = "friends";
+  return true;
+}
+
 async function refundCurrentUserClosedRoomTicket(room) {
   if (!db || !state.authUser || !room?.id || room.status !== "closed") {
     return 0;
@@ -1149,10 +1179,14 @@ async function refreshSocialData() {
       }
 
       state.socialActiveRoom = normalizedActiveRoom;
+      if (hasOpenFriendRoom()) {
+        state.lobbyPlayMode = "friends";
+      }
       await refreshFriendsList();
       if (normalizedActiveRoom?.status === "playing" && normalizedActiveRoom.gameState && canAutoResumePlayingRoom()) {
         if (!(await ensureBeansPaidForRoom(normalizedActiveRoom))) {
           renderSocialPanel();
+          renderAuthControls();
           renderRoomInviteModal();
           state.socialLastRefreshAt = Date.now();
           continue;
@@ -1163,6 +1197,7 @@ async function refreshSocialData() {
         clearMultiplayerState();
       }
       renderSocialPanel();
+      renderAuthControls();
       renderRoomInviteModal();
       state.socialLastRefreshAt = Date.now();
     } while (socialRefreshRequested);
@@ -2387,6 +2422,9 @@ async function handleEntryStartGame() {
 
 function setLobbyPlayMode(mode) {
   const nextMode = mode === "friends" ? "friends" : "solo";
+  if (nextMode === "solo" && blockSoloModeWhileFriendRoomOpen()) {
+    return;
+  }
   if (state.lobbyPlayMode === nextMode) {
     return;
   }
@@ -2401,12 +2439,18 @@ function renderLobbyModeControls() {
   }
 
   const friendsMode = state.lobbyPlayMode === "friends";
+  const soloLocked = hasOpenFriendRoom();
   ui.lobbyModeCard.classList.toggle("is-solo-mode", !friendsMode);
   ui.lobbyModeCard.classList.toggle("is-friends-mode", friendsMode);
   ui.lobbyModeSolo?.classList.toggle("active", !friendsMode);
   ui.lobbyModeFriends?.classList.toggle("active", friendsMode);
   ui.lobbyModeSolo?.setAttribute("aria-selected", String(!friendsMode));
   ui.lobbyModeFriends?.setAttribute("aria-selected", String(friendsMode));
+  ui.lobbyModeSolo?.toggleAttribute("disabled", soloLocked);
+  ui.lobbyModeSolo?.setAttribute("aria-disabled", String(soloLocked));
+  if (ui.lobbyModeSolo) {
+    ui.lobbyModeSolo.title = soloLocked ? "请先关闭或离开当前好友房" : "";
+  }
   renderLobbyFriendRoomCard();
 }
 
@@ -2525,6 +2569,9 @@ function renderAuthControls() {
   const signedIn = Boolean(state.authUser);
   const authEntryMode = isAuthEntryViewActive();
   const needsIdSetup = needsInitialPlayerIdSetup();
+  if (signedIn && !authEntryMode && !needsIdSetup) {
+    syncLobbyModeWithOpenFriendRoom();
+  }
   const lobbyMode = signedIn && !needsIdSetup && !authEntryMode;
   const lockedId = signedIn && state.hasBoundGameId && !state.gameIdEditable;
   const shownBeans = signedIn ? state.currentBeans : 0;
@@ -3664,6 +3711,10 @@ async function handleStartGameButton() {
     return;
   }
 
+  if (state.lobbyPlayMode !== "friends" && blockSoloModeWhileFriendRoomOpen()) {
+    return;
+  }
+
   if (state.lobbyPlayMode === "friends") {
     const room = state.socialActiveRoom;
     const members = Array.isArray(room?.members) ? room.members : [];
@@ -3699,6 +3750,7 @@ function updateReturnToRoomButton() {
 
 function returnToSetup() {
   clearAllRoundTimers();
+  syncLobbyModeWithOpenFriendRoom();
   state.phase = "setup";
   state.pendingDrawCard = null;
   state.selectedHandCardId = null;
@@ -3841,6 +3893,10 @@ function startGameRound(playerCount, useDice) {
 }
 
 async function startGame(playerCount, useDice) {
+  if (blockSoloModeWhileFriendRoomOpen()) {
+    render();
+    return;
+  }
   if (!(await prepareCurrentPlayerProfile())) {
     render();
     return;
