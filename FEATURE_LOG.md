@@ -4,6 +4,33 @@
 
 ## 2026-06-14
 
+### 大厅人数下拉框缩小到和面板同一尺度
+
+- 背景：用户最新截图指出大厅里 `玩家人数` 的下拉框展开后太大，甚至会顶出当前界面范围。问题集中在原生 `select/option` 的显示尺寸，不是大厅主卡片布局本身。
+- 改动：
+  - 继续沿用原生下拉框，不改成交互更重的自定义菜单，避免把大厅这块越改越复杂。
+  - 只针对 `body.is-lobby-setup .setup-panel.is-lobby-mode #player-count` 收紧尺寸：
+    - `min-height` 从 `32px` 调成 `30px`
+    - 减小左右内边距
+    - 明确设置 `font-size: 14px`、更稳的 `font-weight` 和 `line-height`
+    - 同步给 `#player-count option` 指定字号和行高，让展开项也跟着缩小
+  - 新增 `artifacts/layout-check/lobby-player-count-select-preview.html`，用同一套样式展示闭合态和列表态，方便后续单独验证这块。
+  - 生成 `artifacts/layout-check/lobby-player-count-select-preview.png` 作为这一轮预览图。
+  - 缓存版本更新为 `20260614-lobby-select-scale`。
+- 涉及文件：
+  - `styles.css`
+  - `index.html`
+  - `artifacts/layout-check/lobby-player-count-select-preview.html`
+  - `artifacts/layout-check/hand-layout-preview.html`
+  - `artifacts/layout-check/public-area-preview.html`
+  - `artifacts/layout-check/solo-resume-preview.html`
+  - `artifacts/layout-check/action-stage-draw-capture-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - `artifacts/layout-check/lobby-player-count-select-preview.png` 已确认列表态不再出现过大的行高和字号。
+- 后续注意：
+  - 这轮优先保留原生下拉框；如果后续 Windows/Chrome 真机上原生弹层仍有平台级放大问题，再考虑改为自定义大厅下拉组件。
+
 ### 补枪成功的最近动作不再混入摸牌
 
 - 背景：用户给了实机截图，指出“补枪补掉黑桃9的话，只显示黑桃9不就行了吗？怎么还出现半张别的牌”。继续排查后确认，不是动作区布局突然坏了，而是 `capturePendingDraw()` 在补枪成功后把 `drawCard` 和 `targets` 一起传给了最近动作。

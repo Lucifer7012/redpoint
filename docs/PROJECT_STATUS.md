@@ -1,11 +1,16 @@
 # Project Status
 
 Latest status update (2026-06-14):
+- 已继续收紧大厅 `玩家人数` 下拉框尺寸：闭合态和展开项的字号、行高都缩小到和当前大厅面板更一致的尺度，避免列表显得过高、超出界面。
+- 这轮只改了 `#player-count` 的样式，不改大厅布局和单机/联机逻辑，仍保留原生下拉交互。
+- 新增验证辅助页：`artifacts/layout-check/lobby-player-count-select-preview.html`。
+- 新增验证截图：`artifacts/layout-check/lobby-player-count-select-preview.png`。
+- 当前缓存版本：`styles.css?v=20260614-lobby-select-scale`，`app.js?v=20260614-lobby-select-scale`。
+- 本轮已完成校验：`node --check app.js`；本机 Chrome headless 已确认闭合态和列表态字号、行高都已收紧。
 - 已继续修正右侧“最近动作”细节：补枪成功时，动作区现在只显示真正被补掉的目标牌，不再把补枪用掉的摸牌一起塞进去。
 - 这次不是改布局，而是修正补枪成功的数据源；此前实机里出现的“黑桃9旁边多半张牌”，本质上是动作区收到了两张牌，而当前卡槽只有 `48px` 宽。
 - 新增验证辅助页：`artifacts/layout-check/action-stage-draw-capture-preview.html`。
 - 新增验证截图：`artifacts/layout-check/action-stage-draw-capture-preview.png`。
-- 当前缓存版本：`styles.css?v=20260614-draw-capture-target-only`，`app.js?v=20260614-draw-capture-target-only`。
 - 本轮已完成校验：`node --check app.js`；本机 Chrome headless 已确认“补枪成功：成功钓走 黑桃9”时动作区只显示单张目标牌。
 - 已继续细化真实对局页里的手牌区逻辑：上一轮补上了正式页被覆盖的重叠规则，这一轮再把手牌排布改成“剩牌越少，越自然铺开”。
 - 现在不是只在几个固定状态间跳转，而是会按当前手牌数量连续重算 gap / overlap：能保留原间距就保留；放不下原间距时先用动态 gap；只有动态 gap 仍不够时才进入重叠。

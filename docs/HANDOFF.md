@@ -2,6 +2,15 @@
 
 本文件用于在不同电脑、不同 Codex 会话之间交接 `redpoint` 项目进度。这里不记录 API Key、密码、Token、Cookie 或任何真实密钥。
 
+## 2026-06-14 Lobby Select Scale Follow-up
+
+- 最新问题定位：用户实机截图确认大厅 `玩家人数` 下拉框的展开项太大，甚至会顶出当前界面；问题集中在原生 `#player-count` 的字号和行高，而不是大厅卡片布局本身。
+- 实际修法：保留原生下拉交互，只把大厅里的 `#player-count` 和 `#player-count option` 字号、行高、内边距收紧到更贴近当前大厅 UI 的尺度。
+- 当前缓存版本：`styles.css?v=20260614-lobby-select-scale`，`app.js?v=20260614-lobby-select-scale`。
+- 本轮预览辅助页：`artifacts/layout-check/lobby-player-count-select-preview.html`。
+- 本轮预览截图：`artifacts/layout-check/lobby-player-count-select-preview.png`。
+- 已做校验：`node --check app.js`；本机 Chrome headless 已确认闭合态和列表态都比上一版更紧凑。
+
 ## 2026-06-14 Draw Capture Target Only Follow-up
 
 - 最新问题定位：用户实机截图确认，补枪成功时右侧“最近动作”不该出现半张别的牌；根因是 `capturePendingDraw()` 把 `drawCard` 和 `targets` 一起传进了动作区，而右侧卡槽只有 `48px` 宽。
@@ -172,13 +181,13 @@ cd redpoint
 - GitHub：`https://github.com/Lucifer7012/redpoint`
 - 线上测试链接：`https://lucifer7012.github.io/redpoint/`
 - 本地测试地址：`http://127.0.0.1:4173/`
-- 当前缓存版本：`styles.css?v=20260614-draw-capture-target-only`，`app.js?v=20260614-draw-capture-target-only`
-- 最近主要改动：补枪成功时右侧“最近动作”只显示真正被补掉的目标牌，不再混入补枪用掉的摸牌；手牌区按剩余手牌数量连续重算 gap / overlap 的逻辑仍保留。此前补上的真实对局页覆盖修复、轻量道风视觉美化、“单机局从大厅返回/关闭”以及“单机未关闭时锁好友联机”逻辑也仍保留。
+- 当前缓存版本：`styles.css?v=20260614-lobby-select-scale`，`app.js?v=20260614-lobby-select-scale`
+- 最近主要改动：大厅 `玩家人数` 下拉框已收紧到更贴近当前大厅 UI 的尺度；补枪成功时右侧“最近动作”只显示真正被补掉的目标牌；手牌区按剩余手牌数量连续重算 gap / overlap 的逻辑也仍保留。此前补上的真实对局页覆盖修复、轻量道风视觉美化、“单机局从大厅返回/关闭”以及“单机未关闭时锁好友联机”逻辑仍保留。
 
 ## 当前接力状态
 
-- 上次做到哪里：已经把补枪成功的最近动作收成“只显示目标牌”，并补了独立预览页；手牌区连续铺开的逻辑也还在。当前没有改玩法和整体布局框架。
-- 下一步准备做什么：优先让用户在真实设备上确认“补枪成功只显示目标牌”和“10 -> 9 -> 8 张手牌逐步铺开”这两条最新交互；如果还想继续抠细节，再微调最近动作和手牌区的小牌展示边界。
+- 上次做到哪里：已经把大厅 `玩家人数` 下拉框尺寸收紧，并补了独立预览页；补枪成功只显示目标牌和手牌区连续铺开的逻辑也仍在。当前没有改玩法和整体布局框架。
+- 下一步准备做什么：优先让用户在真实设备上确认“大厅人数下拉框不再过大”、“补枪成功只显示目标牌”和“10 -> 9 -> 8 张手牌逐步铺开”这三条最新交互；如果还想继续抠细节，再微调大厅原生下拉和最近动作小牌的展示边界。
 - 当前先别动什么：不要重新接入 `assets/cards/daoist/`；不要把手牌排布再改回按模式写死；跨电脑同步入口和邀请弹窗展示时机也不要改，除非本轮任务明确要求。
 
 ## 当前可继续方向

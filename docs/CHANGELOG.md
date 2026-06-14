@@ -11,6 +11,21 @@
 
 ## 2026-06-14
 
+### 大厅人数下拉框尺寸收紧
+
+- 根据最新截图继续收大厅 `玩家人数` 下拉框：当前问题不是卡片太大，而是原生 `select` 的闭合态和弹出项字号偏大，导致打开后列表显得过高，甚至会超出当前大厅面板的视觉范围。
+- 已只针对大厅里的 `#player-count` 做样式收紧，保持现有布局和原生下拉交互不变：
+  - 闭合态高度从 `32px` 收到 `30px`
+  - 左右内边距减小
+  - `select` 和 `option` 的字号、字重、行高统一压到更接近当前大厅面板尺度
+- 新增预览页 `artifacts/layout-check/lobby-player-count-select-preview.html` 和截图 `artifacts/layout-check/lobby-player-count-select-preview.png`，辅助确认人数下拉框不会再大到顶出面板。
+- 同步更新缓存版本为 `20260614-lobby-select-scale`。
+
+验证：
+
+- `node --check app.js` 通过。
+- 使用本机 Chrome headless 生成 `artifacts/layout-check/lobby-player-count-select-preview.png`，确认闭合态和列表态字号、行高都已收紧。
+
 ### 补枪成功的最近动作只显示目标牌
 
 - 根据最新实机截图确认：补枪成功时，右侧“最近动作”里会出现一张完整目标牌外加半张别的牌，不是样式自己凭空多画了半张，而是补枪成功的动作数据本身把 `[摸到的牌, 被钓走的牌]` 两张都传进了动作区。

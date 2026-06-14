@@ -6523,11 +6523,21 @@ select {
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode #player-count {
-    min-height: 32px;
+    min-height: 30px;
+    padding: 0 28px 0 10px;
     border-radius: 12px;
     border-color: rgba(255, 229, 150, 0.28);
     color: #fff8d6;
     background: rgba(6, 31, 46, 0.78);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode #player-count option {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .dice-inline-row {
