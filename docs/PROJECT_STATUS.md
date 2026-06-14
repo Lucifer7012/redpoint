@@ -1,12 +1,17 @@
 # Project Status
 
 Latest status update (2026-06-14):
+- 已继续修正右侧“最近动作”细节：补枪成功时，动作区现在只显示真正被补掉的目标牌，不再把补枪用掉的摸牌一起塞进去。
+- 这次不是改布局，而是修正补枪成功的数据源；此前实机里出现的“黑桃9旁边多半张牌”，本质上是动作区收到了两张牌，而当前卡槽只有 `48px` 宽。
+- 新增验证辅助页：`artifacts/layout-check/action-stage-draw-capture-preview.html`。
+- 新增验证截图：`artifacts/layout-check/action-stage-draw-capture-preview.png`。
+- 当前缓存版本：`styles.css?v=20260614-draw-capture-target-only`，`app.js?v=20260614-draw-capture-target-only`。
+- 本轮已完成校验：`node --check app.js`；本机 Chrome headless 已确认“补枪成功：成功钓走 黑桃9”时动作区只显示单张目标牌。
 - 已继续细化真实对局页里的手牌区逻辑：上一轮补上了正式页被覆盖的重叠规则，这一轮再把手牌排布改成“剩牌越少，越自然铺开”。
 - 现在不是只在几个固定状态间跳转，而是会按当前手牌数量连续重算 gap / overlap：能保留原间距就保留；放不下原间距时先用动态 gap；只有动态 gap 仍不够时才进入重叠。
 - 这套逻辑仍作用于共享的本地手牌区，所以单机 / 好友联机共用；2 / 3 / 4 人模式都会按当前手牌数量和容器宽度动态切换。
 - 因此 `2 人 10 张` 在最挤时会重叠，但每出掉一张牌，重叠就会变少，随后先恢复贴边，再恢复正常间距；压缩或重叠状态下仍会取消奇偶高低差，并保持选中牌层级优先。
 - 轻量道风视觉美化仍保留，当前主题风格没有回退。
-- 当前缓存版本：`styles.css?v=20260614-hand-gap-relax`，`app.js?v=20260614-hand-gap-relax`。
 - 新增验证截图：`artifacts/layout-check/hand-layout-preview-915x412.png`。
 - 验证辅助页仍为：`artifacts/layout-check/hand-layout-preview.html`。
 - 本轮已完成校验：`node --check app.js`；预览页脚本已同步更新为连续 gap / overlap 计算逻辑。

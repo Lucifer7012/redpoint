@@ -2,6 +2,15 @@
 
 本文件用于在不同电脑、不同 Codex 会话之间交接 `redpoint` 项目进度。这里不记录 API Key、密码、Token、Cookie 或任何真实密钥。
 
+## 2026-06-14 Draw Capture Target Only Follow-up
+
+- 最新问题定位：用户实机截图确认，补枪成功时右侧“最近动作”不该出现半张别的牌；根因是 `capturePendingDraw()` 把 `drawCard` 和 `targets` 一起传进了动作区，而右侧卡槽只有 `48px` 宽。
+- 实际修法：保持动作区布局不动，只把补枪成功后的展示牌改成优先显示 `targets`；像“补枪成功：成功钓走 黑桃9”这种情况，现在只会显示黑桃9。
+- 当前缓存版本：`styles.css?v=20260614-draw-capture-target-only`，`app.js?v=20260614-draw-capture-target-only`。
+- 本轮预览辅助页：`artifacts/layout-check/action-stage-draw-capture-preview.html`。
+- 本轮预览截图：`artifacts/layout-check/action-stage-draw-capture-preview.png`。
+- 已做校验：`node --check app.js`；本机 Chrome headless 已确认动作区只显示单张目标牌。
+
 ## 2026-06-14 Hand Gap Relax Follow-up
 
 - 最新补充需求：用户希望 `2 人 10 张` 不只是“能显示全”，而是要随着每次出牌，剩余手牌逐步铺开，重叠越来越少。
@@ -163,13 +172,13 @@ cd redpoint
 - GitHub：`https://github.com/Lucifer7012/redpoint`
 - 线上测试链接：`https://lucifer7012.github.io/redpoint/`
 - 本地测试地址：`http://127.0.0.1:4173/`
-- 当前缓存版本：`styles.css?v=20260614-hand-gap-relax`，`app.js?v=20260614-hand-gap-relax`
-- 最近主要改动：手牌区现在会按剩余手牌数量连续重算 gap / overlap，`2 人 10 张` 每出掉一张都会更铺开一点，不会卡在固定重叠值上；此前补上的真实对局页覆盖修复、轻量道风视觉美化、“单机局从大厅返回/关闭”以及“单机未关闭时锁好友联机”逻辑仍保留。
+- 当前缓存版本：`styles.css?v=20260614-draw-capture-target-only`，`app.js?v=20260614-draw-capture-target-only`
+- 最近主要改动：补枪成功时右侧“最近动作”只显示真正被补掉的目标牌，不再混入补枪用掉的摸牌；手牌区按剩余手牌数量连续重算 gap / overlap 的逻辑仍保留。此前补上的真实对局页覆盖修复、轻量道风视觉美化、“单机局从大厅返回/关闭”以及“单机未关闭时锁好友联机”逻辑也仍保留。
 
 ## 当前接力状态
 
-- 上次做到哪里：已经把手牌区继续改成随剩余牌数连续铺开的逻辑，正式页和预览页都会按当前手牌数量动态减少重叠；当前没有改玩法和整体布局框架。
-- 下一步准备做什么：优先让用户在真实设备上再看一轮 `2 人 10 张 -> 9 张 -> 8 张` 的正式效果；如果还想继续抠细节，再微调“理想 gap”和“最小可见牌宽”的边界。
+- 上次做到哪里：已经把补枪成功的最近动作收成“只显示目标牌”，并补了独立预览页；手牌区连续铺开的逻辑也还在。当前没有改玩法和整体布局框架。
+- 下一步准备做什么：优先让用户在真实设备上确认“补枪成功只显示目标牌”和“10 -> 9 -> 8 张手牌逐步铺开”这两条最新交互；如果还想继续抠细节，再微调最近动作和手牌区的小牌展示边界。
 - 当前先别动什么：不要重新接入 `assets/cards/daoist/`；不要把手牌排布再改回按模式写死；跨电脑同步入口和邀请弹窗展示时机也不要改，除非本轮任务明确要求。
 
 ## 当前可继续方向

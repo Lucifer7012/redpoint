@@ -4,6 +4,29 @@
 
 ## 2026-06-14
 
+### 补枪成功的最近动作不再混入摸牌
+
+- 背景：用户给了实机截图，指出“补枪补掉黑桃9的话，只显示黑桃9不就行了吗？怎么还出现半张别的牌”。继续排查后确认，不是动作区布局突然坏了，而是 `capturePendingDraw()` 在补枪成功后把 `drawCard` 和 `targets` 一起传给了最近动作。
+- 改动：
+  - 保持现有右侧最近动作面板布局不动，只修补枪成功这一个数据入口，避免误伤普通出牌、弃牌和其他动作展示。
+  - `capturePendingDraw()` 里新增 `displayCards`，补枪成功后优先只显示 `targets`；只有极端兜底情况下目标为空时，才退回显示 `drawCard`。
+  - 这样像“补枪成功：成功钓走 黑桃9”时，动作区只会显示黑桃9，不会再把补枪用掉的摸牌塞进同一个 48px 卡槽里。
+  - 新增独立预览页 `artifacts/layout-check/action-stage-draw-capture-preview.html`，直接复现这条文案和动作牌展示。
+  - 使用本机 Chrome headless 导出 `artifacts/layout-check/action-stage-draw-capture-preview.png`，作为这一轮的对照图。
+  - 缓存版本更新为 `20260614-draw-capture-target-only`。
+- 涉及文件：
+  - `app.js`
+  - `index.html`
+  - `artifacts/layout-check/action-stage-draw-capture-preview.html`
+  - `artifacts/layout-check/public-area-preview.html`
+  - `artifacts/layout-check/solo-resume-preview.html`
+  - `artifacts/layout-check/hand-layout-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - `artifacts/layout-check/action-stage-draw-capture-preview.png` 已确认动作区只显示单张目标牌。
+- 后续注意：
+  - 如果后面还要继续调整“最近动作”显示，优先先区分“动作文本想表达的目标牌”和“内部结算用的源牌 + 目标牌”这两套数据，不要直接把结算数组原样喂给右侧卡槽。
+
 ### 手牌会随着出牌逐步铺开
 
 - 背景：用户继续明确了想要的细节，不只是“10 张能显示全”，而是希望 `10 张手牌每出掉一张，手牌就铺开一点，重叠的部分少一点`。

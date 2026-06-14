@@ -4903,15 +4903,16 @@ function discardHandCard(player, sourceCard, fromHuman) {
 
 function capturePendingDraw(player, targets, resolution, fromHuman) {
   const drawCard = state.pendingDrawCard;
+  const displayCards = targets.length ? [...targets] : [drawCard];
   removeTableCards(targets);
   player.captured.push(drawCard, ...targets);
   state.pendingDrawCard = null;
-  updateLastAction(player, `补枪成功：${resolution.description}`, [drawCard, ...targets]);
+  updateLastAction(player, `补枪成功：${resolution.description}`, displayCards);
   setActionDisplay({
     playerId: player.id,
     playerName: player.name,
     text: `补枪成功：${resolution.description}`,
-    cards: [drawCard, ...targets],
+    cards: displayCards,
     tone: "collect",
   });
   pushLog(`${player.name} 用摸到的 ${cardLabel(drawCard)} 完成补枪。`);

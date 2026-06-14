@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Action Stage Draw Capture Preview</title>
+  <link rel="stylesheet" href="../../styles.css?v=20260614-draw-capture-target-only">
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #115745, #0b2e30);
+      color: #fff8de;
+      font-family: var(--font-body);
+    }
+
+    .preview-card {
+      width: min(420px, calc(100vw - 48px));
+      padding: 22px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(8, 34, 43, 0.72);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+    }
+
+    .preview-card h2,
+    .preview-card p {
+      margin: 0;
+    }
+
+    .preview-card h2 {
+      font-family: var(--font-display);
+      font-size: 28px;
+      color: #fff2cc;
+    }
+
+    .preview-card p {
+      margin-top: 8px;
+      color: rgba(239, 249, 255, 0.82);
+    }
+
+    .preview-action-shell {
+      margin-top: 18px;
+      padding: 12px;
+      border-radius: 18px;
+      background: rgba(9, 51, 56, 0.48);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .preview-action-shell .action-stage {
+      position: static !important;
+      width: 100% !important;
+      min-height: 112px !important;
+      height: auto !important;
+      padding: 9px 10px !important;
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) 48px !important;
+      grid-template-rows: minmax(0, 1fr) !important;
+      column-gap: 8px !important;
+      align-items: center !important;
+      overflow: hidden !important;
+      color: #fff8ec !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      transform: none !important;
+      pointer-events: auto !important;
+    }
+
+    .preview-action-shell .action-stage__meta {
+      display: grid !important;
+      gap: 3px !important;
+      min-width: 0 !important;
+    }
+
+    .preview-action-shell .action-stage__meta .status-label,
+    .preview-action-shell .action-stage__meta h3,
+    .preview-action-shell .action-stage__meta p {
+      margin: 0 !important;
+      color: #fff8ec !important;
+    }
+
+    .preview-action-shell .action-stage__cards {
+      width: 48px !important;
+      min-width: 48px !important;
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      overflow: hidden !important;
+    }
+
+    .preview-action-shell .action-stage__cards .card-btn {
+      flex: 0 0 auto !important;
+      width: 40px !important;
+      min-width: 40px !important;
+      min-height: auto !important;
+      aspect-ratio: 18 / 25 !important;
+      padding: 4px !important;
+      border-radius: 9px !important;
+    }
+  </style>
+</head>
+<body>
+  <main class="preview-card">
+    <h2>补枪成功动作区</h2>
+    <p>只显示真正被补掉的目标牌，不再混入补枪用掉的摸牌。</p>
+    <section class="preview-action-shell">
+      <div class="action-stage" data-tone="collect">
+        <div class="action-stage__meta">
+          <p class="status-label">最近动作</p>
+          <h3>玩家 2 的动作</h3>
+          <p>补枪成功：成功钓走 黑桃9</p>
+        </div>
+        <div class="action-stage__cards">
+          <button class="card-btn black-card" type="button" disabled>
+            <span class="card-corner">
+              <span class="card-rank">9</span>
+              <span class="card-suit">♠</span>
+            </span>
+            <span class="card-center-suit">♠</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
