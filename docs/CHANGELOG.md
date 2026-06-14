@@ -11,6 +11,21 @@
 
 ## 2026-06-14
 
+### 出牌钓牌的最近动作也只显示目标牌
+
+- 根据最新截图继续补齐动作区：此前只修了“补枪成功”不再混入摸牌，但普通“出牌钓牌”这条链路里，AI 瞄准目标牌和钓牌成功时仍会把 `打出去的源牌 + 目标牌` 一起塞进右侧动作卡槽。
+- 已统一收口到同一套规则：凡是动作文案表达的是“正在瞄准什么 / 成功钓走什么”，右侧最近动作就只显示目标牌，不再混入打出去的源牌。
+- 具体覆盖了两段：
+  - AI 出牌后 `正在瞄准 红桃6` 这类 `aim` 展示
+  - 普通手牌钓牌成功后的 `collect` 展示和座位上的最近动作缩略牌
+- 新增预览页 `artifacts/layout-check/action-stage-hand-capture-preview.html` 和截图 `artifacts/layout-check/action-stage-hand-capture-preview.png`，专门验证“瞄准目标牌 / 钓成功”两种状态都只剩单张目标牌。
+- 同步更新缓存版本为 `20260614-hand-action-target-only`。
+
+验证：
+
+- `node --check app.js` 通过。
+- 使用本机 Chrome headless 生成 `artifacts/layout-check/action-stage-hand-capture-preview.png`，确认两种状态都只显示目标牌。
+
 ### 大厅人数下拉框尺寸收紧
 
 - 根据最新截图继续收大厅 `玩家人数` 下拉框：当前问题不是卡片太大，而是原生 `select` 的闭合态和弹出项字号偏大，导致打开后列表显得过高，甚至会超出当前大厅面板的视觉范围。

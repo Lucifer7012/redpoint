@@ -4,6 +4,34 @@
 
 ## 2026-06-14
 
+### 出牌钓牌动作区也改成只显示目标牌
+
+- 背景：用户继续给出实机截图，指出“出牌钓牌的时候也有这个问题，跟之前补枪的一样”。排查后确认，这次不是 `capturePendingDraw()`，而是普通手牌钓牌链路里的 `stageAiHandTurn()` 和 `captureHandCard()` 还在把源牌和目标牌一起塞进动作区。
+- 改动：
+  - 新增共享 helper `getActionTargetCards(targets, fallbackCard)`，统一把“动作区应该显示哪些牌”从结算数据里剥离出来。
+  - AI 普通出牌钓牌时，`正在瞄准 XXX` 这类 `aim` 展示现在只显示目标牌，不再显示打出去的源牌。
+  - 普通手牌钓牌成功后，`captureHandCard()` 里的右侧最近动作和座位最近动作缩略牌也统一改成只显示目标牌。
+  - 之前已经修过的补枪成功展示同步切到同一个 helper，避免后面 снова 分叉。
+  - 新增独立预览页 `artifacts/layout-check/action-stage-hand-capture-preview.html`，同时展示：
+    - `正在瞄准 红桃6`
+    - `成功钓走 红桃6`
+  - 生成截图 `artifacts/layout-check/action-stage-hand-capture-preview.png` 作为这轮预览图。
+  - 缓存版本更新为 `20260614-hand-action-target-only`。
+- 涉及文件：
+  - `app.js`
+  - `index.html`
+  - `artifacts/layout-check/action-stage-hand-capture-preview.html`
+  - `artifacts/layout-check/action-stage-draw-capture-preview.html`
+  - `artifacts/layout-check/lobby-player-count-select-preview.html`
+  - `artifacts/layout-check/hand-layout-preview.html`
+  - `artifacts/layout-check/public-area-preview.html`
+  - `artifacts/layout-check/solo-resume-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - `artifacts/layout-check/action-stage-hand-capture-preview.png` 已确认瞄准和钓成功都只显示单张目标牌。
+- 后续注意：
+  - 以后只要动作文案说的是“目标牌”，就优先走 `getActionTargetCards()`，不要再把源牌原样塞进动作区卡槽。
+
 ### 大厅人数下拉框缩小到和面板同一尺度
 
 - 背景：用户最新截图指出大厅里 `玩家人数` 的下拉框展开后太大，甚至会顶出当前界面范围。问题集中在原生 `select/option` 的显示尺寸，不是大厅主卡片布局本身。

@@ -4619,7 +4619,7 @@ function stageAiHandTurn(player, move) {
         playerId: player.id,
         playerName: player.name,
         text: `正在瞄准 ${move.targets.map(cardLabel).join("、")}`,
-        cards: [move.card, ...move.targets],
+        cards: getActionTargetCards(move.targets, move.card),
         tone: "aim",
       });
       setFeedback(`${player.name} 正在瞄准桌上的目标牌。`, "info");
@@ -4681,7 +4681,7 @@ function stageAiDrawTurn(player) {
       playerId: player.id,
       playerName: player.name,
       text: `补枪目标：${move.targets.map(cardLabel).join("、")}`,
-      cards: [drawCard, ...move.targets],
+      cards: getActionTargetCards(move.targets, drawCard),
       tone: "aim",
     });
     setFeedback(`${player.name} 准备用摸牌补枪。`, "info");
@@ -4845,17 +4845,18 @@ function captureHandCard(player, sourceCard, targets, resolution, fromHuman) {
   }
 
   const playedCard = player.hand.splice(cardIndex, 1)[0];
+  const displayCards = getActionTargetCards(targets, playedCard);
   removeTableCards(targets);
   player.captured.push(playedCard, ...targets);
   if (player.uid === state.authUser?.uid) {
     state.multiplayer.localHand = [...player.hand];
   }
-  updateLastAction(player, resolution.description, [playedCard, ...targets]);
+  updateLastAction(player, resolution.description, displayCards);
   setActionDisplay({
     playerId: player.id,
     playerName: player.name,
     text: resolution.description,
-    cards: [playedCard, ...targets],
+    cards: displayCards,
     tone: "collect",
   });
   pushLog(`${player.name} 打出 ${cardLabel(playedCard)}，${resolution.description}。`);
@@ -4903,7 +4904,7 @@ function discardHandCard(player, sourceCard, fromHuman) {
 
 function capturePendingDraw(player, targets, resolution, fromHuman) {
   const drawCard = state.pendingDrawCard;
-  const displayCards = targets.length ? [...targets] : [drawCard];
+  const displayCards = getActionTargetCards(targets, drawCard);
   removeTableCards(targets);
   player.captured.push(drawCard, ...targets);
   state.pendingDrawCard = null;
@@ -5432,6 +5433,13 @@ function getSelectedTableCards() {
 function removeTableCards(cardsToRemove) {
   const ids = new Set(cardsToRemove.map((card) => card.id));
   state.tableCards = state.tableCards.filter((card) => !ids.has(card.id));
+}
+
+function getActionTargetCards(targets, fallbackCard) {
+  if (targets.length) {
+    return [...targets];
+  }
+  return fallbackCard ? [fallbackCard] : [];
 }
 
 function updateLastAction(player, text, cards) {

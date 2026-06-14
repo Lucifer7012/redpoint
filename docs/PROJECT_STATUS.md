@@ -1,11 +1,16 @@
 # Project Status
 
 Latest status update (2026-06-14):
+- 已继续补齐右侧“最近动作”的 target-only 规则：普通出牌钓牌时，`正在瞄准` 和 `成功钓走` 这两种展示现在也只显示目标牌，不再混入打出去的源牌。
+- 这轮把普通钓牌链路和补枪链路统一到了同一个 helper，避免之后一个修了、一个漏掉。
+- 新增验证辅助页：`artifacts/layout-check/action-stage-hand-capture-preview.html`。
+- 新增验证截图：`artifacts/layout-check/action-stage-hand-capture-preview.png`。
+- 当前缓存版本：`styles.css?v=20260614-hand-action-target-only`，`app.js?v=20260614-hand-action-target-only`。
+- 本轮已完成校验：`node --check app.js`；本机 Chrome headless 已确认“正在瞄准 红桃6”和“成功钓走 红桃6”都只显示目标牌。
 - 已继续收紧大厅 `玩家人数` 下拉框尺寸：闭合态和展开项的字号、行高都缩小到和当前大厅面板更一致的尺度，避免列表显得过高、超出界面。
 - 这轮只改了 `#player-count` 的样式，不改大厅布局和单机/联机逻辑，仍保留原生下拉交互。
 - 新增验证辅助页：`artifacts/layout-check/lobby-player-count-select-preview.html`。
 - 新增验证截图：`artifacts/layout-check/lobby-player-count-select-preview.png`。
-- 当前缓存版本：`styles.css?v=20260614-lobby-select-scale`，`app.js?v=20260614-lobby-select-scale`。
 - 本轮已完成校验：`node --check app.js`；本机 Chrome headless 已确认闭合态和列表态字号、行高都已收紧。
 - 已继续修正右侧“最近动作”细节：补枪成功时，动作区现在只显示真正被补掉的目标牌，不再把补枪用掉的摸牌一起塞进去。
 - 这次不是改布局，而是修正补枪成功的数据源；此前实机里出现的“黑桃9旁边多半张牌”，本质上是动作区收到了两张牌，而当前卡槽只有 `48px` 宽。

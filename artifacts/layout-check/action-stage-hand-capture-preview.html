@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Action Stage Draw Capture Preview</title>
+  <title>Action Stage Hand Capture Preview</title>
   <link rel="stylesheet" href="../../styles.css?v=20260614-hand-action-target-only">
   <style>
     body {
@@ -18,7 +18,7 @@
     }
 
     .preview-card {
-      width: min(420px, calc(100vw - 48px));
+      width: min(460px, calc(100vw - 48px));
       padding: 22px;
       border-radius: 20px;
       border: 1px solid rgba(255, 255, 255, 0.12);
@@ -42,8 +42,13 @@
       color: rgba(239, 249, 255, 0.82);
     }
 
-    .preview-action-shell {
+    .preview-stack {
       margin-top: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .preview-action-shell {
       padding: 12px;
       border-radius: 18px;
       background: rgba(9, 51, 56, 0.48);
@@ -104,25 +109,45 @@
 </head>
 <body>
   <main class="preview-card">
-    <h2>补枪成功动作区</h2>
-    <p>只显示真正被补掉的目标牌，不再混入补枪用掉的摸牌。</p>
-    <section class="preview-action-shell">
-      <div class="action-stage" data-tone="collect">
-        <div class="action-stage__meta">
-          <p class="status-label">最近动作</p>
-          <h3>玩家 2 的动作</h3>
-          <p>补枪成功：成功钓走 黑桃9</p>
+    <h2>出牌钓牌动作区</h2>
+    <p>瞄准和钓成功都只显示目标牌，不再混入打出去的源牌。</p>
+    <section class="preview-stack">
+      <section class="preview-action-shell">
+        <div class="action-stage" data-tone="aim">
+          <div class="action-stage__meta">
+            <p class="status-label">最近动作</p>
+            <h3>玩家 2 的动作</h3>
+            <p>正在瞄准 红桃6</p>
+          </div>
+          <div class="action-stage__cards">
+            <button class="card-btn red-card" type="button" disabled>
+              <span class="card-corner">
+                <span class="card-rank">6</span>
+                <span class="card-suit">♥</span>
+              </span>
+              <span class="card-center-suit">♥</span>
+            </button>
+          </div>
         </div>
-        <div class="action-stage__cards">
-          <button class="card-btn black-card" type="button" disabled>
-            <span class="card-corner">
-              <span class="card-rank">9</span>
-              <span class="card-suit">♠</span>
-            </span>
-            <span class="card-center-suit">♠</span>
-          </button>
+      </section>
+      <section class="preview-action-shell">
+        <div class="action-stage" data-tone="collect">
+          <div class="action-stage__meta">
+            <p class="status-label">最近动作</p>
+            <h3>玩家 2 的动作</h3>
+            <p>成功钓走 红桃6</p>
+          </div>
+          <div class="action-stage__cards">
+            <button class="card-btn red-card" type="button" disabled>
+              <span class="card-corner">
+                <span class="card-rank">6</span>
+                <span class="card-suit">♥</span>
+              </span>
+              <span class="card-center-suit">♥</span>
+            </button>
+          </div>
         </div>
-      </div>
+      </section>
     </section>
   </main>
 </body>
