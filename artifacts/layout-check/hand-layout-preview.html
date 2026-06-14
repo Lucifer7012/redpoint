@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hand Layout Preview</title>
-  <link rel="stylesheet" href="../../styles.css?v=20260614-hand-overlap-fix">
+  <link rel="stylesheet" href="../../styles.css?v=20260614-hand-gap-relax">
   <style>
     body {
       margin: 0;
@@ -131,11 +131,6 @@
       transform: translateY(0);
     }
 
-    .preview-hand-grid.is-condensed {
-      gap: 0 !important;
-      justify-content: flex-start !important;
-    }
-
     .preview-hand-grid.is-overlapped .card-btn {
       margin-left: calc(var(--hand-overlap, 0px) * -1);
       z-index: calc(var(--card-index, 0) + 1);
@@ -215,30 +210,37 @@
       const baseGap = parseFloat(gridStyle.columnGap || gridStyle.gap || "0") || 0;
       const availableWidth = Math.max(handGrid.clientWidth - paddingLeft - paddingRight - 2, 0);
       const count = cards.length;
-      const relaxedWidth = cardWidth * count + baseGap * Math.max(count - 1, 0);
-      const touchingWidth = cardWidth * count;
+      const gapSlots = Math.max(count - 1, 0);
+      const relaxedWidth = cardWidth * count + baseGap * gapSlots;
 
       if (relaxedWidth <= availableWidth + 1) {
         return;
       }
 
       handGrid.classList.add("is-condensed");
-      handGrid.style.setProperty("gap", "0px");
       handGrid.style.setProperty("justify-content", "flex-start");
       handGrid.style.setProperty("overflow-x", "auto");
 
-      if (touchingWidth <= availableWidth + 1) {
+      const idealGap = gapSlots > 0
+        ? (availableWidth - cardWidth * count) / gapSlots
+        : baseGap;
+
+      if (idealGap >= 0) {
+        const fittedGap = Math.max(0, Math.min(baseGap, idealGap));
+        handGrid.style.setProperty("gap", `${fittedGap}px`);
         handGrid.classList.add("is-fit");
         handGrid.style.setProperty("justify-content", "safe center");
         handGrid.style.setProperty("overflow-x", "hidden");
         return;
       }
 
+      handGrid.style.setProperty("gap", "0px");
+
       const minVisibleWidth = Math.max(20, Math.min(Math.round(cardWidth * 0.42), cardWidth - 10));
       const maxOverlap = Math.max(0, cardWidth - minVisibleWidth);
-      const requiredOverlap = Math.ceil((touchingWidth - availableWidth) / Math.max(count - 1, 1));
+      const requiredOverlap = Math.ceil(Math.abs(idealGap));
       const appliedOverlap = Math.max(0, Math.min(requiredOverlap, maxOverlap));
-      const fittedWidth = touchingWidth - appliedOverlap * Math.max(count - 1, 0);
+      const fittedWidth = cardWidth * count - appliedOverlap * gapSlots;
 
       if (appliedOverlap > 0) {
         handGrid.classList.add("is-overlapped");

@@ -5892,30 +5892,37 @@ function syncResponsiveHandLayout() {
   const baseGap = parseFloat(gridStyle.columnGap || gridStyle.gap || "0") || 0;
   const availableWidth = Math.max(ui.handCards.clientWidth - paddingLeft - paddingRight - 2, 0);
   const count = cards.length;
-  const relaxedWidth = cardWidth * count + baseGap * Math.max(count - 1, 0);
-  const touchingWidth = cardWidth * count;
+  const gapSlots = Math.max(count - 1, 0);
+  const relaxedWidth = cardWidth * count + baseGap * gapSlots;
 
   if (relaxedWidth <= availableWidth + 1) {
     return;
   }
 
   ui.handCards.classList.add("is-condensed");
-  ui.handCards.style.setProperty("gap", "0px");
   ui.handCards.style.setProperty("justify-content", "flex-start");
   ui.handCards.style.setProperty("overflow-x", "auto");
 
-  if (touchingWidth <= availableWidth + 1) {
+  const idealGap = gapSlots > 0
+    ? (availableWidth - cardWidth * count) / gapSlots
+    : baseGap;
+
+  if (idealGap >= 0) {
+    const fittedGap = Math.max(0, Math.min(baseGap, idealGap));
+    ui.handCards.style.setProperty("gap", `${fittedGap}px`);
     ui.handCards.classList.add("is-fit");
     ui.handCards.style.setProperty("justify-content", "safe center");
     ui.handCards.style.setProperty("overflow-x", "hidden");
     return;
   }
 
+  ui.handCards.style.setProperty("gap", "0px");
+
   const minVisibleWidth = Math.max(20, Math.min(Math.round(cardWidth * 0.42), cardWidth - 10));
   const maxOverlap = Math.max(0, cardWidth - minVisibleWidth);
-  const requiredOverlap = Math.ceil((touchingWidth - availableWidth) / Math.max(count - 1, 1));
+  const requiredOverlap = Math.ceil(Math.abs(idealGap));
   const appliedOverlap = Math.max(0, Math.min(requiredOverlap, maxOverlap));
-  const fittedWidth = touchingWidth - appliedOverlap * Math.max(count - 1, 0);
+  const fittedWidth = cardWidth * count - appliedOverlap * gapSlots;
 
   if (appliedOverlap > 0) {
     ui.handCards.classList.add("is-overlapped");
