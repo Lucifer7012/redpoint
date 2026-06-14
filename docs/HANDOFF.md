@@ -2,6 +2,16 @@
 
 本文件用于在不同电脑、不同 Codex 会话之间交接 `redpoint` 项目进度。这里不记录 API Key、密码、Token、Cookie 或任何真实密钥。
 
+## 2026-06-14 Daoist UI Polish Follow-up
+
+- 最新方向：按用户要求保持布局和功能不变，只对 `创建游戏 ID`、大厅、对局和共享弹窗做了一轮轻量视觉美化。
+- 风格约束：只借 `daoist_poker_deck` 的气质，不重新接入整套图片牌；当前方向是 `深青 + 暖金 + 米纸 + 少量朱砂`，偏克制、偏干净，不走重特效。
+- 这轮重点：统一了标题字族、共享面板材质、按钮质感、牌桌底色、扑克牌纸面感、骰子结果卡和社交区弹窗风格。
+- 这轮没有改动布局、交互和玩法逻辑；大厅结构、创建 ID 流程、单机/联机规则、当前 CSS 牌结构都保持原样。
+- 当前缓存版本：`styles.css?v=20260614-daoist-ui-polish`，`app.js?v=20260614-daoist-ui-polish`。
+- 本轮预览截图：`artifacts/layout-check/daoist-ui-id-setup-preview.png`、`artifacts/layout-check/daoist-ui-lobby-preview.png`、`artifacts/layout-check/daoist-ui-table-preview.png`。
+- 已做校验：`node --check app.js`；本地 `http://127.0.0.1:4173/` 可访问；本机 Chrome headless 已导出三张预览图。
+
 ## 2026-06-10 ID Setup UI Follow-up
 
 - 最新新增界面：`创建游戏 ID` 页面已经补齐为和登录页 / 大厅一致的深色游戏 UI，不再保留旧的浅色网页式面板。
@@ -126,19 +136,19 @@ cd redpoint
 - GitHub：`https://github.com/Lucifer7012/redpoint`
 - 线上测试链接：`https://lucifer7012.github.io/redpoint/`
 - 本地测试地址：`http://127.0.0.1:4173/`
-- 当前缓存版本：`styles.css?v=20260610-id-setup-ui`，`app.js?v=20260610-id-setup-ui`
-- 最近主要改动：`创建游戏 ID` 页面已统一到登录页 / 大厅同风格；手机横屏下不再是旧的浅色卡片，而是全屏游戏化布局。此前补上的“单机局从大厅返回/关闭”以及“单机未关闭时锁好友联机”逻辑仍保留。
+- 当前缓存版本：`styles.css?v=20260614-daoist-ui-polish`，`app.js?v=20260614-daoist-ui-polish`
+- 最近主要改动：刚完成一轮轻量道风视觉美化，覆盖 `创建游戏 ID`、大厅、对局与共享弹窗；只改颜色、字体、材质和局部细节，不改布局和交互。此前补上的“单机局从大厅返回/关闭”以及“单机未关闭时锁好友联机”逻辑仍保留。
 
 ## 当前接力状态
 
-- 上次做到哪里：已经补齐 `创建游戏 ID` 页的统一风格，基础桌面样式改成深色金边卡片，手机横屏改成和大厅同语言的全屏布局；并生成了 `artifacts/layout-check/id-setup-ui-preview.png` 与 `artifacts/layout-check/id-setup-ui-desktop-preview.png` 两张预览图。当前没有改 `创建 ID` 绑定逻辑，只是补 UI 一致性。
-- 下一步准备做什么：优先用真实浏览器串一次“登录 -> 创建 ID -> 进入大厅”流程；如果用户继续抠桌面端细节，再小范围收紧桌面创建 ID 页右侧空白。
-- 当前先别动什么：不要重新接入 `assets/cards/daoist/`；跨电脑同步入口和邀请弹窗展示时机也不要改，除非本轮任务明确要求。
+- 上次做到哪里：已经完成轻量道风视觉美化，重点落在主题配色、标题字体、按钮、面板、牌桌和 CSS 扑克牌质感；并生成了 `artifacts/layout-check/daoist-ui-id-setup-preview.png`、`artifacts/layout-check/daoist-ui-lobby-preview.png`、`artifacts/layout-check/daoist-ui-table-preview.png` 三张预览图。当前没有改布局和功能逻辑。
+- 下一步准备做什么：优先用真实浏览器串一次“登录 -> 创建 ID -> 进入大厅 -> 对局”流程，确认实际观感与预览一致；如果用户继续抠 UI，就只在颜色、字体、阴影、边框和材质细节上继续微调。
+- 当前先别动什么：不要重新接入 `assets/cards/daoist/`；不要把这轮轻量美化重新做成重素材方案；跨电脑同步入口和邀请弹窗展示时机也不要改，除非本轮任务明确要求。
 
 ## 当前可继续方向
 
-- 继续根据手机横屏截图微调大厅布局、好友申请/房间邀请区域和右侧好友/排行榜区域。
-- 继续测试登录 -> 创建 ID -> 大厅 -> 单机/好友联机 -> 对局 -> 结算循环。
+- 继续在不改布局的前提下微调大厅、创建 ID 和对局的颜色、字体、阴影、边框与按钮质感。
+- 继续测试登录 -> 创建 ID -> 大厅 -> 单机/好友联机 -> 对局 -> 结算循环，确认新视觉下没有出现文字换行、按钮挤压或对比度问题。
 - 如果要在另一台电脑继续开发，优先确认 `git pull --ff-only` 已拿到 GitHub `main` 最新提交。
 
 ## 测试方式

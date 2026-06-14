@@ -2,6 +2,37 @@
 
 这个文件从 2026-05-18 开始记录项目后续新增功能和重要规则变更。每次增加新功能时，先写清楚目标、改动范围、验证方式和后续注意点，方便之后继续接手。
 
+## 2026-06-14
+
+### 大厅 / 创建 ID / 对局道风轻量视觉美化
+
+- 背景：用户希望在不改布局、不改功能的前提下，把现有 UI 再做得更好看一点；参考 `C:\Users\HOUSE\Documents\Codex\2026-06-04\apikey-gpt-image-2\outputs\daoist_poker_deck`，但明确说如果风格太重就收一点。
+- 改动：
+  - 这轮没有重新接入图片扑克牌资源，也没有改大厅、创建 ID、对局、弹窗的结构和交互；只做轻量视觉升级。
+  - `:root` 主题变量统一到更克制的 `深青 + 暖金 + 米纸 + 少量朱砂` 方向，补上共享的 `--ink`、`--paper`、`--gold`、`--seal` 等色值。
+  - 标题字族切到偏书卷气的中文 serif / 楷体栈，正文保留更稳妥的系统 sans 栈，避免为了风格牺牲可读性。
+  - 大厅、创建 ID、历史区、手牌区、结果区、规则弹窗、欢乐豆弹窗、社交区等共享面板统一为更温润的纸面渐变、细描边和暖色阴影。
+  - 主按钮改成偏金色压印质感，次按钮维持更素一点的米纸按钮，保持原本信息层级不变。
+  - 对局牌桌底色从单纯绿色桌布收成更深的青绿色，骰子结果卡、座位标签和最近动作等细部同步统一到同一套语气。
+  - 当前 CSS 扑克牌继续保留原结构，只把牌面调成更接近米纸卡、细边框、暖色阴影和更稳妥的红黑花色，不重新引入图片牌。
+  - 修了一处顺手发现的细节：大厅社交区搜索按钮在较窄宽度下会换行，现在已强制保持单行。
+  - 缓存版本更新为 `20260614-daoist-ui-polish`。
+- 涉及文件：
+  - `index.html`
+  - `styles.css`
+  - `artifacts/layout-check/public-area-preview.html`
+  - `artifacts/layout-check/solo-resume-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 本地静态服务 `http://127.0.0.1:4173/` 可访问。
+  - 使用本机 Chrome headless 生成：
+    - `artifacts/layout-check/daoist-ui-id-setup-preview.png`
+    - `artifacts/layout-check/daoist-ui-lobby-preview.png`
+    - `artifacts/layout-check/daoist-ui-table-preview.png`
+- 后续注意：
+  - 后续如果继续调这套风格，优先沿着颜色、材质、阴影和字体细节继续微调，不要反手把布局和功能一起动掉。
+  - 暂时不要重新接入 `assets/cards/daoist/` 一整套图片牌；当前方向是借道风气质，不回到重素材方案。
+
 ## 2026-06-10
 
 ### 创建游戏 ID 页面统一到登录 / 大厅风格

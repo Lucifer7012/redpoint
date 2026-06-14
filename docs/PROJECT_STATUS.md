@@ -1,14 +1,14 @@
 # Project Status
 
-Latest status update (2026-06-10):
-- `创建游戏 ID` 页面已补齐到和登录页 / 大厅一致的深色游戏风格，不再保留旧的浅色网页式卡片。
-- `setup-panel.is-id-setup-mode` 现在使用深色半透明卡片、深色输入框、金色主按钮；桌面端也统一成同一套视觉语言。
-- 手机横屏下，创建 ID 页已切到与大厅同源的全屏布局：左上标题说明、左侧输入与主按钮、右上退出登录与状态说明。
-- 这轮没有改 `创建 ID` 绑定逻辑，只做 UI 一致性修正；登录后先建 ID、再进大厅的流程保持不变。
-- `artifacts/layout-check/solo-resume-preview.html` 已同步切到新缓存版本，避免继续命中旧资源。
-- 当前缓存版本：`styles.css?v=20260610-id-setup-ui`，`app.js?v=20260610-id-setup-ui`。
-- 新增验证截图：`artifacts/layout-check/id-setup-ui-preview.png`、`artifacts/layout-check/id-setup-ui-desktop-preview.png`。
-- 本轮已完成校验：`node --check app.js`；本机 Chrome headless 已验证 `915 x 412` 触屏横屏与 `1366 x 768` 桌面视口。
+Latest status update (2026-06-14):
+- 这轮按用户要求保持布局和功能不变，只对 `创建 ID`、大厅、对局和共享弹窗做了一轮轻量视觉美化。
+- 视觉方向参考 `daoist_poker_deck`，但明确控制在轻量范围：主色统一为 `深青 + 暖金 + 米纸 + 少量朱砂`，不走重特效或重素材方案。
+- 扑克牌仍然使用当前 CSS 牌结构，没有重新接入图片牌；只是把牌面质感、边框、阴影和红黑花色做得更干净一些。
+- 共享面板、按钮、牌桌底色、骰子结果卡、社交区和欢乐豆弹窗已统一到同一套视觉语言，整体观感比之前更完整。
+- 顺手修复了大厅社交搜索按钮在窄宽度下会换行的细节问题。
+- 当前缓存版本：`styles.css?v=20260614-daoist-ui-polish`，`app.js?v=20260614-daoist-ui-polish`。
+- 新增验证截图：`artifacts/layout-check/daoist-ui-id-setup-preview.png`、`artifacts/layout-check/daoist-ui-lobby-preview.png`、`artifacts/layout-check/daoist-ui-table-preview.png`。
+- 本轮已完成校验：`node --check app.js`；本地静态服务 `http://127.0.0.1:4173/` 可访问；本机 Chrome headless 已完成 3 张预览截图导出。
 
 最新状态补充（2026-06-09）：
 - 四人横屏对局里的公共牌区已按最新反馈利用两侧空白：不再默认锁死 6 列。

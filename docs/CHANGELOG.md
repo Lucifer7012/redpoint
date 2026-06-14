@@ -9,6 +9,24 @@
 - 如当前状态、测试方式或后续注意点发生变化，同时更新 `docs/PROJECT_STATUS.md`。
 - 桌面总工作记录同步更新：`C:\Users\OgCloud\Desktop\Codex-Worklog\WORKLOG.md`。
 
+## 2026-06-14
+
+### 道风轻量视觉美化
+
+- 按用户要求保持布局和功能不变，只对整体视觉皮肤做了一轮轻量道风美化，方向参考 `daoist_poker_deck`，但避免走重特效。
+- 全局主题色调整为更克制的 `深青 + 暖金 + 米纸 + 少量朱砂`；统一了标题字体气质、面板层次、按钮质感和牌桌底色。
+- 扑克牌继续保持当前 CSS 牌结构，没有重新接入图片牌，只把牌面调成更接近米纸卡、细边框、暖色阴影的质感。
+- 社交区、规则弹窗、欢乐豆弹窗、骰子结果卡等共享面板同步收口到同一套视觉语言。
+- 更新缓存版本为 `20260614-daoist-ui-polish`；`artifacts/layout-check/public-area-preview.html` 和 `artifacts/layout-check/solo-resume-preview.html` 同步切到新缓存版本。
+
+验证：
+
+- `node --check app.js` 通过。
+- 使用本机 Chrome headless 生成：
+  - `artifacts/layout-check/daoist-ui-id-setup-preview.png`
+  - `artifacts/layout-check/daoist-ui-lobby-preview.png`
+  - `artifacts/layout-check/daoist-ui-table-preview.png`
+
 ## 2026-06-10
 
 ### 创建游戏 ID 页面统一到登录 / 大厅风格
