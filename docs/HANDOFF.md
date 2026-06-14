@@ -2,6 +2,16 @@
 
 本文件用于在不同电脑、不同 Codex 会话之间交接 `redpoint` 项目进度。这里不记录 API Key、密码、Token、Cookie 或任何真实密钥。
 
+## 2026-06-14 Hand Overlap Fix Follow-up
+
+- 最新问题定位：用户在真实 `915 x 412` 对局页里看到 `2 人 10 张` 仍没重叠，而且最后两张被裁掉；根因不是算法没算出来，而是后面的 `body.is-game-view` 样式把通用重叠规则覆盖回去了。
+- 实际修法：在横屏对局专用的后置样式块里补齐 `.hand-grid.is-overlapped`、`.hand-grid.is-condensed` 和选中牌层级规则，确保正式对局页也会保留负间距重叠。
+- 当前规则仍是上一轮那套：先保留正常间距；放不下先贴边；贴边还放不下才自动重叠；只要已经完整显示，就关闭横向滚动。
+- 当前缓存版本：`styles.css?v=20260614-hand-overlap-fix`，`app.js?v=20260614-hand-overlap-fix`。
+- 本轮预览辅助页：`artifacts/layout-check/hand-layout-preview.html`。
+- 本轮预览截图：`artifacts/layout-check/hand-layout-preview-915x412.png`。
+- 已做校验：`node --check app.js`；本机 Chrome headless 已重新导出 `915 x 412` 预览图；`2 人 10 张` 已完整显示，`3 人 7 张` 仍只贴边不重叠。
+
 ## 2026-06-14 Hand Layout Auto Fit Follow-up
 
 - 最新方向：对局手牌区不再按模式硬编码滚动或重叠，而是改成按当前宽度自动判断。
@@ -147,13 +157,13 @@ cd redpoint
 - GitHub：`https://github.com/Lucifer7012/redpoint`
 - 线上测试链接：`https://lucifer7012.github.io/redpoint/`
 - 本地测试地址：`http://127.0.0.1:4173/`
-- 当前缓存版本：`styles.css?v=20260614-hand-layout-auto-fit`，`app.js?v=20260614-hand-layout-auto-fit`
-- 最近主要改动：刚把手牌区改成按可用宽度自动决定“正常间距 / 贴边 / 重叠”的适配规则；轻量道风视觉美化仍保留。此前补上的“单机局从大厅返回/关闭”以及“单机未关闭时锁好友联机”逻辑仍保留。
+- 当前缓存版本：`styles.css?v=20260614-hand-overlap-fix`，`app.js?v=20260614-hand-overlap-fix`
+- 最近主要改动：已补上真实对局页里把手牌重叠覆盖回去的后置 CSS，`2 人 10 张` 不会再在正式页里少最后两张；手牌区自适应规则和轻量道风视觉美化仍保留。此前补上的“单机局从大厅返回/关闭”以及“单机未关闭时锁好友联机”逻辑也仍保留。
 
 ## 当前接力状态
 
-- 上次做到哪里：已经完成手牌区自适应排布，能保留间距就保留，放不下先贴边，再不够才重叠；并生成了 `artifacts/layout-check/hand-layout-preview.html` 和 `artifacts/layout-check/hand-layout-preview.png` 用来快速校验 `2 人 10 张` 与 `3 人 7 张`。当前没有改玩法和布局框架。
-- 下一步准备做什么：优先在真实对局里串一次 `2 人 10 张` 和 `3 人 7 张` 的实际场景，确认正式页和预览页一致；如果用户继续抠手牌细节，再微调“最小可见牌宽”和重叠阈值。
+- 上次做到哪里：已经把“真实对局页里重叠规则被覆盖”这个问题补上，正式页会保留负间距重叠；并重新导出了 `artifacts/layout-check/hand-layout-preview-915x412.png` 作为这轮验图。当前没有改玩法和整体布局框架。
+- 下一步准备做什么：优先让用户在真实设备上再看一轮 `2 人 10 张` 和 `3 人 7 张` 的正式效果；如果用户继续抠手牌细节，再微调“最小可见牌宽”和重叠阈值。
 - 当前先别动什么：不要重新接入 `assets/cards/daoist/`；不要把手牌排布再改回按模式写死；跨电脑同步入口和邀请弹窗展示时机也不要改，除非本轮任务明确要求。
 
 ## 当前可继续方向

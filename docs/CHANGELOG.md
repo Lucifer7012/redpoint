@@ -11,6 +11,22 @@
 
 ## 2026-06-14
 
+### 真实对局页手牌重叠覆盖修复
+
+- 根据用户最新反馈继续追查后确认：`2 人 10 张` 在真实对局页里最后两张仍被裁掉，不是手牌自适应算法没生效，而是后面的对局视图样式把通用重叠规则覆盖回去了。
+- 具体根因是横屏对局专用块里存在 `body.is-game-view .hand-grid .card-btn { margin-left: 0; }`，会把前面 `.hand-grid.is-overlapped .card-btn` 的负间距抵消掉；结果就是 JS 已经算出应当重叠，但真实页面仍按不重叠排版，最后两张被裁切。
+- 已在后面的 `body.is-game-view` 对局样式块里补齐更具体的 `.hand-grid.is-overlapped` / `.hand-grid.is-condensed` 规则，确保真实对局页也会保留负间距重叠、压缩态取消高低差、选中牌层级抬高。
+- 同步更新了手牌布局预览页 `artifacts/layout-check/hand-layout-preview.html`，让它更贴近真实对局手牌区，并补出新的横屏预览截图 `artifacts/layout-check/hand-layout-preview-915x412.png`，方便直接看 `2 人 10 张自动重叠` 和 `3 人 7 张只贴边不重叠`。
+- 更新缓存版本为 `20260614-hand-overlap-fix`；`index.html`、`artifacts/layout-check/public-area-preview.html`、`artifacts/layout-check/solo-resume-preview.html` 和 `artifacts/layout-check/hand-layout-preview.html` 都已切到新版本，避免设备继续吃旧 CSS。
+
+验证：
+
+- `node --check app.js` 通过。
+- 使用本机 Chrome headless 重新导出 `artifacts/layout-check/hand-layout-preview-915x412.png`。
+- 预览确认：
+  - `2 人 10 张` 已进入重叠展示，不再少最后两张
+  - `3 人 7 张` 仍为贴边完整展示，不额外重叠
+
 ### 手牌区自动贴边 / 重叠适配
 
 - 按最新反馈把手牌区改成了“能完整展示时不重叠，展示不下时再重叠”的自适应规则，而不是固定让 2 人局横向滚动。

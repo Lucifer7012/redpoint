@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hand Layout Preview</title>
-  <link rel="stylesheet" href="../../styles.css?v=20260614-hand-layout-auto-fit">
+  <link rel="stylesheet" href="../../styles.css?v=20260614-hand-overlap-fix">
   <style>
     body {
       margin: 0;
@@ -50,15 +50,104 @@
       width: 100% !important;
       margin-top: 14px;
       padding: 16px 18px 14px;
+      position: static !important;
+      left: auto !important;
+      right: auto !important;
+      bottom: auto !important;
+      z-index: auto !important;
+      height: auto !important;
+      max-height: none !important;
+      display: block !important;
+      overflow: visible !important;
+      border-radius: 18px !important;
+      background:
+        linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(245, 238, 226, 0.98)) !important;
+      box-shadow: 0 8px 22px rgba(10, 30, 24, 0.18) !important;
     }
 
     .preview-hand-grid {
       width: 100%;
       min-height: 128px;
+      padding: 0 2px 2px;
+      gap: 8px;
+      align-items: flex-end;
+      justify-content: safe center;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    .preview-hand-panel .controls,
+    .preview-hand-panel .panel-head,
+    .preview-hand-panel .human-summary,
+    .preview-hand-panel .control-hint {
+      display: none !important;
     }
 
     .preview-hand-grid .card-btn {
       flex: 0 0 auto;
+      width: 88px;
+      min-width: 88px;
+      min-height: 108px;
+      aspect-ratio: 18 / 25;
+      padding: 5px 6px;
+      border-radius: 12px;
+      border-color: rgba(141, 111, 67, 0.52) !important;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.88), transparent 32%),
+        linear-gradient(180deg, rgba(255, 250, 241, 0.98), rgba(243, 235, 219, 0.95)),
+        #f8efdc !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.94),
+        inset 0 0 0 1px rgba(131, 101, 60, 0.14),
+        inset 0 -10px 16px rgba(25, 28, 33, 0.06),
+        0 6px 14px rgba(9, 18, 16, 0.16) !important;
+      opacity: 1 !important;
+      filter: none !important;
+      margin-left: 0;
+    }
+
+    .preview-hand-grid .card-btn::before {
+      border-color: rgba(128, 99, 58, 0.34) !important;
+    }
+
+    .preview-hand-grid .card-btn.red-card {
+      color: #ae4334 !important;
+    }
+
+    .preview-hand-grid .card-btn.black-card {
+      color: #213039 !important;
+    }
+
+    .preview-hand-grid .card-center-suit {
+      opacity: 0.92;
+    }
+
+    .preview-hand-grid .card-btn:first-child {
+      margin-left: 0;
+    }
+
+    .preview-hand-grid .card-btn:nth-child(odd),
+    .preview-hand-grid .card-btn:nth-child(even) {
+      transform: translateY(0);
+    }
+
+    .preview-hand-grid.is-condensed {
+      gap: 0 !important;
+      justify-content: flex-start !important;
+    }
+
+    .preview-hand-grid.is-overlapped .card-btn {
+      margin-left: calc(var(--hand-overlap, 0px) * -1);
+      z-index: calc(var(--card-index, 0) + 1);
+    }
+
+    .preview-hand-grid.is-overlapped .card-btn:first-child {
+      margin-left: 0;
+    }
+
+    .preview-hand-grid.is-fit {
+      justify-content: safe center !important;
+      overflow-x: hidden !important;
     }
   </style>
 </head>
