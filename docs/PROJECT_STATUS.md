@@ -1,14 +1,15 @@
 # Project Status
 
 Latest status update (2026-06-14):
-- 这轮按用户要求保持布局和功能不变，只对 `创建 ID`、大厅、对局和共享弹窗做了一轮轻量视觉美化。
-- 视觉方向参考 `daoist_poker_deck`，但明确控制在轻量范围：主色统一为 `深青 + 暖金 + 米纸 + 少量朱砂`，不走重特效或重素材方案。
-- 扑克牌仍然使用当前 CSS 牌结构，没有重新接入图片牌；只是把牌面质感、边框、阴影和红黑花色做得更干净一些。
-- 共享面板、按钮、牌桌底色、骰子结果卡、社交区和欢乐豆弹窗已统一到同一套视觉语言，整体观感比之前更完整。
-- 顺手修复了大厅社交搜索按钮在窄宽度下会换行的细节问题。
-- 当前缓存版本：`styles.css?v=20260614-daoist-ui-polish`，`app.js?v=20260614-daoist-ui-polish`。
-- 新增验证截图：`artifacts/layout-check/daoist-ui-id-setup-preview.png`、`artifacts/layout-check/daoist-ui-lobby-preview.png`、`artifacts/layout-check/daoist-ui-table-preview.png`。
-- 本轮已完成校验：`node --check app.js`；本地静态服务 `http://127.0.0.1:4173/` 可访问；本机 Chrome headless 已完成 3 张预览截图导出。
+- 本轮继续跟进对局手牌区：不再按模式固定“滚动”或“重叠”，而是改成按当前可用宽度自动选择 `正常间距 -> 贴边 -> 重叠`。
+- 当前规则是：能完整展示就不重叠；贴边后能完整展示就只贴边；贴边还不够才自动重叠，并在能完整装下时关闭横向滚动。
+- 这套逻辑作用于共享的本地手牌区，所以单机 / 好友联机共用；2 / 3 / 4 人模式都会按当前手牌数量和容器宽度动态切换。
+- 为了让压缩态更稳定，手牌进入压缩或重叠后会取消奇偶高低差；进入重叠态时再按牌序重新设定覆盖层级。
+- 轻量道风视觉美化仍保留，当前主题风格没有回退。
+- 当前缓存版本：`styles.css?v=20260614-hand-layout-auto-fit`，`app.js?v=20260614-hand-layout-auto-fit`。
+- 新增验证截图：`artifacts/layout-check/hand-layout-preview.png`。
+- 新增验证辅助页：`artifacts/layout-check/hand-layout-preview.html`。
+- 本轮已完成校验：`node --check app.js`；本地静态服务 `http://127.0.0.1:4173/` 可访问；预览页已确认 `2 人 10 张自动重叠`、`3 人 7 张只贴边不重叠`。
 
 最新状态补充（2026-06-09）：
 - 四人横屏对局里的公共牌区已按最新反馈利用两侧空白：不再默认锁死 6 列。

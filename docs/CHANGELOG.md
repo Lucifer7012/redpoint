@@ -11,6 +11,23 @@
 
 ## 2026-06-14
 
+### 手牌区自动贴边 / 重叠适配
+
+- 按最新反馈把手牌区改成了“能完整展示时不重叠，展示不下时再重叠”的自适应规则，而不是固定让 2 人局横向滚动。
+- 具体逻辑是：先尝试保留原本间距；放不下时先把间距压到 0，让牌与牌贴边；如果贴边后仍放不下，再自动计算需要的重叠量。
+- 只有在压到贴边或重叠后已经可以完整展示时，才会关闭横向滚动；如果极端宽度下即使重叠仍不够，才保留滚动作为兜底。
+- 这套逻辑直接作用于共享的本地手牌区，所以单机 2 人、好友联机 2 人，以及其他模式下的本地手牌展示都会一起受益。
+- 新增了手牌布局专用预览页 `artifacts/layout-check/hand-layout-preview.html`，用来并排验证 `2 人 10 张自动重叠` 和 `3 人 7 张只贴边不重叠` 两种场景。
+- 更新缓存版本为 `20260614-hand-layout-auto-fit`；`index.html`、`artifacts/layout-check/public-area-preview.html`、`artifacts/layout-check/solo-resume-preview.html` 和新的 `artifacts/layout-check/hand-layout-preview.html` 都已切到新版本。
+
+验证：
+
+- `node --check app.js` 通过。
+- 本地静态服务 `http://127.0.0.1:4173/` 可访问。
+- 使用本机浏览器预览页导出 `artifacts/layout-check/hand-layout-preview.png`，确认：
+  - `2 人 10 张` 为自动重叠且无需横向滚动
+  - `3 人 7 张` 为贴边完整展示且不重叠
+
 ### 道风轻量视觉美化
 
 - 按用户要求保持布局和功能不变，只对整体视觉皮肤做了一轮轻量道风美化，方向参考 `daoist_poker_deck`，但避免走重特效。

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hand Layout Preview</title>
+  <link rel="stylesheet" href="../../styles.css?v=20260614-hand-layout-auto-fit">
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px;
+      background: linear-gradient(180deg, #115745, #0b2e30);
+      color: #fff8de;
+      font-family: var(--font-body);
+    }
+
+    .preview-shell {
+      display: grid;
+      gap: 18px;
+      justify-items: center;
+    }
+
+    .preview-card {
+      width: min(720px, calc(100vw - 48px));
+      padding: 18px 18px 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(8, 34, 43, 0.72);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+    }
+
+    .preview-card h2,
+    .preview-card p {
+      margin: 0;
+    }
+
+    .preview-card h2 {
+      font-family: var(--font-display);
+      font-size: 28px;
+      color: #fff2cc;
+    }
+
+    .preview-card p {
+      margin-top: 6px;
+      color: rgba(239, 249, 255, 0.78);
+    }
+
+    .preview-hand-panel {
+      width: 100% !important;
+      margin-top: 14px;
+      padding: 16px 18px 14px;
+    }
+
+    .preview-hand-grid {
+      width: 100%;
+      min-height: 128px;
+    }
+
+    .preview-hand-grid .card-btn {
+      flex: 0 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <main class="preview-shell">
+    <section class="preview-card">
+      <h2>2 人模式 · 10 张手牌</h2>
+      <p>贴边放不下时，自动改成重叠展示，不需要横向滚动。</p>
+      <section class="human-panel preview-hand-panel">
+        <div class="card-grid hand-grid preview-hand-grid">
+          <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">2</span><span class="card-suit">♦</span></span><span class="card-center-suit">♦</span></button>
+          <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">3</span><span class="card-suit">♦</span></span><span class="card-center-suit">♦</span></button>
+          <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">K</span><span class="card-suit">♠</span></span><span class="card-center-suit">♠</span></button>
+          <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">9</span><span class="card-suit">♠</span></span><span class="card-center-suit">♠</span></button>
+          <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">6</span><span class="card-suit">♥</span></span><span class="card-center-suit">♥</span></button>
+          <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">2</span><span class="card-suit">♣</span></span><span class="card-center-suit">♣</span></button>
+          <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">8</span><span class="card-suit">♣</span></span><span class="card-center-suit">♣</span></button>
+          <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">J</span><span class="card-suit">♥</span></span><span class="card-center-suit">♥</span></button>
+          <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">Q</span><span class="card-suit">♦</span></span><span class="card-center-suit">♦</span></button>
+          <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">7</span><span class="card-suit">♣</span></span><span class="card-center-suit">♣</span></button>
+        </div>
+      </section>
+    </section>
+
+    <section class="preview-card">
+      <h2>3 人模式 · 7 张手牌</h2>
+      <p>只要牌贴着牌就能完整展示时，不做重叠。</p>
+      <section class="human-panel preview-hand-panel">
+        <div class="card-grid hand-grid preview-hand-grid">
+          <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">7</span><span class="card-suit">♦</span></span><span class="card-center-suit">♦</span></button>
+          <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">3</span><span class="card-suit">♦</span></span><span class="card-center-suit">♦</span></button>
+          <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">3</span><span class="card-suit">♥</span></span><span class="card-center-suit">♥</span></button>
+          <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">7</span><span class="card-suit">♥</span></span><span class="card-center-suit">♥</span></button>
+          <button class="card-btn red-card" type="button"><span class="card-corner"><span class="card-rank">5</span><span class="card-suit">♥</span></span><span class="card-center-suit">♥</span></button>
+          <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">K</span><span class="card-suit">♣</span></span><span class="card-center-suit">♣</span></button>
+          <button class="card-btn black-card" type="button"><span class="card-corner"><span class="card-rank">9</span><span class="card-suit">♣</span></span><span class="card-center-suit">♣</span></button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    function resetPreviewHandLayout(handGrid) {
+      handGrid.classList.remove("is-condensed", "is-overlapped", "is-fit");
+      handGrid.style.removeProperty("gap");
+      handGrid.style.removeProperty("overflow-x");
+      handGrid.style.removeProperty("justify-content");
+      handGrid.style.removeProperty("--hand-overlap");
+    }
+
+    function syncPreviewHandLayout(handGrid) {
+      const cards = Array.from(handGrid.querySelectorAll(".card-btn"));
+      if (cards.length < 2) {
+        resetPreviewHandLayout(handGrid);
+        return;
+      }
+
+      resetPreviewHandLayout(handGrid);
+
+      const firstCard = cards[0];
+      const gridStyle = window.getComputedStyle(handGrid);
+      const cardWidth = Math.round(firstCard.getBoundingClientRect().width || 0);
+      const paddingLeft = parseFloat(gridStyle.paddingLeft || "0") || 0;
+      const paddingRight = parseFloat(gridStyle.paddingRight || "0") || 0;
+      const baseGap = parseFloat(gridStyle.columnGap || gridStyle.gap || "0") || 0;
+      const availableWidth = Math.max(handGrid.clientWidth - paddingLeft - paddingRight - 2, 0);
+      const count = cards.length;
+      const relaxedWidth = cardWidth * count + baseGap * Math.max(count - 1, 0);
+      const touchingWidth = cardWidth * count;
+
+      if (relaxedWidth <= availableWidth + 1) {
+        return;
+      }
+
+      handGrid.classList.add("is-condensed");
+      handGrid.style.setProperty("gap", "0px");
+      handGrid.style.setProperty("justify-content", "flex-start");
+      handGrid.style.setProperty("overflow-x", "auto");
+
+      if (touchingWidth <= availableWidth + 1) {
+        handGrid.classList.add("is-fit");
+        handGrid.style.setProperty("justify-content", "safe center");
+        handGrid.style.setProperty("overflow-x", "hidden");
+        return;
+      }
+
+      const minVisibleWidth = Math.max(20, Math.min(Math.round(cardWidth * 0.42), cardWidth - 10));
+      const maxOverlap = Math.max(0, cardWidth - minVisibleWidth);
+      const requiredOverlap = Math.ceil((touchingWidth - availableWidth) / Math.max(count - 1, 1));
+      const appliedOverlap = Math.max(0, Math.min(requiredOverlap, maxOverlap));
+      const fittedWidth = touchingWidth - appliedOverlap * Math.max(count - 1, 0);
+
+      if (appliedOverlap > 0) {
+        handGrid.classList.add("is-overlapped");
+        handGrid.style.setProperty("--hand-overlap", `${appliedOverlap}px`);
+      }
+
+      if (fittedWidth <= availableWidth + 1) {
+        handGrid.classList.add("is-fit");
+        handGrid.style.setProperty("justify-content", "safe center");
+        handGrid.style.setProperty("overflow-x", "hidden");
+      }
+    }
+
+    function syncAllPreviewHands() {
+      document.querySelectorAll(".preview-hand-grid").forEach(syncPreviewHandLayout);
+    }
+
+    window.addEventListener("load", syncAllPreviewHands);
+    window.addEventListener("resize", syncAllPreviewHands);
+  </script>
+</body>
+</html>

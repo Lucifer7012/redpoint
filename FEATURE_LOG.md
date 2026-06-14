@@ -4,6 +4,38 @@
 
 ## 2026-06-14
 
+### 手牌区按可用宽度自动选择“正常间距 / 贴边 / 重叠”
+
+- 背景：用户先提出 2 人模式下的 10 张手牌希望像参考图那样叠起来，一次性全部展示，不要再靠左右拖动；随后又补充了更精确的规则：如果像 3 人模式那样，牌和牌贴着就已经能完整展示，那就不需要重叠，只有展示不下时才重叠。
+- 改动：
+  - 这轮不再把“2 人模式固定重叠”写死，而是把手牌区改成按当前容器宽度动态判断。
+  - `render()` 之后新增 `syncResponsiveHandLayout()`，并在窗口缩放时同步重算，避免只在首次渲染时生效。
+  - 判断顺序改为三档：
+    - 能保留原有手牌间距完整展示：保持原样；
+    - 放不下，但牌贴着牌就能完整展示：压成 `gap: 0`，不重叠；
+    - 贴边后仍放不下：自动计算需要的重叠量，再把整排手牌压进当前区域。
+  - 当压到贴边或重叠后已经可以完整展示时，会自动关闭横向滚动并居中显示；如果极端小宽度下即使重叠仍放不下，才保留滚动兜底，避免把最后几张牌直接裁掉。
+  - 为了避免压缩态下视觉上下错落，`.hand-grid.is-condensed` 会取消原本奇偶手牌的轻微高低差；进入重叠态后则按 `--card-index` 重新设定层级，保证后面的牌自然压在前面上方，被选中的手牌继续抬起。
+  - 这套逻辑是绑在共享的本地手牌区上，所以单机 / 好友联机共用；2 / 3 / 4 人模式都会按“能否完整展示”自动切换，不再按模式硬编码。
+  - 新增手牌布局专用预览页 `artifacts/layout-check/hand-layout-preview.html`，内置与正式逻辑同顺序的演示脚本，用来快速看 `2 人 10 张` 与 `3 人 7 张` 两种场景。
+  - 缓存版本更新为 `20260614-hand-layout-auto-fit`。
+- 涉及文件：
+  - `app.js`
+  - `styles.css`
+  - `index.html`
+  - `artifacts/layout-check/public-area-preview.html`
+  - `artifacts/layout-check/solo-resume-preview.html`
+  - `artifacts/layout-check/hand-layout-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 本地静态服务 `http://127.0.0.1:4173/` 可访问。
+  - 导出 `artifacts/layout-check/hand-layout-preview.png`，确认：
+    - `2 人 10 张` 命中 `is-condensed + is-overlapped + is-fit`
+    - `3 人 7 张` 命中 `is-condensed + is-fit`，但不命中 `is-overlapped`
+- 后续注意：
+  - 后面如果继续调整这块，优先只改“最小可见牌宽”和“压缩阈值”，不要再回到按模式写死的手牌排列规则。
+  - 预览页里的演示脚本只是为了快速看效果；正式逻辑以 `app.js` 里的 `syncResponsiveHandLayout()` 为准。
+
 ### 大厅 / 创建 ID / 对局道风轻量视觉美化
 
 - 背景：用户希望在不改布局、不改功能的前提下，把现有 UI 再做得更好看一点；参考 `C:\Users\HOUSE\Documents\Codex\2026-06-04\apikey-gpt-image-2\outputs\daoist_poker_deck`，但明确说如果风格太重就收一点。

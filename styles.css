@@ -2528,9 +2528,27 @@ select {
   transform: translateY(0);
 }
 
+.hand-grid.is-condensed .card-btn:nth-child(odd),
+.hand-grid.is-condensed .card-btn:nth-child(even) {
+  transform: translateY(0);
+}
+
+.hand-grid.is-overlapped .card-btn {
+  margin-left: calc(var(--hand-overlap, 0px) * -1);
+  z-index: calc(var(--card-index, 0) + 1);
+}
+
+.hand-grid.is-overlapped .card-btn:first-child {
+  margin-left: 0;
+}
+
 .hand-grid .card-btn.source-selected {
   transform: translateY(-10px) !important;
   z-index: 3;
+}
+
+.hand-grid.is-overlapped .card-btn.source-selected {
+  z-index: 200;
 }
 
 .table-cards .card-btn {

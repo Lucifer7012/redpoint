@@ -385,6 +385,7 @@ function init() {
   document.addEventListener("keydown", handleKeyDown);
   document.addEventListener("click", handleDocumentClick);
   window.addEventListener("resize", updateGameLayoutScale);
+  window.addEventListener("resize", () => requestAnimationFrame(syncResponsiveHandLayout));
   window.addEventListener("resize", () => requestAnimationFrame(syncLandscapeActionPanel));
   window.addEventListener("resize", syncSocialSideHeight);
 
@@ -5788,6 +5789,7 @@ function render() {
   renderLog();
   renderResults();
   updateGameLayoutScale();
+  requestAnimationFrame(syncResponsiveHandLayout);
   requestAnimationFrame(syncLandscapeActionPanel);
 }
 
@@ -5849,6 +5851,82 @@ function clearLandscapeActionPanelStyles() {
   actionTargets.filter(Boolean).forEach((element) => {
     properties.forEach((property) => element.style.removeProperty(property));
   });
+}
+
+function resetResponsiveHandLayout() {
+  if (!ui.handCards) {
+    return;
+  }
+
+  ui.handCards.classList.remove("is-condensed", "is-overlapped", "is-fit");
+  ui.handCards.style.removeProperty("gap");
+  ui.handCards.style.removeProperty("overflow-x");
+  ui.handCards.style.removeProperty("justify-content");
+  ui.handCards.style.removeProperty("--hand-overlap");
+}
+
+function syncResponsiveHandLayout() {
+  if (!ui.handCards || state.phase === "setup" || state.phase === "game-over") {
+    resetResponsiveHandLayout();
+    return;
+  }
+
+  const cards = Array.from(ui.handCards.querySelectorAll(".card-btn"));
+  if (cards.length < 2) {
+    resetResponsiveHandLayout();
+    return;
+  }
+
+  resetResponsiveHandLayout();
+
+  const firstCard = cards[0];
+  const gridStyle = window.getComputedStyle(ui.handCards);
+  const cardRect = firstCard.getBoundingClientRect();
+  const cardWidth = Math.round(cardRect.width || 0);
+  if (!cardWidth) {
+    return;
+  }
+
+  const paddingLeft = parseFloat(gridStyle.paddingLeft || "0") || 0;
+  const paddingRight = parseFloat(gridStyle.paddingRight || "0") || 0;
+  const baseGap = parseFloat(gridStyle.columnGap || gridStyle.gap || "0") || 0;
+  const availableWidth = Math.max(ui.handCards.clientWidth - paddingLeft - paddingRight - 2, 0);
+  const count = cards.length;
+  const relaxedWidth = cardWidth * count + baseGap * Math.max(count - 1, 0);
+  const touchingWidth = cardWidth * count;
+
+  if (relaxedWidth <= availableWidth + 1) {
+    return;
+  }
+
+  ui.handCards.classList.add("is-condensed");
+  ui.handCards.style.setProperty("gap", "0px");
+  ui.handCards.style.setProperty("justify-content", "flex-start");
+  ui.handCards.style.setProperty("overflow-x", "auto");
+
+  if (touchingWidth <= availableWidth + 1) {
+    ui.handCards.classList.add("is-fit");
+    ui.handCards.style.setProperty("justify-content", "safe center");
+    ui.handCards.style.setProperty("overflow-x", "hidden");
+    return;
+  }
+
+  const minVisibleWidth = Math.max(20, Math.min(Math.round(cardWidth * 0.42), cardWidth - 10));
+  const maxOverlap = Math.max(0, cardWidth - minVisibleWidth);
+  const requiredOverlap = Math.ceil((touchingWidth - availableWidth) / Math.max(count - 1, 1));
+  const appliedOverlap = Math.max(0, Math.min(requiredOverlap, maxOverlap));
+  const fittedWidth = touchingWidth - appliedOverlap * Math.max(count - 1, 0);
+
+  if (appliedOverlap > 0) {
+    ui.handCards.classList.add("is-overlapped");
+    ui.handCards.style.setProperty("--hand-overlap", `${appliedOverlap}px`);
+  }
+
+  if (fittedWidth <= availableWidth + 1) {
+    ui.handCards.classList.add("is-fit");
+    ui.handCards.style.setProperty("justify-content", "safe center");
+    ui.handCards.style.setProperty("overflow-x", "hidden");
+  }
 }
 
 function syncLandscapeActionPanel() {
