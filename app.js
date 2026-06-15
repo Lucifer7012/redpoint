@@ -88,6 +88,11 @@ const ui = {
   rulesClose: document.getElementById("rules-close"),
   rulesAck: document.getElementById("rules-ack"),
   playerCount: document.getElementById("player-count"),
+  playerCountSelect: document.getElementById("player-count-select"),
+  playerCountTrigger: document.getElementById("player-count-trigger"),
+  playerCountDisplay: document.getElementById("player-count-display"),
+  playerCountMenu: document.getElementById("player-count-menu"),
+  playerCountOptions: [...document.querySelectorAll("#player-count-menu .lobby-select-option")],
   useDice: document.getElementById("use-dice"),
   lobbyModeCard: document.getElementById("lobby-mode-card"),
   lobbyModeSolo: document.getElementById("lobby-mode-solo"),
@@ -330,6 +335,7 @@ const state = {
     playerCount: 2,
     useDice: true,
   },
+  lobbyPlayerCountMenuOpen: false,
 };
 
 function init() {
@@ -368,7 +374,12 @@ function init() {
   ui.roomInviteRejectToggle?.addEventListener("click", toggleRoomInviteRejectPanel);
   ui.roomInviteRejectConfirm?.addEventListener("click", handleRejectActiveRoomInvite);
   ui.playerId.addEventListener("input", handlePlayerIdInput);
-  ui.playerCount.addEventListener("change", renderAuthControls);
+  ui.playerCount.addEventListener("change", () => {
+    syncLobbyPlayerCountMenu();
+    renderAuthControls();
+  });
+  ui.playerCountTrigger?.addEventListener("click", handleLobbyPlayerCountTrigger);
+  ui.playerCountOptions.forEach((option) => option.addEventListener("click", handleLobbyPlayerCountOption));
   ui.lobbyModeSolo?.addEventListener("click", () => setLobbyPlayMode("solo"));
   ui.lobbyModeFriends?.addEventListener("click", () => setLobbyPlayMode("friends"));
   ui.entryStartGame?.addEventListener("click", handleEntryStartGame);
@@ -406,6 +417,7 @@ function init() {
 
   state.playerIdHintMessage = "先登录或注册账号，再创建全局唯一的游戏 ID。";
   ensureLeaderboardControls();
+  syncLobbyPlayerCountMenu();
   renderHeroIntro();
   renderAuthControls();
   render();
@@ -2045,6 +2057,10 @@ function applyMultiplayerRoomState(room, localHand = state.multiplayer.localHand
 }
 
 function handleKeyDown(event) {
+  if (event.key === "Escape" && state.lobbyPlayerCountMenuOpen) {
+    toggleLobbyPlayerCountMenu(false);
+    return;
+  }
   if (event.key === "Escape" && state.rulesOpen) {
     closeRulesModal();
   }
@@ -2596,6 +2612,7 @@ function renderLobbyModeControls() {
   if (ui.lobbyModeFriends) {
     ui.lobbyModeFriends.title = friendsLocked ? "请先返回或关闭当前单机对局" : "";
   }
+  syncLobbyPlayerCountMenu();
   renderLobbyFriendRoomCard();
   renderLobbySoloSessionActions();
 }
@@ -2745,10 +2762,15 @@ function renderLobbyFriendRoomCard() {
 }
 
 function handleDocumentClick(event) {
+  const target = event.target;
+
+  if (state.lobbyPlayerCountMenuOpen && !target?.closest?.("#player-count-select")) {
+    toggleLobbyPlayerCountMenu(false);
+  }
+
   if (!state.playerStatsOpen) {
     return;
   }
-  const target = event.target;
   if (target?.closest?.(".player-id-details-toggle") || ui.playerStatsCard?.contains(target)) {
     return;
   }
@@ -2844,6 +2866,7 @@ function renderAuthControls() {
     ui.rechargeBeans.disabled = state.authBusy || state.beansBenefitBusy || !signedIn;
     ui.rechargeBeans.title = signedIn ? "打开欢乐豆中心" : "登录后打开欢乐豆中心";
   }
+  syncLobbyPlayerCountMenu();
   ui.startGame.textContent = needsIdSetup ? "创建 ID，进入大厅" : "开始游戏";
   ui.startGame.title = "";
   if (!needsIdSetup && state.lobbyPlayMode === "friends") {
@@ -5943,6 +5966,74 @@ function syncResponsiveHandLayout() {
     ui.handCards.style.setProperty("justify-content", "safe center");
     ui.handCards.style.setProperty("overflow-x", "hidden");
   }
+}
+
+function syncLobbyPlayerCountMenu() {
+  if (!ui.playerCount || !ui.playerCountTrigger) {
+    return;
+  }
+
+  const value = String(ui.playerCount.value || state.settings.playerCount || 2);
+  const activeOption = ui.playerCountOptions.find((option) => option.dataset.value === value);
+  const menuEnabled = Boolean(state.authUser)
+    && !isAuthEntryViewActive()
+    && !needsInitialPlayerIdSetup()
+    && state.lobbyPlayMode === "solo";
+
+  if (!menuEnabled) {
+    state.lobbyPlayerCountMenuOpen = false;
+  }
+
+  if (ui.playerCountDisplay) {
+    ui.playerCountDisplay.textContent = activeOption?.textContent?.trim() || `${value} 人`;
+  }
+
+  ui.playerCountTrigger.disabled = !menuEnabled;
+  ui.playerCountTrigger.tabIndex = menuEnabled ? 0 : -1;
+  ui.playerCountTrigger.setAttribute("aria-expanded", String(menuEnabled && state.lobbyPlayerCountMenuOpen));
+  ui.playerCountTrigger.setAttribute("aria-disabled", String(!menuEnabled));
+
+  ui.playerCountSelect?.classList.toggle("is-open", menuEnabled && state.lobbyPlayerCountMenuOpen);
+  ui.playerCountMenu?.classList.toggle("hidden", !(menuEnabled && state.lobbyPlayerCountMenuOpen));
+  ui.playerCountMenu?.setAttribute("aria-hidden", String(!(menuEnabled && state.lobbyPlayerCountMenuOpen)));
+  ui.playerCountOptions.forEach((option) => {
+    const active = option.dataset.value === value;
+    option.classList.toggle("active", active);
+    option.setAttribute("aria-selected", String(active));
+  });
+}
+
+function toggleLobbyPlayerCountMenu(force) {
+  if (!ui.playerCountMenu || !ui.playerCountTrigger || ui.playerCountTrigger.disabled) {
+    return;
+  }
+
+  state.lobbyPlayerCountMenuOpen = typeof force === "boolean"
+    ? force
+    : !state.lobbyPlayerCountMenuOpen;
+  syncLobbyPlayerCountMenu();
+}
+
+function handleLobbyPlayerCountTrigger(event) {
+  event.preventDefault();
+  toggleLobbyPlayerCountMenu();
+}
+
+function handleLobbyPlayerCountOption(event) {
+  const option = event.currentTarget;
+  const nextValue = option.dataset.value;
+  if (!nextValue || !ui.playerCount) {
+    return;
+  }
+
+  toggleLobbyPlayerCountMenu(false);
+  if (ui.playerCount.value === nextValue) {
+    syncLobbyPlayerCountMenu();
+    return;
+  }
+
+  ui.playerCount.value = nextValue;
+  ui.playerCount.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
 function syncLandscapeActionPanel() {

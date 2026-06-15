@@ -2,6 +2,53 @@
 
 这个文件从 2026-05-18 开始记录项目后续新增功能和重要规则变更。每次增加新功能时，先写清楚目标、改动范围、验证方式和后续注意点，方便之后继续接手。
 
+## 2026-06-15
+
+### 大厅人数下拉框改为轻量自定义菜单
+
+- 背景：上次把大厅 `玩家人数` 的原生 `select` 只做了字号和行高收紧，但这轮继续接着看用户反馈时，问题并没有真正消失。Windows/Chrome 的原生弹层仍会出现展开项过大、右侧空白灰块、视觉风格和大厅不一致的问题，这一层基本不受我们自己的 CSS 稳定控制。
+- 改动：
+  - 只替换大厅单机模式里的 `玩家人数` 控件，不动大厅整体布局，也不改单机 / 好友联机流程。
+  - 在 `index.html` 里新增：
+    - `#player-count-select`
+    - `#player-count-trigger`
+    - `#player-count-display`
+    - `#player-count-menu`
+    - `.lobby-select-option`
+  - 原生 `<select id="player-count">` 继续保留，但改成视觉隐藏；它仍然是实际数据源，现有逻辑继续读取 `ui.playerCount.value`。
+  - `app.js` 新增并接通：
+    - `syncLobbyPlayerCountMenu()`
+    - `toggleLobbyPlayerCountMenu(force)`
+    - `handleLobbyPlayerCountTrigger(event)`
+    - `handleLobbyPlayerCountOption(event)`
+  - 补了完整收口逻辑：
+    - 按 `Escape` 收起
+    - 点击组件外部收起
+    - 切到 `好友联机` 自动收起
+    - 离开大厅或回到未登录 / 创建 ID 阶段时自动收起
+    - 非大厅单机态下触发按钮自动禁用
+  - `styles.css` 新增大厅自定义下拉的触发器、箭头、浮层和激活态样式，并把大厅玩家卡片在单机态改成允许浮层外溢；好友联机态仍保持 `overflow: hidden`。
+  - 预览页 `artifacts/layout-check/lobby-player-count-select-preview.html` 改成使用和正式页一致的自定义结构，同时展示闭合态和展开态。
+  - 缓存版本更新为 `20260615-lobby-custom-select`，并同步更新正式页和相关预览页引用。
+- 涉及文件：
+  - `index.html`
+  - `app.js`
+  - `styles.css`
+  - `artifacts/layout-check/lobby-player-count-select-preview.html`
+  - `artifacts/layout-check/action-stage-draw-capture-preview.html`
+  - `artifacts/layout-check/action-stage-hand-capture-preview.html`
+  - `artifacts/layout-check/hand-layout-preview.html`
+  - `artifacts/layout-check/public-area-preview.html`
+  - `artifacts/layout-check/solo-resume-preview.html`
+- 验证：
+  - `node --check app.js` 通过。
+  - 内置 Browser 打开 `artifacts/layout-check/lobby-player-count-select-preview.html`，已确认闭合态和展开态都走自定义样式。
+  - 重新生成 `artifacts/layout-check/lobby-player-count-select-preview.png` 作为这轮预览图。
+  - 内置 Browser 打开正式 `index.html?v=20260615-lobby-custom-select`，已确认页面可正常加载，`#player-count-trigger` / `#player-count` 结构存在，且无新增 warn / error 日志。
+- 后续注意：
+  - 后面如果继续微调这块，优先只动自定义下拉的视觉细节和展开位置，不要把大厅人数逻辑再改回系统原生弹层。
+  - 既然隐藏的 `#player-count` 还是唯一真实值，后续任何新逻辑都继续从它读写，避免 UI 状态和业务状态分叉。
+
 ## 2026-06-14
 
 ### 出牌钓牌动作区也改成只显示目标牌

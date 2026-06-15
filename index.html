@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>钓红点</title>
   <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="stylesheet" href="styles.css?v=20260614-hand-action-target-only">
+  <link rel="stylesheet" href="styles.css?v=20260615-lobby-custom-select">
 </head>
 <body>
   <main class="app-shell">
@@ -70,11 +70,30 @@
           </div>
           <label class="field-block lobby-solo-options" id="lobby-solo-options">
           <span>玩家人数</span>
-          <select id="player-count">
-            <option value="2">2 人</option>
-            <option value="3">3 人</option>
-            <option value="4">4 人</option>
-          </select>
+          <div class="lobby-player-count-select" id="player-count-select">
+            <button
+              id="player-count-trigger"
+              class="lobby-select-trigger"
+              type="button"
+              role="combobox"
+              aria-haspopup="listbox"
+              aria-controls="player-count-menu"
+              aria-expanded="false"
+            >
+              <span id="player-count-display">2 人</span>
+              <span class="lobby-select-chevron" aria-hidden="true"></span>
+            </button>
+            <div id="player-count-menu" class="lobby-select-menu hidden" role="listbox" aria-labelledby="player-count-trigger">
+              <button class="lobby-select-option active" type="button" role="option" aria-selected="true" data-value="2">2 人</button>
+              <button class="lobby-select-option" type="button" role="option" aria-selected="false" data-value="3">3 人</button>
+              <button class="lobby-select-option" type="button" role="option" aria-selected="false" data-value="4">4 人</button>
+            </div>
+            <select id="player-count" aria-hidden="true" tabindex="-1">
+              <option value="2">2 人</option>
+              <option value="3">3 人</option>
+              <option value="4">4 人</option>
+            </select>
+          </div>
           </label>
           <div class="lobby-friend-options" id="lobby-friend-options">
             <div id="lobby-friend-room-card" class="lobby-friend-room-card"></div>
@@ -399,6 +418,6 @@
   <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=20260614-hand-action-target-only"></script>
+  <script src="app.js?v=20260615-lobby-custom-select"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lobby Player Count Select Preview</title>
-  <link rel="stylesheet" href="../../styles.css?v=20260614-hand-action-target-only">
+  <link rel="stylesheet" href="../../styles.css?v=20260615-lobby-custom-select">
   <style>
     body {
       margin: 0;
@@ -18,8 +18,8 @@
     }
 
     .preview-card {
-      width: min(420px, calc(100vw - 48px));
-      padding: 22px;
+      width: min(480px, calc(100vw - 48px));
+      padding: 24px;
       border-radius: 20px;
       border: 1px solid rgba(255, 255, 255, 0.12);
       background: rgba(8, 34, 43, 0.72);
@@ -55,43 +55,178 @@
     }
 
     .preview-shell {
-      padding: 16px;
+      padding: 18px;
       border-radius: 18px;
       border: 1px solid rgba(255, 229, 150, 0.22);
       background: linear-gradient(180deg, rgba(16, 72, 91, 0.78), rgba(8, 40, 62, 0.76));
     }
 
-    .preview-shell select {
-      width: 100%;
+    .preview-lobby-scope.setup-panel.is-lobby-mode {
+      width: auto;
+      min-height: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
     }
 
-    .preview-shell .list-preview {
-      margin-top: 10px;
-      min-height: 104px;
+    .preview-lobby-scope .lobby-player-count-select {
+      position: relative;
+    }
+
+    .preview-lobby-scope .lobby-select-trigger {
+      width: 100%;
+      min-height: 32px;
+      padding: 0 11px 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px solid rgba(255, 229, 150, 0.28);
+      border-radius: 14px;
+      color: #fff8d6;
+      background: rgba(6, 31, 46, 0.78);
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.2;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .preview-lobby-scope .lobby-select-chevron {
+      width: 8px;
+      height: 8px;
+      flex: 0 0 auto;
+      border-right: 2px solid rgba(255, 248, 214, 0.88);
+      border-bottom: 2px solid rgba(255, 248, 214, 0.88);
+      transform: translateY(-1px) rotate(45deg);
+      transition: transform 0.18s ease;
+    }
+
+    .preview-lobby-scope .lobby-select-trigger[aria-expanded="true"] .lobby-select-chevron {
+      transform: translateY(2px) rotate(-135deg);
+    }
+
+    .preview-lobby-scope .lobby-select-menu {
+      padding: 6px;
+      display: grid;
+      gap: 4px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 229, 150, 0.24);
+      background: linear-gradient(180deg, rgba(16, 72, 91, 0.96), rgba(8, 40, 62, 0.96));
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.34);
+    }
+
+    .preview-lobby-scope .lobby-select-option {
+      min-height: 34px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      border: 0;
+      border-radius: 12px;
+      color: rgba(239, 249, 255, 0.92);
+      background: transparent;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.2;
+      text-align: left;
+    }
+
+    .preview-lobby-scope .lobby-select-option.active {
+      color: #fff8d6;
+      background: linear-gradient(180deg, rgba(212, 151, 55, 0.28), rgba(111, 86, 40, 0.24));
+    }
+
+    .preview-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .preview-state {
+      display: grid;
+      gap: 8px;
+    }
+
+    .preview-state > strong {
+      font-size: 13px;
+      color: rgba(255, 244, 205, 0.86);
+    }
+
+    .preview-state .lobby-player-count-select {
+      width: min(260px, 100%);
+    }
+
+    .preview-state select {
+      position: absolute;
+      inset: 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .preview-state .lobby-select-menu {
+      position: static;
+      margin-top: 6px;
+      width: 100%;
+      box-sizing: border-box;
     }
   </style>
 </head>
 <body class="is-lobby-setup">
   <main class="preview-card">
     <h2>大厅人数下拉框</h2>
-    <p>校验闭合态和列表态的字号、行高不会再大到溢出面板。</p>
+    <p>校验闭合态和展开态都使用新的自定义下拉，不再受系统原生弹层样式影响。</p>
     <section class="preview-shell">
-      <label class="preview-field">
-        <span>玩家人数</span>
-        <select id="player-count-preview">
-          <option selected>2 人</option>
-          <option>3 人</option>
-          <option>4 人</option>
-        </select>
-      </label>
-      <label class="preview-field">
-        <span>列表态预览</span>
-        <select class="list-preview" size="3">
-          <option selected>2 人</option>
-          <option>3 人</option>
-          <option>4 人</option>
-        </select>
-      </label>
+      <div class="preview-lobby-scope setup-panel is-lobby-mode">
+        <div class="preview-grid">
+          <div class="preview-state">
+            <strong>闭合态</strong>
+            <label class="preview-field">
+              <span>玩家人数</span>
+              <div class="lobby-player-count-select">
+                <button class="lobby-select-trigger" type="button" role="combobox" aria-haspopup="listbox" aria-controls="player-count-preview-closed" aria-expanded="false">
+                  <span>2 人</span>
+                  <span class="lobby-select-chevron" aria-hidden="true"></span>
+                </button>
+                <div id="player-count-preview-closed" class="lobby-select-menu hidden" role="listbox" aria-hidden="true">
+                  <button class="lobby-select-option active" type="button" role="option" aria-selected="true">2 人</button>
+                  <button class="lobby-select-option" type="button" role="option" aria-selected="false">3 人</button>
+                  <button class="lobby-select-option" type="button" role="option" aria-selected="false">4 人</button>
+                </div>
+                <select aria-hidden="true" tabindex="-1">
+                  <option selected>2 人</option>
+                  <option>3 人</option>
+                  <option>4 人</option>
+                </select>
+              </div>
+            </label>
+          </div>
+          <div class="preview-state">
+            <strong>展开态</strong>
+            <label class="preview-field">
+              <span>玩家人数</span>
+              <div class="lobby-player-count-select is-open">
+                <button class="lobby-select-trigger" type="button" role="combobox" aria-haspopup="listbox" aria-controls="player-count-preview-open" aria-expanded="true">
+                  <span>3 人</span>
+                  <span class="lobby-select-chevron" aria-hidden="true"></span>
+                </button>
+                <div id="player-count-preview-open" class="lobby-select-menu" role="listbox" aria-hidden="false">
+                  <button class="lobby-select-option" type="button" role="option" aria-selected="false">2 人</button>
+                  <button class="lobby-select-option active" type="button" role="option" aria-selected="true">3 人</button>
+                  <button class="lobby-select-option" type="button" role="option" aria-selected="false">4 人</button>
+                </div>
+                <select aria-hidden="true" tabindex="-1">
+                  <option>2 人</option>
+                  <option selected>3 人</option>
+                  <option>4 人</option>
+                </select>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 </body>

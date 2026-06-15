@@ -6415,7 +6415,7 @@ select {
     grid-template-rows: auto minmax(0, 1fr);
     gap: 8px;
     align-items: stretch;
-    overflow: hidden;
+    overflow: visible;
     transform: none;
     border: 1px solid rgba(255, 229, 150, 0.34);
     border-radius: 20px;
@@ -6426,6 +6426,7 @@ select {
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .player-options-card.is-friends-mode {
     align-items: stretch;
+    overflow: hidden;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-mode-tabs {
@@ -6522,22 +6523,100 @@ select {
     font-size: 11px;
   }
 
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-player-count-select {
+    position: relative;
+  }
+
   body.is-lobby-setup .setup-panel.is-lobby-mode #player-count {
-    min-height: 30px;
-    padding: 0 28px 0 10px;
-    border-radius: 12px;
-    border-color: rgba(255, 229, 150, 0.28);
+    position: absolute;
+    inset: 0;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-select-trigger {
+    width: 100%;
+    min-height: 32px;
+    padding: 0 11px 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: 1px solid rgba(255, 229, 150, 0.28);
+    border-radius: 14px;
     color: #fff8d6;
     background: rgba(6, 31, 46, 0.78);
     font-size: 14px;
     font-weight: 800;
     line-height: 1.2;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
-  body.is-lobby-setup .setup-panel.is-lobby-mode #player-count option {
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-select-trigger:focus-visible {
+    outline: 2px solid rgba(255, 221, 122, 0.78);
+    outline-offset: 2px;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-select-trigger:disabled {
+    opacity: 0.62;
+    cursor: default;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-select-chevron {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 auto;
+    border-right: 2px solid rgba(255, 248, 214, 0.88);
+    border-bottom: 2px solid rgba(255, 248, 214, 0.88);
+    transform: translateY(-1px) rotate(45deg);
+    transition: transform 0.18s ease;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-select-trigger[aria-expanded="true"] .lobby-select-chevron {
+    transform: translateY(2px) rotate(-135deg);
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-select-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 16;
+    width: 100%;
+    padding: 6px;
+    display: grid;
+    gap: 4px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 229, 150, 0.24);
+    background: linear-gradient(180deg, rgba(16, 72, 91, 0.96), rgba(8, 40, 62, 0.96));
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.34);
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-select-option {
+    min-height: 34px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    border: 0;
+    border-radius: 12px;
+    color: rgba(239, 249, 255, 0.92);
+    background: transparent;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 800;
     line-height: 1.2;
+    text-align: left;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-select-option:hover,
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-select-option:focus-visible {
+    background: rgba(255, 255, 255, 0.08);
+    outline: none;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-select-option.active {
+    color: #fff8d6;
+    background: linear-gradient(180deg, rgba(212, 151, 55, 0.28), rgba(111, 86, 40, 0.24));
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .dice-inline-row {

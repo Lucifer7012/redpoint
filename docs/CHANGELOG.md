@@ -9,6 +9,23 @@
 - 如当前状态、测试方式或后续注意点发生变化，同时更新 `docs/PROJECT_STATUS.md`。
 - 桌面总工作记录同步更新：`C:\Users\OgCloud\Desktop\Codex-Worklog\WORKLOG.md`。
 
+## 2026-06-15
+
+### 大厅人数下拉框改为自定义菜单
+
+- 根据最新中断续做的需求，把大厅里 `玩家人数` 的原生 `select` 改成了轻量自定义下拉；根因不是文案或布局，而是 Windows/Chrome 的系统弹层仍会出现过大的展开项和右侧空白灰块，单靠 CSS 很难稳定修干净。
+- 这次只替换大厅单机模式里的这一个控件，不改大厅整体布局，也不改单机 / 好友联机流程。
+- 隐藏的原生 `#player-count` 仍保留为真实数据源；开始游戏、读写人数设置等原有逻辑继续走 `ui.playerCount.value`，避免把业务逻辑一起重写。
+- 补齐了交互收口：按 `Escape`、点击外部、切去好友联机、离开大厅时都会自动收起；非大厅单机态下触发按钮会自动禁用。
+- 更新预览页 `artifacts/layout-check/lobby-player-count-select-preview.html`，同时展示闭合态和展开态，并生成新截图 `artifacts/layout-check/lobby-player-count-select-preview.png`。
+- 同步更新缓存版本为 `20260615-lobby-custom-select`。
+
+验证：
+
+- `node --check app.js` 通过。
+- 内置 Browser 已确认 `artifacts/layout-check/lobby-player-count-select-preview.html` 闭合态 / 展开态渲染正常。
+- 内置 Browser 已确认正式 `index.html?v=20260615-lobby-custom-select` 可正常加载，且没有新增 warn / error 日志。
+
 ## 2026-06-14
 
 ### 出牌钓牌的最近动作也只显示目标牌
