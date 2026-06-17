@@ -9,6 +9,19 @@
 - 如当前状态、测试方式或后续注意点发生变化，同时更新 `docs/PROJECT_STATUS.md`。
 - 桌面总工作记录同步更新：`C:\Users\OgCloud\Desktop\Codex-Worklog\WORKLOG.md`。
 
+## 2026-06-17
+
+### 大厅人数下拉层级修正
+
+- 根据最新截图，定位到大厅单机模式里的自定义 `玩家人数` 下拉并不是尺寸问题，而是展开菜单被下面的 `开始游戏 / 查看规则` 操作条盖住。
+- 将大厅中间模式卡 `.player-options-card` 的层级抬高到高于 `.lobby-actions-card`，保证人数菜单展开时不会落到按钮条后面。
+- 额外给 `.lobby-player-count-select` 的展开态补了局部层级兜底，避免同卡片内其它元素再次压住菜单。
+- 同步更新缓存版本到 `20260617-lobby-select-layer-fix`，确保 GitHub Pages 和本地浏览器拿到新的 `styles.css`。
+
+Verification:
+
+- `node --check app.js` passed.
+
 ## 2026-06-15
 
 ### 大厅人数下拉框改为自定义菜单

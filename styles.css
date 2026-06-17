@@ -6403,7 +6403,7 @@ select {
     left: 226px;
     right: 250px;
     bottom: 91px;
-    z-index: 5;
+    z-index: 7;
     width: auto;
     min-width: 320px;
     height: 146px;
@@ -6525,6 +6525,10 @@ select {
 
   body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-player-count-select {
     position: relative;
+  }
+
+  body.is-lobby-setup .setup-panel.is-lobby-mode .lobby-player-count-select:has(.lobby-select-trigger[aria-expanded="true"]) {
+    z-index: 3;
   }
 
   body.is-lobby-setup .setup-panel.is-lobby-mode #player-count {

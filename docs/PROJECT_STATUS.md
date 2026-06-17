@@ -1,5 +1,11 @@
 # Project Status
 
+Latest status update (2026-06-17):
+- 大厅单机模式的自定义 `玩家人数` 下拉已修正层级：展开菜单现在会覆盖在下方 `开始游戏 / 查看规则` 按钮条之上，不再被挡住。
+- 本轮只修正大厅中间模式卡与底部操作条的叠层关系，不改人数选择逻辑、好友联机逻辑或大厅整体布局。
+- 当前缓存版本：`styles.css?v=20260617-lobby-select-layer-fix`，`app.js?v=20260617-lobby-select-layer-fix`。
+- 本轮已完成校验：`node --check app.js`。
+
 Latest status update (2026-06-15):
 - 大厅 `玩家人数` 已从 Windows/Chrome 表现不稳定的原生 `select` 改成轻量自定义下拉；只替换大厅单机模式里的这一个控件，不改大厅整体布局和单机 / 好友联机逻辑。
 - 隐藏的原生 `#player-count` 仍保留为真实数据源，所以 `startGame(Number(ui.playerCount.value), ...)` 等原有逻辑无需改动。
