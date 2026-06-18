@@ -907,6 +907,7 @@ select {
 .seat-result {
   position: absolute;
   width: min(280px, calc(100% - 32px));
+  max-height: 138px;
   padding: 14px 16px;
   border-radius: 20px;
   border: 1px solid rgba(126, 98, 61, 0.2);
@@ -914,6 +915,7 @@ select {
     linear-gradient(180deg, rgba(255, 251, 243, 0.98), rgba(241, 233, 219, 0.96));
   box-shadow: 0 18px 34px rgba(18, 22, 20, 0.2);
   backdrop-filter: blur(10px);
+  overflow: hidden;
 }
 
 .seat-result-top-left {
@@ -1005,12 +1007,13 @@ select {
 }
 
 .seat-result__meta {
-  margin: 10px 0 12px;
+  margin: 8px 0 0;
   color: var(--muted);
   font-size: 13px;
 }
 
 .seat-result__cards {
+  display: none;
   gap: 6px;
 }
 
@@ -1537,13 +1540,18 @@ select {
 
 .hand-grid.settlement-grid {
   display: block;
-  overflow: visible;
+  overflow: auto;
   min-height: 0;
   padding: 0;
 }
 
 .human-panel.is-settlement {
+  position: relative;
+  z-index: 18;
   padding: 12px 14px;
+  background:
+    radial-gradient(circle at top right, rgba(213, 168, 95, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(255, 251, 245, 0.98), rgba(244, 236, 223, 0.98));
 }
 
 .human-panel.is-settlement .panel-head,
@@ -1603,11 +1611,13 @@ select {
 
 .round-settlement-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 10px;
+  align-items: stretch;
 }
 
 .settlement-card {
+  min-width: 0;
   min-height: 118px;
   padding: 10px 12px;
   border-radius: var(--radius-md);
@@ -1616,6 +1626,7 @@ select {
   display: grid;
   gap: 4px;
   align-content: start;
+  overflow: hidden;
 }
 
 .settlement-card.is-winner {
@@ -7900,26 +7911,46 @@ select {
   }
 
   body.is-game-view .human-panel.is-settlement {
-    height: calc(124px + env(safe-area-inset-bottom, 0px));
+    height: var(--game-bottom-band-height);
     padding: 6px 8px calc(7px + env(safe-area-inset-bottom, 0px));
+    grid-template-rows: minmax(0, 1fr);
   }
 
   body.is-game-view .human-panel.is-settlement .hand-grid {
+    grid-row: 1 / -1;
     display: block;
+    height: 100%;
+    min-height: 0;
     padding: 0;
     overflow-x: hidden;
     overflow-y: auto;
   }
 
+  body.is-game-view .round-settlement-summary {
+    height: 100%;
+    min-height: 0;
+  }
+
   body.is-game-view .round-settlement-grid {
-    grid-template-columns: repeat(4, minmax(128px, 1fr));
+    height: 100%;
+    min-height: 0;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
     gap: 6px;
+    align-items: stretch;
   }
 
   body.is-game-view .settlement-card {
-    min-height: 94px;
+    min-height: 0;
+    height: 100%;
     padding: 7px 8px;
     gap: 2px;
+    overflow: hidden;
+  }
+
+  body.is-game-view .settlement-card__head span,
+  body.is-game-view .settlement-card__head strong {
+    padding: 2px 6px;
+    font-size: 9px;
   }
 
   body.is-game-view .settlement-card h3 {
@@ -7933,6 +7964,37 @@ select {
   body.is-game-view .settlement-card__role,
   body.is-game-view .settlement-card__detail,
   body.is-game-view .settlement-card__meta {
+    font-size: 10px;
+    line-height: 1.18;
+  }
+
+  body.is-game-view .settlement-card__detail,
+  body.is-game-view .settlement-card__meta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  body.is-game-view .settlement-card__meta {
+    display: none;
+  }
+
+  body.is-game-view .settlement-card__actions {
+    gap: 4px;
+    margin-top: 2px;
+  }
+
+  body.is-game-view .settlement-claim-btn {
+    min-height: 28px;
+    padding: 3px 4px;
+    border-radius: 9px;
+  }
+
+  body.is-game-view .settlement-claim-btn span {
+    font-size: 8px;
+  }
+
+  body.is-game-view .settlement-claim-btn strong {
     font-size: 10px;
   }
 

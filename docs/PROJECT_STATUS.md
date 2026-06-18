@@ -1,6 +1,12 @@
 # Project Status
 
 Latest status update (2026-06-18):
+- 对局结束结算布局已修正：底部结算区恢复沿用原手牌区域固定高度，4 名玩家结算卡同一行自适应排列，不再因为赢家领取按钮或详细红牌文本互相叠住。
+- 桌面上的玩家结果卡已压缩为紧凑比分卡，详细红牌列表留在底部结算区，避免某个玩家红牌很多时把桌面中央撑高。
+- 当前缓存版本：`styles.css?v=20260618-settlement-layout-fix`，`app.js?v=20260618-settlement-layout-fix`。
+- 本轮已完成校验：`node --check app.js`；Chrome headless 已导出 `artifacts/layout-check/settlement-layout-preview-1280x720-after.png`，确认底部结算卡无重叠。
+
+Latest status update (2026-06-18, earlier):
 - 大厅单机模式的自定义 `玩家人数` 下拉已继续统一样式：展开后触发器与菜单无缝衔接，菜单配色、圆角、阴影和字号都收回到与触发器更接近的一套 UI。
 - 这轮不是功能改动，只是把下拉从“能用但像另一张卡片”进一步修到“更像同一个控件”。
 - 当前缓存版本：`styles.css?v=20260618-lobby-select-unified`，`app.js?v=20260618-lobby-select-unified`。

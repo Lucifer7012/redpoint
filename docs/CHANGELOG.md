@@ -24,6 +24,20 @@ Verification:
 
 ## 2026-06-18
 
+### 结算页底部区域和玩家结果卡防重叠
+
+- 修复对局结束后结算态把中间手牌区域撑变形的问题：底部结算区继续沿用原手牌区固定高度，结算卡在同一行内自适应排列，超出时在区域内滚动，不再互相叠住。
+- 桌面上的玩家结果卡改成紧凑展示，只保留名次、玩家、分数和红牌/赢牌数量；详细红牌列表和欢乐豆输赢保留在底部“本局结算”里，避免某个玩家红牌很多时把桌面中央撑成长条。
+- 结算态的人类面板补上更明确的层级和不透明浅色背景，避免在桌面绿色背景上发灰、看不清。
+- 新增结算布局预览页 `artifacts/layout-check/settlement-layout-preview.html`，并导出预览截图 `artifacts/layout-check/settlement-layout-preview-1280x720-after.png`。
+- 同步更新缓存版本到 `20260618-settlement-layout-fix`。
+
+Verification:
+
+- `node --check app.js` passed.
+- 本地静态服务 `http://127.0.0.1:4173/` 已启动并加载预览页。
+- Chrome headless 导出 `artifacts/layout-check/settlement-layout-preview-1280x720-after.png`，确认底部 4 张结算卡同一行排列、无重叠，桌面玩家结果卡不再被红牌明细撑高。
+
 ### 大厅人数下拉样式统一
 
 - 根据最新截图继续收紧大厅单机模式里的自定义 `玩家人数` 下拉，不再只修“别被挡住”，而是进一步修正“看起来不像同一个控件”的问题。

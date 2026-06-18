@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settlement layout preview</title>
+  <link rel="stylesheet" href="../../styles.css?v=20260618-settlement-layout-fix">
+  <style>
+    body {
+      min-height: 100vh;
+    }
+
+    .game-layout.hidden {
+      display: grid !important;
+    }
+  </style>
+</head>
+<body class="is-game-view">
+  <main class="app-shell">
+    <section class="game-layout hidden" id="game-layout">
+      <div class="play-stage" id="play-stage">
+        <div class="table-topbar">
+          <div>
+            <p class="eyebrow">Table View</p>
+            <h2 class="table-title">红点牌桌</h2>
+          </div>
+          <div class="topbar-actions">
+            <button class="ghost-btn" type="button">回到大厅</button>
+            <button class="ghost-btn" type="button">再来一局</button>
+            <button class="ghost-btn" type="button">规则说明</button>
+          </div>
+        </div>
+
+        <section class="table-board">
+          <div class="seat-slot seat-top-left">
+            <article class="seat-card"><h3>玩家 3</h3><p class="seat-meta">剩余 0 张 · 42 分</p></article>
+          </div>
+          <div class="seat-slot seat-top">
+            <article class="seat-card"><h3>玩家 2（电脑）</h3><p class="seat-meta">剩余 0 张 · 67 分</p></article>
+          </div>
+          <div class="seat-slot seat-top-right">
+            <article class="seat-card"><h3>玩家 4</h3><p class="seat-meta">剩余 0 张 · 35 分</p></article>
+          </div>
+
+          <div class="seat-result-layer">
+            <article class="seat-result seat-result-top top">
+              <div class="seat-result__header"><span class="seat-result__rank">第 1 名</span><span class="seat-result__winner">最高分</span></div>
+              <h3>玩家 1</h3>
+              <p class="seat-result__score">121 分</p>
+              <div class="seat-result__meta"><span>红牌 14 张</span><span>总赢牌 28 张</span></div>
+              <div class="seat-result__cards">
+                <span class="seat-result__card">♥8</span><span class="seat-result__card">♥5</span><span class="seat-result__card">♦10</span><span class="seat-result__card">♥4</span>
+                <span class="seat-result__card">♦6</span><span class="seat-result__card">♦4</span><span class="seat-result__card">♥3</span><span class="seat-result__card">♥2</span>
+              </div>
+            </article>
+            <article class="seat-result seat-result-left">
+              <div class="seat-result__header"><span class="seat-result__rank">第 2 名</span></div>
+              <h3>玩家 2</h3>
+              <p class="seat-result__score">67 分</p>
+              <div class="seat-result__meta"><span>红牌 9 张</span><span>总赢牌 21 张</span></div>
+            </article>
+            <article class="seat-result seat-result-right">
+              <div class="seat-result__header"><span class="seat-result__rank">第 3 名</span></div>
+              <h3>玩家 3</h3>
+              <p class="seat-result__score">42 分</p>
+              <div class="seat-result__meta"><span>红牌 6 张</span><span>总赢牌 17 张</span></div>
+            </article>
+          </div>
+
+          <div class="table-public-area">
+            <div class="table-public-head">
+              <h3>公共牌区</h3>
+              <p>台面上的公共明牌</p>
+            </div>
+            <div class="table-public-slot">
+              <div class="table-cards"></div>
+            </div>
+          </div>
+
+          <div class="center-stage">
+            <div class="draw-zone">
+              <div class="draw-pile empty">
+                <div class="draw-pile__stack"><span class="draw-pile__card"></span><span class="draw-pile__card"></span><span class="draw-pile__card"></span></div>
+                <div class="draw-pile__meta"><span>牌堆</span><strong>0 张</strong></div>
+              </div>
+            </div>
+            <div class="action-stage">
+              <div class="action-stage__meta"><p class="status-label">最近动作</p><h3>结算完成</h3><p>玩家 1 获胜。</p></div>
+              <div class="action-stage__cards"></div>
+            </div>
+            <div class="selection-metrics">
+              <div><span>当前出牌</span><strong>未选择</strong></div>
+              <div><span>已选台面牌</span><strong>0 张</strong></div>
+              <div><span>判定目标</span><strong>凑十</strong></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="human-panel is-settlement">
+          <div class="card-grid hand-grid settlement-grid">
+            <section class="round-settlement-summary">
+              <div class="round-settlement-grid">
+                <article class="settlement-card settlement-card--win is-winner">
+                  <div class="settlement-card__head"><span>第 1 名</span><strong>最高分</strong></div>
+                  <h3>玩家 1</h3>
+                  <p class="settlement-card__role">你 · 房主 · 赢家</p>
+                  <p class="settlement-card__score">121 分</p>
+                  <p class="settlement-card__beans">+300 欢乐豆</p>
+                  <p class="settlement-card__detail">赢得奖池，等待领取奖励</p>
+                  <p class="settlement-card__meta">红牌 14 张 · ♥8 ♥5 ♦10 ♥4 ♦6 ♦4</p>
+                  <div class="settlement-card__actions">
+                    <button class="settlement-claim-btn settlement-claim-btn--primary" type="button"><span>直接领取</span><strong>300</strong></button>
+                    <button class="settlement-claim-btn" type="button"><span>看广告翻倍</span><strong>600</strong></button>
+                  </div>
+                </article>
+                <article class="settlement-card settlement-card--loss">
+                  <div class="settlement-card__head"><span>第 2 名</span></div>
+                  <h3>玩家 2</h3>
+                  <p class="settlement-card__role">电脑</p>
+                  <p class="settlement-card__score">67 分</p>
+                  <p class="settlement-card__beans">-100 欢乐豆</p>
+                  <p class="settlement-card__detail">本局门票已计入奖池</p>
+                  <p class="settlement-card__meta">红牌 9 张</p>
+                </article>
+                <article class="settlement-card settlement-card--loss">
+                  <div class="settlement-card__head"><span>第 3 名</span></div>
+                  <h3>玩家 3</h3>
+                  <p class="settlement-card__role">电脑</p>
+                  <p class="settlement-card__score">42 分</p>
+                  <p class="settlement-card__beans">-100 欢乐豆</p>
+                  <p class="settlement-card__detail">本局门票已计入奖池</p>
+                  <p class="settlement-card__meta">红牌 6 张</p>
+                </article>
+                <article class="settlement-card settlement-card--loss">
+                  <div class="settlement-card__head"><span>第 4 名</span></div>
+                  <h3>玩家 4</h3>
+                  <p class="settlement-card__role">电脑</p>
+                  <p class="settlement-card__score">35 分</p>
+                  <p class="settlement-card__beans">-100 欢乐豆</p>
+                  <p class="settlement-card__detail">本局门票已计入奖池</p>
+                  <p class="settlement-card__meta">红牌 5 张</p>
+                </article>
+              </div>
+            </section>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+  <script>
+    function updatePreviewScale() {
+      const gameLayout = document.getElementById("game-layout");
+      const playStage = document.getElementById("play-stage");
+      if (!gameLayout || !playStage) {
+        return;
+      }
+
+      playStage.style.zoom = "1";
+      const layoutWidth = Math.max(playStage.scrollWidth, playStage.offsetWidth, 1);
+      const layoutHeight = Math.max(playStage.scrollHeight, playStage.offsetHeight, 1);
+      const availableWidth = Math.max(window.innerWidth - 32, 1);
+      const topOffset = Math.max(gameLayout.offsetTop || 0, gameLayout.getBoundingClientRect().top, 0);
+      const availableHeight = Math.max(window.innerHeight - topOffset - 12, 1);
+      const scale = Math.max(0.56, Math.min(1, availableWidth / layoutWidth, availableHeight / layoutHeight));
+      playStage.style.zoom = scale >= 0.995 ? "" : scale.toFixed(3);
+    }
+
+    window.addEventListener("load", updatePreviewScale);
+    window.addEventListener("resize", updatePreviewScale);
+  </script>
+</body>
+</html>
