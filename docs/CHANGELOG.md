@@ -30,6 +30,7 @@ Verification:
 - 桌面上的玩家结果卡改成紧凑展示，只保留名次、玩家、分数和红牌/赢牌数量；详细红牌列表和欢乐豆输赢保留在底部“本局结算”里，避免某个玩家红牌很多时把桌面中央撑成长条。
 - 结算态的人类面板补上更明确的层级和不透明浅色背景，避免在桌面绿色背景上发灰、看不清。
 - 新增结算布局预览页 `artifacts/layout-check/settlement-layout-preview.html`，并导出预览截图 `artifacts/layout-check/settlement-layout-preview-1280x720-after.png`。
+- 同步修正 `artifacts/layout-check/public-area-preview.html` 的 CSS 缓存参数，避免预览辅助页继续指向旧版本样式。
 - 同步更新缓存版本到 `20260618-settlement-layout-fix`。
 
 Verification:
