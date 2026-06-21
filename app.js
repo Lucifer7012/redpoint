@@ -5586,17 +5586,33 @@ function renderSetupHistory() {
   ui.historyMeta.textContent = `上一局结束于 ${state.lastFinishedAt}。`;
   ui.historyGrid.innerHTML = "";
   state.lastFinishedResult.forEach((item, index) => {
-    const redCardText = item.redCards.length
-      ? item.redCards.map((card) => `${cardLabel(card)}(${card.scoreValue})`).join("、")
-      : "本局没有赢到红牌";
+    const scoreCardsHtml = item.redCards.length
+      ? item.redCards.map((card) => `
+        <span class="result-score-chip">
+          <span>${escapeHtml(cardSymbol(card))}${escapeHtml(card.rank)}</span>
+          <strong>${escapeHtml(String(card.scoreValue))}</strong>
+        </span>
+      `).join("")
+      : '<span class="result-score-empty">本局未赢到红牌</span>';
     const article = document.createElement("article");
     article.className = `result-card${index === 0 ? " top" : ""}`;
     article.innerHTML = `
-      <p class="result-rank">第 ${index + 1} 名</p>
-      <h3>${item.name}</h3>
-      <p class="result-score">${item.score} 分</p>
-      <p class="result-meta">已赢 ${item.captured} 张牌，红牌 ${item.redCards.length} 张</p>
-      <p class="result-red-cards">${redCardText}</p>
+      <div class="result-card__head">
+        <p class="result-rank">第 ${index + 1} 名</p>
+        ${index === 0 ? '<span class="result-rank-mark">本局最高</span>' : ""}
+      </div>
+      <div class="result-card__title-row">
+        <h3>${item.name}</h3>
+        <p class="result-score">${item.score} <span>分</span></p>
+      </div>
+      <div class="result-stats">
+        <span class="result-stat">已赢 ${item.captured} 张牌</span>
+        <span class="result-stat">红牌 ${item.redCards.length} 张</span>
+      </div>
+      <div class="result-score-row">
+        <span class="result-score-label">得分牌</span>
+        <div class="result-score-chips">${scoreCardsHtml}</div>
+      </div>
     `;
     ui.historyGrid.appendChild(article);
   });
