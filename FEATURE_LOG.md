@@ -14,6 +14,7 @@
   - `returnToSetup()` 回大厅时会主动把这个开关关掉，`handleBackToSetup()` 也不再自动滚动到历史结算区。
   - `handleViewLastResult()` 改成显式展开入口：只有用户主动点击 `上一局结算` 按钮时，才展开并滚动到那块内容。
   - 上一局结果数据本身仍保留在 `lastFinishedResult` / `lastFinishedAt`，方便用户需要时手动查看。
+  - 后续联测又确认一处发布层问题：上一轮忘了同步更新 `index.html` 里的 `app.js` 缓存参数，导致线上可能继续加载旧脚本。这轮已把脚本版本抬到 `20260621-lobby-history-collapse`。
 - 涉及文件：
   - `app.js`
   - `docs/CHANGELOG.md`

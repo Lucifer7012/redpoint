@@ -16,6 +16,7 @@
 - 根据用户最新截图，打完一把后点“回到大厅”，大厅里不应自动出现整块“上一局结算”面板；保留一个可手动点击的 `上一局结算` 按钮即可。
 - 这轮把大厅结算历史改成显式展开：`returnToSetup()` 回大厅时会主动收起历史面板，`handleBackToSetup()` 也不再自动滚动到那一块。
 - 上一局结果数据没有删，仍保留在 `state.lastFinishedResult`；只有当用户主动点 `上一局结算` 按钮时，才把 `history-panel` 展开并滚动过去。
+- 补充修正：上一轮虽然改了 `app.js` 逻辑，但没有同步更换 `index.html` 里的脚本缓存参数，线上浏览器可能继续吃到旧 JS。这轮已把脚本版本抬到 `20260621-lobby-history-collapse`。
 
 Verification:
 
