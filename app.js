@@ -251,6 +251,7 @@ const state = {
   roundPlan: null,
   lastFinishedResult: null,
   lastFinishedAt: "",
+  setupHistoryOpen: false,
   playerStats: {},
   currentPlayerId: "",
   currentBeans: 0,
@@ -3859,11 +3860,6 @@ function clearAllRoundTimers() {
 
 function handleBackToSetup() {
   returnToSetup();
-  if (state.lastFinishedResult) {
-    setTimeout(() => {
-      ui.historyPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 0);
-  }
 }
 
 async function handleReturnToActiveRoom() {
@@ -3922,6 +3918,8 @@ function handleViewLastResult() {
   if (!state.lastFinishedResult) {
     return;
   }
+  state.setupHistoryOpen = true;
+  render();
   ui.historyPanel.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -3995,6 +3993,7 @@ function returnToSetup() {
     clearSoloResumeState();
   }
   state.phase = "setup";
+  state.setupHistoryOpen = false;
   if (!preserveSoloRound) {
     state.pendingDrawCard = null;
   }
@@ -5579,6 +5578,7 @@ function renderSetupHistory() {
   state.renderCache.history = signature;
 
   if (!state.lastFinishedResult) {
+    state.setupHistoryOpen = false;
     ui.historyGrid.innerHTML = "";
     return;
   }
@@ -5767,7 +5767,10 @@ function render() {
     updateGameLayoutScale();
     ui.heroSection.classList.toggle("hidden", Boolean(state.authUser) && !authEntryView);
     ui.setupPanel.classList.remove("hidden");
-    ui.historyPanel.classList.toggle("hidden", authEntryView || needsInitialPlayerIdSetup() || !state.lastFinishedResult);
+    ui.historyPanel.classList.toggle(
+      "hidden",
+      authEntryView || needsInitialPlayerIdSetup() || !state.lastFinishedResult || !state.setupHistoryOpen,
+    );
     ui.gameLayout.classList.add("hidden");
     return;
   }
