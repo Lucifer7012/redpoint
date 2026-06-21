@@ -13,6 +13,7 @@ const SUITS = [
 
 const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 const TEN_RANKS = new Set(["10", "J", "Q", "K"]);
+const TRIPLE_CAPTURE_RANKS = new Set(["5", "10", "J", "Q", "K"]);
 const VALUE_LABELS = {
   1: "A",
   2: "2",
@@ -5249,7 +5250,7 @@ function canCapturePair(sourceCard, targetCard) {
 }
 
 function canUseTripleCapture(sourceCard) {
-  return Boolean(sourceCard) && TEN_RANKS.has(sourceCard.rank);
+  return Boolean(sourceCard) && TRIPLE_CAPTURE_RANKS.has(sourceCard.rank);
 }
 
 function evaluateTableSelection(sourceCard, tableCards) {
@@ -5269,6 +5270,8 @@ function evaluateTableSelection(sourceCard, tableCards) {
       message: "",
       helper: TEN_RANKS.has(sourceCard.rank)
         ? `${sourceCard.rank} 只能钓 ${sourceCard.rank}`
+        : sourceCard.rank === "5"
+          ? "5 需要找 5，也可一次钓走 3 张 5"
         : `${sourceCard.rank} 需要找 ${VALUE_LABELS[10 - sourceCard.playValue]}`,
       mode: "empty",
       ready: false,
@@ -5320,7 +5323,7 @@ function evaluateTableSelection(sourceCard, tableCards) {
   if (!canUseTripleCapture(sourceCard)) {
     return {
       allowed: false,
-      message: "只有 10 / J / Q / K 才能触发“三张相同”，普通数字牌只能按凑十处理。",
+      message: "只有 5 / 10 / J / Q / K 才能触发“三张相同”，其他数字牌只能按凑十处理。",
       helper: "",
       mode: "invalid",
       ready: false,
@@ -5788,7 +5791,7 @@ function render() {
     ? `${cardLabel(selectedSourceCard)}${state.pendingDrawCard ? "（摸牌）" : ""}`
     : "未选择";
   ui.selectedTableTotal.textContent = `${selectedTableCards.length} 张`;
-  ui.ruleTargetText.textContent = selectedSourceCard ? getRuleTargetText(selectedSourceCard, selectedTableCards, evaluation) : "凑十 / 三张相同(10/J/Q/K)";
+  ui.ruleTargetText.textContent = selectedSourceCard ? getRuleTargetText(selectedSourceCard, selectedTableCards, evaluation) : "凑十 / 三张相同(5/10/J/Q/K)";
   ui.selectionHint.textContent = getSelectionHint();
   ui.confirmAction.textContent = state.pendingDrawCard ? "尝试补枪" : "尝试钓牌";
   ui.discardAction.textContent = state.pendingDrawCard ? "摸牌落台" : "弃到台面";
@@ -6337,13 +6340,17 @@ function applyButtonState(button, stateConfig) {
 function getRuleTargetText(sourceCard, selectedTableCards, evaluation) {
   if (selectedTableCards.length === 3) {
     if (!canUseTripleCapture(sourceCard)) {
-      return "仅 10/J/Q/K 可三张相同";
+      return "仅 5/10/J/Q/K 可三张相同";
     }
     return evaluation.allowed ? "三张相同可结算" : "三张相同未满足";
   }
 
   if (TEN_RANKS.has(sourceCard.rank)) {
     return `${sourceCard.rank} 只能钓 ${sourceCard.rank} / 三张相同`;
+  }
+
+  if (sourceCard.rank === "5") {
+    return "5 需要找 5 / 三张相同";
   }
 
   return `${sourceCard.rank} 需要找 ${VALUE_LABELS[10 - sourceCard.playValue]}`;
