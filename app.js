@@ -6616,9 +6616,11 @@ function renderRoundSettlementSummary(result = state.lastFinishedResult || getRa
           <span>第 ${item.rank} 名</span>
           ${item.isWinner ? "<strong>最高分</strong>" : ""}
         </div>
-        <h3>${name}</h3>
+        <div class="settlement-card__title-row">
+          <h3>${name}</h3>
+          <p class="settlement-card__score">${item.score} 分</p>
+        </div>
         <p class="settlement-card__role">${roles}</p>
-        <p class="settlement-card__score">${item.score} 分</p>
         <p class="settlement-card__beans">${formatBeansDelta(item.delta)}</p>
         <p class="settlement-card__detail">${escapeHtml(item.detail)}</p>
         <p class="settlement-card__meta">红牌 ${item.redCards.length} 张 · ${escapeHtml(redCardText)}</p>

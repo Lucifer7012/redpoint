@@ -1664,8 +1664,17 @@ select {
   margin: 0;
 }
 
+.settlement-card__title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
 .settlement-card h3 {
   font-size: 18px;
+  min-width: 0;
 }
 
 .settlement-card__role,
@@ -1723,6 +1732,8 @@ select {
 .settlement-card__score {
   font-size: 16px;
   font-weight: 800;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .settlement-card__beans {
@@ -8001,6 +8012,15 @@ select {
 
   body.is-game-view .settlement-card h3 {
     font-size: 14px;
+  }
+
+  body.is-game-view .settlement-card__title-row {
+    gap: 6px;
+  }
+
+  body.is-game-view .settlement-card__score {
+    font-size: 12px;
+    line-height: 1;
   }
 
   body.is-game-view .settlement-card__beans {
