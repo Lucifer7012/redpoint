@@ -6602,6 +6602,7 @@ function renderRoundSettlementSummary(result = state.lastFinishedResult || getRa
   const cardsHtml = rows.map((item) => {
     const name = escapeHtml(item.name);
     const roles = item.roleLabels.map(escapeHtml).join(" · ");
+    const showBeansDetail = Boolean(round);
     const redCardText = item.redCards.length
       ? item.redCards.map((card) => `${cardSymbol(card)}${card.rank}`).join(" ")
       : "无红牌";
@@ -6638,8 +6639,8 @@ function renderRoundSettlementSummary(result = state.lastFinishedResult || getRa
           <p class="settlement-card__score">${item.score} 分</p>
         </div>
         <p class="settlement-card__role">${roles}</p>
-        <p class="settlement-card__beans">${formatBeansDelta(item.delta)}</p>
-        <p class="settlement-card__detail">${escapeHtml(item.detail)}</p>
+        ${showBeansDetail ? `<p class="settlement-card__beans">${formatBeansDelta(item.delta)}</p>` : ""}
+        ${showBeansDetail ? `<p class="settlement-card__detail">${escapeHtml(item.detail)}</p>` : ""}
         <p class="settlement-card__meta">红牌 ${item.redCards.length} 张 · ${escapeHtml(redCardText)}</p>
         <div class="settlement-card__score-row">
           <span class="settlement-card__score-label">得分牌</span>
