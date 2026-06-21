@@ -6588,6 +6588,14 @@ function renderRoundSettlementSummary(result = state.lastFinishedResult || getRa
     const redCardText = item.redCards.length
       ? item.redCards.map((card) => `${cardSymbol(card)}${card.rank}`).join(" ")
       : "无红牌";
+    const scoringCardsHtml = item.redCards.length
+      ? item.redCards.map((card) => `
+        <span class="settlement-card__score-card">
+          <span>${escapeHtml(cardSymbol(card))}${escapeHtml(card.rank)}</span>
+          <strong>${escapeHtml(String(card.scoreValue))} 分</strong>
+        </span>
+      `).join("")
+      : '<span class="settlement-card__score-empty">本局未赢到红牌</span>';
     const claimActions = canClaimAward && item.isWinner
       ? `
         <div class="settlement-card__actions">
@@ -6614,6 +6622,10 @@ function renderRoundSettlementSummary(result = state.lastFinishedResult || getRa
         <p class="settlement-card__beans">${formatBeansDelta(item.delta)}</p>
         <p class="settlement-card__detail">${escapeHtml(item.detail)}</p>
         <p class="settlement-card__meta">红牌 ${item.redCards.length} 张 · ${escapeHtml(redCardText)}</p>
+        <div class="settlement-card__score-row">
+          <span class="settlement-card__score-label">得分牌</span>
+          <div class="settlement-card__score-cards">${scoringCardsHtml}</div>
+        </div>
         ${claimActions}
       </article>
     `;
@@ -7119,6 +7131,10 @@ function renderSeatResults(seats) {
 
   ui.seatResultLayer.innerHTML = "";
   if (state.phase !== "game-over") {
+    return;
+  }
+
+  if (shouldUseCompactLandscapeGameLayout()) {
     return;
   }
 
