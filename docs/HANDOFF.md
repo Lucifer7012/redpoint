@@ -2,6 +2,23 @@
 
 本文件用于在不同电脑、不同 Codex 会话之间交接 `redpoint` 项目进度。这里不记录 API Key、密码、Token、Cookie 或任何真实密钥。
 
+## 2026-06-21 Mobile Draw Pile + Settlement Follow-up
+
+- 最新用户反馈来自真实 GitHub Pages `915 x 412` Android 横屏截图，不是预览页想象问题：左侧提示条会压住下面牌堆框，牌堆内容看起来也没真正贴到底；另外结算态第二张卡里的 `得分牌` 一行会被底边裁掉。
+- 这轮实际分成 4 次线上提交，顺序如下：
+  - `be3479a Refine compact settlement display`
+  - `69d9efc Tighten mobile draw pile bottom alignment`
+  - `d2bf719 Stabilize mobile draw pile panel spacing`
+  - `ea52b05 Compact settlement score chips on mobile`
+- 真实结论是：前两次牌堆贴底微调还不够，真正把左侧重叠问题兜住的是 `d2bf719`。它把左侧提示条改成固定紧凑高度，并把牌堆区改成稳定底部对齐，所以后续如果再遇到左侧重叠，不要只回退/微调 `bottom` 或 `padding`，优先保住这套固定高度思路。
+- 结算区这边，`be3479a` 已经把移动横屏上方重复悬浮结算去掉，只保留下方 `本局结算`，并把结算卡里的得分改成 `得分牌` 标签。`ea52b05` 进一步只缩小这些标签本身，不改结算卡外框和底部三栏整体布局。
+- 这几轮没有改 `app.js` 缓存版本，也没有改整体底部三栏结构；主要都是 `styles.css` 的移动横屏微调。
+- 本地已做的关键校验：
+  - `node --check app.js`
+  - 移动横屏模拟下确认左侧提示条与牌堆框不再重叠
+  - 移动横屏模拟下确认结算卡第二列的 `得分牌` 一行可完整显示
+- 注意：这几轮为了快速核对，生成过一些本地临时截图放在 `artifacts/layout-check/`，但没有一并提交；公司电脑同步代码后，不会自动拿到这些临时验图，只会拿到代码和文档记录。
+
 ## 2026-06-15 Lobby Custom Select Follow-up
 
 - 最新问题定位：上次只把大厅 `玩家人数` 的原生 `select` 做了尺寸收紧，但这轮继续跟进时确认，Windows/Chrome 的系统弹层仍然会出现展开项过大、右侧空白灰块、画风不统一的问题，单靠 CSS 很难稳定修干净。
