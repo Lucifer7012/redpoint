@@ -7488,16 +7488,17 @@ select {
     align-self: start;
     min-width: 0;
     margin: 0;
-    min-height: 0;
-    max-height: none;
-    padding: 6px 10px 4px;
+    min-height: 36px;
+    height: 36px;
+    max-height: 36px;
+    padding: 5px 10px 3px;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.08);
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 800;
-    line-height: 1.2;
+    line-height: 1.12;
     color: #eef9f3;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
     display: -webkit-box;
@@ -7608,6 +7609,7 @@ select {
     min-height: 0;
     display: flex;
     align-items: stretch;
+    padding-top: 2px;
     padding-bottom: 0;
     pointer-events: auto;
   }
@@ -7616,11 +7618,13 @@ select {
     min-height: 0;
     width: 100%;
     height: 100%;
-    padding: 12px 10px 4px;
-    display: grid;
+    padding: 8px 10px 0;
+    display: flex;
+    flex-direction: column;
     justify-items: center;
-    align-content: end;
-    gap: 8px;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     background:
@@ -7630,8 +7634,8 @@ select {
 
   body.is-game-view .draw-pile__stack {
     display: block;
-    width: 48px;
-    height: 64px;
+    width: 44px;
+    height: 58px;
   }
 
   body.is-game-view .draw-pile__card {
@@ -7641,18 +7645,18 @@ select {
   body.is-game-view .draw-pile__meta {
     display: grid;
     justify-content: center;
-    gap: 2px;
+    gap: 1px;
     text-align: center;
   }
 
   body.is-game-view .draw-pile__meta span,
   body.is-game-view .draw-pile__meta strong {
-    font-size: 10px;
+    font-size: 9px;
     line-height: 1.1;
   }
 
   body.is-game-view .draw-pile__meta strong {
-    font-size: 18px;
+    font-size: 16px;
   }
 
   body.is-game-view .selection-metrics {
