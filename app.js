@@ -4755,7 +4755,7 @@ function chooseBestCaptureMove(sourceCard) {
   const candidates = [];
   const sameRankCards = state.tableCards.filter((card) => card.rank === sourceCard.rank);
 
-  if (sameRankCards.length >= 3) {
+  if (canUseTripleCapture(sourceCard) && sameRankCards.length >= 3) {
     const targets = sameRankCards.slice(0, 3);
     candidates.push({
       targets,
@@ -5248,6 +5248,10 @@ function canCapturePair(sourceCard, targetCard) {
   return sourceCard.playValue + targetCard.playValue === 10;
 }
 
+function canUseTripleCapture(sourceCard) {
+  return Boolean(sourceCard) && TEN_RANKS.has(sourceCard.rank);
+}
+
 function evaluateTableSelection(sourceCard, tableCards) {
   if (!sourceCard) {
     return {
@@ -5293,7 +5297,7 @@ function evaluateTableSelection(sourceCard, tableCards) {
       };
     }
 
-    if (target.rank === sourceCard.rank) {
+    if (canUseTripleCapture(sourceCard) && target.rank === sourceCard.rank) {
       return {
         allowed: true,
         message: "",
@@ -5313,6 +5317,16 @@ function evaluateTableSelection(sourceCard, tableCards) {
   }
 
   const allSameRank = tableCards.every((card) => card.rank === sourceCard.rank);
+  if (!canUseTripleCapture(sourceCard)) {
+    return {
+      allowed: false,
+      message: "只有 10 / J / Q / K 才能触发“三张相同”，普通数字牌只能按凑十处理。",
+      helper: "",
+      mode: "invalid",
+      ready: false,
+    };
+  }
+
   if (!allSameRank) {
     return {
       allowed: false,
@@ -5528,7 +5542,7 @@ function getPlayableTargetIds(sourceCard) {
     if (canCapturePair(sourceCard, card)) {
       ids.add(card.id);
     }
-    if (sameRankCount >= 3 && card.rank === sourceCard.rank) {
+    if (canUseTripleCapture(sourceCard) && sameRankCount >= 3 && card.rank === sourceCard.rank) {
       ids.add(card.id);
     }
   });
@@ -5774,7 +5788,7 @@ function render() {
     ? `${cardLabel(selectedSourceCard)}${state.pendingDrawCard ? "（摸牌）" : ""}`
     : "未选择";
   ui.selectedTableTotal.textContent = `${selectedTableCards.length} 张`;
-  ui.ruleTargetText.textContent = selectedSourceCard ? getRuleTargetText(selectedSourceCard, selectedTableCards, evaluation) : "凑十 / 三张相同";
+  ui.ruleTargetText.textContent = selectedSourceCard ? getRuleTargetText(selectedSourceCard, selectedTableCards, evaluation) : "凑十 / 三张相同(10/J/Q/K)";
   ui.selectionHint.textContent = getSelectionHint();
   ui.confirmAction.textContent = state.pendingDrawCard ? "尝试补枪" : "尝试钓牌";
   ui.discardAction.textContent = state.pendingDrawCard ? "摸牌落台" : "弃到台面";
@@ -6322,11 +6336,14 @@ function applyButtonState(button, stateConfig) {
 
 function getRuleTargetText(sourceCard, selectedTableCards, evaluation) {
   if (selectedTableCards.length === 3) {
+    if (!canUseTripleCapture(sourceCard)) {
+      return "仅 10/J/Q/K 可三张相同";
+    }
     return evaluation.allowed ? "三张相同可结算" : "三张相同未满足";
   }
 
   if (TEN_RANKS.has(sourceCard.rank)) {
-    return `${sourceCard.rank} 只能钓 ${sourceCard.rank}`;
+    return `${sourceCard.rank} 只能钓 ${sourceCard.rank} / 三张相同`;
   }
 
   return `${sourceCard.rank} 需要找 ${VALUE_LABELS[10 - sourceCard.playValue]}`;
