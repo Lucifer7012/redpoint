@@ -7572,11 +7572,11 @@ select {
     min-height: 0;
     width: 100%;
     height: 100%;
-    padding: 10px 10px 12px;
+    padding: 14px 10px 10px;
     display: grid;
     justify-items: center;
-    align-content: center;
-    gap: 6px;
+    align-content: end;
+    gap: 8px;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     background:
@@ -7588,7 +7588,6 @@ select {
     display: block;
     width: 48px;
     height: 64px;
-    transform: translateY(8px);
   }
 
   body.is-game-view .draw-pile__card {
@@ -7600,7 +7599,6 @@ select {
     justify-content: center;
     gap: 2px;
     text-align: center;
-    transform: translateY(8px);
   }
 
   body.is-game-view .draw-pile__meta span,
