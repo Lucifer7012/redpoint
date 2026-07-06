@@ -1,6 +1,9 @@
 # Project Status
 
 Latest status update (2026-07-06):
+- 横屏对局右下三张状态小框已进一步改成真正的 90 度直角长方形，不再保留圆角。
+- 当前缓存版本已更新为：`styles.css?v=20260706-metrics-hard-rect`，`app.js?v=20260706-metrics-hard-rect`。
+- 本轮已完成校验：`node --check app.js`。
 - 大厅 `玩家人数` 自定义下拉的 `aria-hidden` 焦点告警已修正；关闭菜单时会先把焦点交还给触发按钮。
 - 横屏对局右下三张状态小框已从偏胶囊样式改成更规整的矮长方形，继续保持 `最近动作` 区块尺寸不变。
 - 当前缓存版本已更新为：`styles.css?v=20260706-focus-metrics-rect`，`app.js?v=20260706-focus-metrics-rect`。

@@ -2,6 +2,14 @@
 
 本文件用于在不同电脑、不同 Codex 会话之间交接 `redpoint` 项目进度。这里不记录 API Key、密码、Token、Cookie 或任何真实密钥。
 
+## 2026-07-06 Metrics Hard Rectangle Follow-up
+
+- 最新补充反馈：用户明确指出“长方形”就是 90 度直角，不接受上一版那种仍然带圆角的矮框。
+- 实际修法：横屏右下三张 `selection-metrics` 小框已从 `border-radius: 6px` 直接改成 `border-radius: 0`，并补上整排 `align-items: stretch` 与卡片 `height: 100%`，让三张卡的底边更像标准直角长方形。
+- 当前缓存版本：`styles.css?v=20260706-metrics-hard-rect`，`app.js?v=20260706-metrics-hard-rect`。
+- 本轮校验：`node --check app.js` 通过。
+- 下一步如果用户还觉得怪，就继续看边框、底边阴影和底部留白，不要再把圆角加回来。
+
 ## 2026-07-06 Lobby Focus Warning + Metrics Rect Follow-up
 
 - 最新补充问题：用户在 Edge 控制台里看到大厅自定义人数下拉的 `Blocked aria-hidden ... descendant retained focus` 告警；同时右下三张状态小框虽然已经缩小，但边角还是显得发怪，希望改成长方形一点。

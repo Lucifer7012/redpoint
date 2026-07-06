@@ -11,6 +11,16 @@
 
 ## 2026-07-06
 
+### 右下三张指标卡改成 90 度直角
+
+- 根据用户继续截图确认，上一版虽然已经缩成矮框，但仍然保留了圆角，视觉上不算真正的长方形。
+- 这轮把横屏对局右下三张 `selection-metrics` 小框直接改成 `border-radius: 0` 的 90 度直角，并补上 `align-items: stretch` 与子项 `height: 100%`，避免底边再出现不整齐的弧线观感。
+- 同步抬高静态资源缓存参数到 `styles.css?v=20260706-metrics-hard-rect` 与 `app.js?v=20260706-metrics-hard-rect`，确保线上能立刻吃到这次直角版样式。
+
+Verification:
+
+- `node --check app.js` passed.
+
 ### 大厅人数下拉焦点告警 + 右下指标卡改成长方形
 
 - 修正大厅单机 `玩家人数` 自定义下拉的可访问性告警：关闭菜单时，如果焦点还停在菜单项里，会先把焦点移回触发按钮，再隐藏 `#player-count-menu`，避免继续出现 `Blocked aria-hidden ... descendant retained focus` 警告。
