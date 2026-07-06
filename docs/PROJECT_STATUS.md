@@ -1,6 +1,9 @@
 # Project Status
 
 Latest status update (2026-07-06):
+- 横屏对局右侧 `最近动作 + 指标卡` 这一整列已补齐外层底板，底边现在会像旁边手牌区那样完整可见。
+- 当前缓存版本已更新为：`styles.css?v=20260706-right-panel-base`，`app.js?v=20260706-right-panel-base`。
+- 本轮已完成校验：`node --check app.js`。
 - 横屏对局右下三张状态小框已进一步改成真正的 90 度直角长方形，不再保留圆角。
 - 当前缓存版本已更新为：`styles.css?v=20260706-metrics-hard-rect`，`app.js?v=20260706-metrics-hard-rect`。
 - 本轮已完成校验：`node --check app.js`。

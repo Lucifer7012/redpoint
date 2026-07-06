@@ -7648,6 +7648,23 @@ select {
     pointer-events: none;
   }
 
+  body.is-game-view .center-stage::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: var(--game-right-slot-width);
+    height: var(--game-bottom-band-height);
+    border-radius: 16px 16px 0 0;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background:
+      radial-gradient(circle at 50% 0, rgba(255, 255, 255, 0.08), transparent 32%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(0, 0, 0, 0.1));
+    box-shadow: 0 -10px 24px rgba(10, 30, 24, 0.16);
+    pointer-events: none;
+    z-index: 1;
+  }
+
   body.is-game-view .center-stage .compact-head,
   body.is-game-view .draw-preview {
     display: none !important;
