@@ -2,6 +2,15 @@
 
 本文件用于在不同电脑、不同 Codex 会话之间交接 `redpoint` 项目进度。这里不记录 API Key、密码、Token、Cookie 或任何真实密钥。
 
+## 2026-07-06 Settlement Score Chip + Metrics Follow-up
+
+- 最新问题定位：用户实机截图确认，结算区 `得分牌` 的花色标签整列都在走深色文本，红桃 / 方块没有沿用牌面的红色语义；同时右下角三张状态小框在横屏结算态里仍然略高，底边会顶出容器。
+- 实际修法：`renderSetupHistory()` 和 `renderRoundSettlementSummary()` 的标签渲染都已补上按 `isRedCard(card)` 输出的红 / 黑类名；对应 CSS 已补齐红黑花色颜色。
+- 布局收口：保持右侧 `最近动作` 卡片完全不动，只缩小 `selection-metrics` 这三张小框的高度、间距、圆角、内边距和字号，避免再次把底边挤出去。
+- 当前缓存版本：`styles.css?v=20260706-settlement-chip-metrics`，`app.js?v=20260706-settlement-chip-metrics`。
+- 本轮校验：`node --check app.js` 通过；本地静态页 `http://127.0.0.1:4173/` 返回 `200`。
+- 下一步如果还要继续跟：先让用户硬刷新或走最新 GitHub Pages 版本，再看真实结算截图里这两处是否还有残留问题；优先微调这三个小框，不要再去动 `最近动作` 区块尺寸。
+
 ## 2026-06-21 Mobile Draw Pile + Settlement Follow-up
 
 - 用户继续跟进大厅里的 `上一局结算`，指出这块 UI 既不像当前牌桌风格，又容易在横屏小视口里过高、超出画面。当前已经按这个方向重做：不再是旧的大段文本白卡，而是更贴当前大厅 / 牌桌语气的紧凑排行卡。

@@ -5588,7 +5588,7 @@ function renderSetupHistory() {
   state.lastFinishedResult.forEach((item, index) => {
     const scoreCardsHtml = item.redCards.length
       ? item.redCards.map((card) => `
-        <span class="result-score-chip">
+        <span class="result-score-chip result-score-chip--${isRedCard(card) ? "red" : "black"}">
           <span>${escapeHtml(cardSymbol(card))}${escapeHtml(card.rank)}</span>
           <strong>${escapeHtml(String(card.scoreValue))}</strong>
         </span>
@@ -6634,7 +6634,7 @@ function renderRoundSettlementSummary(result = state.lastFinishedResult || getRa
       : "无红牌";
     const scoringCardsHtml = item.redCards.length
       ? item.redCards.map((card) => `
-        <span class="settlement-card__score-card">
+        <span class="settlement-card__score-card settlement-card__score-card--${isRedCard(card) ? "red" : "black"}">
           <span>${escapeHtml(cardSymbol(card))}${escapeHtml(card.rank)}</span>
           <strong>${escapeHtml(String(card.scoreValue))} 分</strong>
         </span>

@@ -9,6 +9,20 @@
 - 如当前状态、测试方式或后续注意点发生变化，同时更新 `docs/PROJECT_STATUS.md`。
 - 桌面总工作记录同步更新：`C:\Users\OgCloud\Desktop\Codex-Worklog\WORKLOG.md`。
 
+## 2026-07-06
+
+### 结算得分牌颜色与右下指标卡收紧
+
+- 修正结算区与大厅“上一局结算”里的 `得分牌` 标签渲染：红桃 / 方块现在会按红色显示，黑桃 / 梅花保持深色，不再整列都变成黑字。
+- 保持右侧 `最近动作` 区块尺寸不动，只收紧横屏对局右下角三张状态小框：缩小高度、内边距、圆角和字号，避免底边继续顶出容器。
+- 同步抬高静态资源缓存参数到 `styles.css?v=20260706-settlement-chip-metrics` 与 `app.js?v=20260706-settlement-chip-metrics`，减少 GitHub Pages / 浏览器继续命中旧样式的概率。
+
+Verification:
+
+- `node --check app.js` passed.
+- Local static server `http://127.0.0.1:4173/` responded `200`.
+- This round did not replay a full automated settlement screenshot; the fix was applied directly to the settlement/history render path and the matching CSS selectors.
+
 ## 2026-06-21
 
 ### 上一局结算改成更贴当前牌桌的紧凑排行卡
