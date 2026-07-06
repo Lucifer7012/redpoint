@@ -1,6 +1,10 @@
 # Project Status
 
 Latest status update (2026-07-06):
+- 横屏对局右下三张状态小框的文字已回调放大一档；当前优先保证“更好读”，同时不重新撑破框体。
+- 为了避免重新溢出，这轮只微调了小框内部的字号、顶部内边距和文本间距，没有再去放大右侧整列。
+- 当前缓存版本已更新为：`styles.css?v=20260706-right-panel-metrics-text`，`app.js?v=20260706-right-panel-metrics-text`。
+- 本轮已完成校验：`node --check app.js`；本地静态页 `http://127.0.0.1:4173/` 返回 `200`。
 - 横屏对局右下三张状态小框已继续缩短并整体上提，底部额外留出可见空隙，底边不再直接贴死到容器底部。
 - `最近动作` 区块尺寸保持不变；本轮只调整最下方三格的高度、字号、间距和边框可见度。
 - 当前缓存版本已更新为：`styles.css?v=20260706-right-panel-bottom-align`，`app.js?v=20260706-right-panel-bottom-align`。
