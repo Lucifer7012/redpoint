@@ -6044,9 +6044,18 @@ function toggleLobbyPlayerCountMenu(force) {
     return;
   }
 
+  const previousOpen = state.lobbyPlayerCountMenuOpen;
   state.lobbyPlayerCountMenuOpen = typeof force === "boolean"
     ? force
     : !state.lobbyPlayerCountMenuOpen;
+
+  if (previousOpen && !state.lobbyPlayerCountMenuOpen) {
+    const focusedInsideMenu = ui.playerCountMenu.contains(document.activeElement);
+    if (focusedInsideMenu) {
+      ui.playerCountTrigger.focus({ preventScroll: true });
+    }
+  }
+
   syncLobbyPlayerCountMenu();
 }
 

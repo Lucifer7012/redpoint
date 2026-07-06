@@ -2,6 +2,15 @@
 
 本文件用于在不同电脑、不同 Codex 会话之间交接 `redpoint` 项目进度。这里不记录 API Key、密码、Token、Cookie 或任何真实密钥。
 
+## 2026-07-06 Lobby Focus Warning + Metrics Rect Follow-up
+
+- 最新补充问题：用户在 Edge 控制台里看到大厅自定义人数下拉的 `Blocked aria-hidden ... descendant retained focus` 告警；同时右下三张状态小框虽然已经缩小，但边角还是显得发怪，希望改成长方形一点。
+- 实际修法：`toggleLobbyPlayerCountMenu(false)` 关闭菜单时，如果当前焦点仍停在 `#player-count-menu` 内的选项按钮上，会先把焦点移回 `#player-count-trigger`，再走隐藏逻辑。
+- 视觉收口：横屏右下三张 `selection-metrics` 小框继续保持在原位置和原宽度，只把圆角压低、整体高度再收一点，改成更规整的矮长方形；`最近动作` 区块不动。
+- 当前缓存版本：`styles.css?v=20260706-focus-metrics-rect`，`app.js?v=20260706-focus-metrics-rect`。
+- 本轮校验：`node --check app.js` 通过。
+- 下一步如果用户还说“没变化”，先检查是否已经硬刷新到 `20260706-focus-metrics-rect`，再看是否还需要继续把这三张小框压得更扁。
+
 ## 2026-07-06 Settlement Score Chip + Metrics Follow-up
 
 - 最新问题定位：用户实机截图确认，结算区 `得分牌` 的花色标签整列都在走深色文本，红桃 / 方块没有沿用牌面的红色语义；同时右下角三张状态小框在横屏结算态里仍然略高，底边会顶出容器。

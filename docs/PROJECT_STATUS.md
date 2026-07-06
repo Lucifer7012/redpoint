@@ -1,6 +1,11 @@
 # Project Status
 
 Latest status update (2026-07-06):
+- 大厅 `玩家人数` 自定义下拉的 `aria-hidden` 焦点告警已修正；关闭菜单时会先把焦点交还给触发按钮。
+- 横屏对局右下三张状态小框已从偏胶囊样式改成更规整的矮长方形，继续保持 `最近动作` 区块尺寸不变。
+- 当前缓存版本已更新为：`styles.css?v=20260706-focus-metrics-rect`，`app.js?v=20260706-focus-metrics-rect`。
+- 本轮已完成校验：`node --check app.js`。
+- 如用户继续看到旧圆角或旧警告，优先做硬刷新，确认页面已经加载 `20260706-focus-metrics-rect` 版本。
 - 结算区和大厅 `上一局结算` 的 `得分牌` 标签已补齐红黑花色样式；红牌不再整列显示成黑色。
 - 横屏对局右下角仍保留 `最近动作` 大小不变；这轮只把下方三张状态小框收紧，避免底边继续出界。
 - 当前缓存版本已更新为：`styles.css?v=20260706-settlement-chip-metrics`，`app.js?v=20260706-settlement-chip-metrics`。
