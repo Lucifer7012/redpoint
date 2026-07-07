@@ -11,6 +11,14 @@
 
 ## 2026-07-07
 
+### 撤掉公共牌槽 padding，改成不裁切公共牌
+- 用户继续截图确认，上一轮给 `table-public-slot` 加安全内边距的修法带来了新的副作用：空公共牌提示框变成明显的内层圆角块，同时四角公共牌又出现更多被裁切的弧角。
+- 这轮直接撤掉那层 `table-public-slot` padding / `box-sizing` 修法，改为让横屏对局里的 `table-public-area` 不再裁切内部内容；这样保留原来的完整显示方式，不再额外制造一圈圈内层圆角。
+- 同步抬高静态资源缓存参数到 `styles.css?v=20260707-public-card-overflow-fix` 与 `app.js?v=20260707-public-card-overflow-fix`。
+Verification:
+
+- `node --check app.js` passed.
+
 ### 去掉公共牌区圆角对牌面的裁切
 - 用户最新截图确认，公共牌区左上角的牌面被容器圆角裁掉了一小块，视觉上像“上面的公共牌区挡住了公共牌”。
 - 这轮没有放大或重排公共牌区，只是在 `table-public-slot` 内补了安全内边距，并启用 `box-sizing: border-box`，让最外侧那几张公共牌离圆角边界远一点，不再被切角。

@@ -1,6 +1,10 @@
 # Project Status
 
 Latest status update (2026-07-07):
+- 公共牌区已撤掉上一轮那种 `table-public-slot` 内补边距的修法，避免再出现空提示框内层圆角和四角公共牌被额外裁切的问题。
+- 当前改为：公共牌区外框保留，但不再用它去裁切内部公共牌内容，优先恢复“完整显示牌面”。
+- 当前缓存版本已更新为：`styles.css?v=20260707-public-card-overflow-fix`，`app.js?v=20260707-public-card-overflow-fix`。
+- 本轮已完成校验：`node --check app.js`。
 - 公共牌区最左上牌面的切角问题已修掉；原因是公共牌离容器圆角边界太近，被 `overflow: hidden` 裁掉了一小块。
 - 本轮只给 `table-public-slot` 增加内部安全留白，没有改公共牌区整体大小，也没有继续动下方手牌 / 右侧动作区布局。
 - 当前缓存版本已更新为：`styles.css?v=20260707-public-card-clip-fix`，`app.js?v=20260707-public-card-clip-fix`。

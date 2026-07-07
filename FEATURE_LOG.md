@@ -4,6 +4,24 @@
 
 ## 2026-07-07
 
+### 撤掉公共牌槽 padding，恢复完整显示
+
+- 背景：用户继续截图确认，上一轮给公共牌槽补内边距后，反而出现了更明显的内层圆角提示框和更多公共牌四角裁切。
+- 改动：
+  - `styles.css` 中撤掉横屏对局 `table-public-slot` 的 padding / `box-sizing` 修法。
+  - 改为让 `table-public-area` 不再裁切内部内容，优先恢复公共牌完整显示。
+  - `index.html` 中把缓存版本更新到 `styles.css?v=20260707-public-card-overflow-fix` 和 `app.js?v=20260707-public-card-overflow-fix`。
+- 涉及文件：
+  - `styles.css`
+  - `index.html`
+  - `docs/CHANGELOG.md`
+  - `docs/PROJECT_STATUS.md`
+  - `docs/HANDOFF.md`
+- 验证：
+  - `node --check app.js` 通过。
+- 后续注意：
+  - 不再给整个公共牌槽额外补一圈内边距；之后只针对真正需要的牌距做修正。
+
 ### 公共牌区切角裁牌修正
 
 - 背景：用户截图确认，公共牌区最左上角那张牌被容器边界裁掉了一小角，看起来像公共牌区挡住了牌面。

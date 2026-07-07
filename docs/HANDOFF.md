@@ -2,6 +2,14 @@
 
 本文件用于在不同电脑、不同 Codex 会话之间交接 `redpoint` 项目进度。这里不记录 API Key、密码、Token、Cookie 或任何真实密钥。
 
+## 2026-07-07 Public Card Overflow Follow-up
+
+- 最新补充反馈：用户明确指出上一轮“公共牌区补内边距”的修法把画面搞脏了，出现了明显的内层圆角块，以及更多四角公共牌被裁切的弧角。
+- 实际修法：撤掉 `table-public-slot` 新增的 padding / `box-sizing`；改为让横屏对局里的 `table-public-area` 不再裁切内部内容，恢复更接近之前“完整显示牌面”的效果。
+- 当前缓存版本：`styles.css?v=20260707-public-card-overflow-fix`，`app.js?v=20260707-public-card-overflow-fix`。
+- 本轮校验：`node --check app.js` 通过。
+- 如果后面还要继续修公共牌边缘观感，优先找真正单张牌的间距或定位，不要再给整个公共牌槽额外加一层内边距。
+
 ## 2026-07-07 Public Card Clip Follow-up
 
 - 最新补充反馈：用户指出上方公共牌区把最左上角的牌裁掉了一小块，要求直接去掉，不要再碰下面底部一排的布局。
