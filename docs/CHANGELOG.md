@@ -9,6 +9,17 @@
 - 如当前状态、测试方式或后续注意点发生变化，同时更新 `docs/PROJECT_STATUS.md`。
 - 桌面总工作记录同步更新：`C:\Users\OgCloud\Desktop\Codex-Worklog\WORKLOG.md`。
 
+## 2026-07-07
+
+### 去掉公共牌区圆角对牌面的裁切
+- 用户最新截图确认，公共牌区左上角的牌面被容器圆角裁掉了一小块，视觉上像“上面的公共牌区挡住了公共牌”。
+- 这轮没有放大或重排公共牌区，只是在 `table-public-slot` 内补了安全内边距，并启用 `box-sizing: border-box`，让最外侧那几张公共牌离圆角边界远一点，不再被切角。
+- 同步抬高静态资源缓存参数到 `styles.css?v=20260707-public-card-clip-fix` 与 `app.js?v=20260707-public-card-clip-fix`。
+Verification:
+
+- `node --check app.js` passed.
+- Local static server `http://127.0.0.1:4173/` responded `200`.
+
 ## 2026-07-06
 
 ### 右下三格文字回调放大

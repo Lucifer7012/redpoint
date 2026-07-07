@@ -1,5 +1,11 @@
 # Project Status
 
+Latest status update (2026-07-07):
+- 公共牌区最左上牌面的切角问题已修掉；原因是公共牌离容器圆角边界太近，被 `overflow: hidden` 裁掉了一小块。
+- 本轮只给 `table-public-slot` 增加内部安全留白，没有改公共牌区整体大小，也没有继续动下方手牌 / 右侧动作区布局。
+- 当前缓存版本已更新为：`styles.css?v=20260707-public-card-clip-fix`，`app.js?v=20260707-public-card-clip-fix`。
+- 本轮已完成校验：`node --check app.js`；本地静态页 `http://127.0.0.1:4173/` 返回 `200`。
+
 Latest status update (2026-07-06):
 - 横屏对局右下三张状态小框的文字已回调放大一档；当前优先保证“更好读”，同时不重新撑破框体。
 - 为了避免重新溢出，这轮只微调了小框内部的字号、顶部内边距和文本间距，没有再去放大右侧整列。

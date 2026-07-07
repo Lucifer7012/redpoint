@@ -2,6 +2,14 @@
 
 本文件用于在不同电脑、不同 Codex 会话之间交接 `redpoint` 项目进度。这里不记录 API Key、密码、Token、Cookie 或任何真实密钥。
 
+## 2026-07-07 Public Card Clip Follow-up
+
+- 最新补充反馈：用户指出上方公共牌区把最左上角的牌裁掉了一小块，要求直接去掉，不要再碰下面底部一排的布局。
+- 实际修法：问题来自公共牌区容器本身的圆角 + `overflow: hidden`，而不是公共牌逻辑。当前已在 `table-public-slot` 内补安全内边距，并用 `box-sizing: border-box` 保证这层留白不会把容器再次撑坏。
+- 当前缓存版本：`styles.css?v=20260707-public-card-clip-fix`，`app.js?v=20260707-public-card-clip-fix`。
+- 本轮校验：`node --check app.js` 通过；本地静态页 `http://127.0.0.1:4173/` 返回 `200`。
+- 如果用户后面还觉得公共牌太贴边，优先继续加这层内部安全边距，不要先改公共牌区外框尺寸。
+
 ## 2026-07-06 Right Metrics Text Follow-up
 
 - 最新补充反馈：用户确认右下三张小框的边界已经能接受，现在主要想把里面的文字再放大一点，但前提是不要重新超出框体。
